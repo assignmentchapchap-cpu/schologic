@@ -1,14 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
-import { extractTextFromDocx } from '@/lib/file-processing';
+
 import { checkAIContent, cleanText } from '@/lib/ai-service';
 import { Upload, Type, ArrowRight, Loader2, Home } from 'lucide-react';
 import Link from 'next/link';
 
+import { Suspense } from 'react';
+
 export default function StudentSubmitPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <StudentSubmitContent />
+        </Suspense>
+    );
+}
+
+function StudentSubmitContent() {
     const [step, setStep] = useState(1); // 1: Identify, 2: Upload
     const [inviteCode, setInviteCode] = useState('');
     const [studentName, setStudentName] = useState('');
@@ -19,51 +29,45 @@ export default function StudentSubmitPage() {
     const [isExamining, setIsExamining] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
 
+    const searchParams = useSearchParams();
     const router = useRouter();
     const supabase = createClient();
+
+    // Auto-load effect
+    useEffect(() => {
+        const assignmentId = searchParams.get('assignmentId');
+        if (assignmentId && step === 1 && !classData && !isExamining) {
+            handleAutoLoad(assignmentId);
+        }
+    }, [searchParams]);
+
+    const handleAutoLoad = async (assignmentId: string) => {
+        setIsExamining(true);
+        try {
+            // Check current session first
+            const { data: { session } } = await supabase.auth.getSession();
+
+            // If no session, THEN sign in anonymously (or redirect to login if we preferred)
+            // But for this specific "submit" flow, we might want to keep the anon logic as fallback
+            if (!session) {
+                const { error: authErr } = await supabase.auth.signInAnonymously();
+                if (authErr) throw authErr;
+            }
+
+            await authenticateAndFindClass(null, assignmentId);
+        } catch (error) {
+            console.error("Auto-load failed", error);
+        } finally {
+            setIsExamining(false);
+        }
+    };
 
     // Step 1: Find Class & Register/Identify
     const handleJoin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsExamining(true);
         try {
-            // 1. Authenticate First (Required for RLS)
-            const { data: authData, error: authErr } = await supabase.auth.signInAnonymously();
-            if (authErr) throw authErr;
-
-            if (authData.user) {
-                // Upsert profile
-                const { error: profErr } = await supabase.from('profiles').upsert({
-                    id: authData.user.id,
-                    role: 'student',
-                    full_name: studentName,
-                    email: email,
-                });
-                if (profErr) console.error("Profile Error", profErr);
-            }
-
-            // 2. Verify Class Code
-            const { data: cls, error: clsErr } = await supabase
-                .from('classes')
-                .select('*')
-                .eq('invite_code', inviteCode.trim().toUpperCase())
-                .single();
-
-            if (clsErr || !cls) {
-                alert("Invalid Class Code");
-                setIsExamining(false);
-                return;
-            }
-
-            if (cls.is_locked) {
-                alert("This class is currently locked for new submissions.");
-                setIsExamining(false);
-                return;
-            }
-
-            setClassData(cls);
-            setStep(2);
-
+            await authenticateAndFindClass(inviteCode);
         } catch (error: any) {
             console.error("Join Error", error);
             alert("Failed to join. " + error.message);
@@ -71,6 +75,59 @@ export default function StudentSubmitPage() {
             setIsExamining(false);
         }
     };
+
+    const authenticateAndFindClass = async (code: string | null, assignmentId?: string) => {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+            // Only update profile if we gathered new data from the form
+            // If auto-loading, studentName might be empty, so we skip overwriting profile
+            if (studentName) {
+                const { error: profErr } = await supabase.from('profiles').upsert({
+                    id: user.id,
+                    role: 'student',
+                    full_name: studentName,
+                    email: email,
+                }, { onConflict: 'id', ignoreDuplicates: true });
+                if (profErr) console.error("Profile Error", profErr);
+            }
+        } else {
+            // If we somehow still don't have a user (should be caught by handleAutoLoad or handleJoin)
+            const { error: authErr } = await supabase.auth.signInAnonymously();
+            if (authErr) throw authErr;
+        }
+
+        let cls;
+        let pIdToDelete; // In case we need cleanup (optional)
+
+        if (assignmentId) {
+            const { data: assign, error: assignErr } = await supabase
+                .from('assignments')
+                .select('class_id, classes(*)')
+                .eq('id', assignmentId)
+                .single();
+
+            if (assignErr || !assign) throw new Error("Assignment not found");
+            cls = assign.classes;
+        } else if (code) {
+            const { data, error } = await supabase
+                .from('classes')
+                .select('*')
+                .eq('invite_code', code.trim().toUpperCase())
+                .single();
+            if (error) throw error;
+            cls = data;
+        }
+
+        if (!cls) throw new Error("Class not found");
+
+        if (cls.is_locked) {
+            throw new Error("This class is currently locked for new submissions.");
+        }
+
+        setClassData(cls);
+        setStep(2);
+    }
 
     // Step 2: Submit
     const handleSubmission = async (textToAnalyze: string) => {
@@ -89,10 +146,15 @@ export default function StudentSubmitPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user || !classData) return;
 
+            // Ensure profile exists just in case (for purely anonymous users who skipped name/email form by auto-load)
+            // If they are logged in, they have a profile. If they are anon, they might not.
+            // But if they came from dashboard, they are logged in.
+
             const { data: sub, error: subErr } = await supabase.from('submissions').insert({
                 student_id: user.id,
                 class_id: classData.id,
-                content: cleaned, // Storing extracted text
+                assignment_id: searchParams.get('assignmentId') || null, // Link to assignment if known
+                content: cleaned,
                 ai_score: analysis.globalScore,
                 report_data: analysis
             }).select().single();

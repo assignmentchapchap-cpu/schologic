@@ -38,7 +38,7 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ data }) => {
                         itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
                         labelStyle={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px', textTransform: 'uppercase' }}
                         labelFormatter={(label) => `Segment ${Number(label) + 1}`}
-                        formatter={(value: number) => [`${(value * 100).toFixed(1)}%`, 'AI Probability']}
+                        formatter={(value: number | undefined) => [`${((value || 0) * 100).toFixed(1)}%`, 'AI Probability']}
                     />
                     <Bar dataKey="prob" radius={[6, 6, 0, 0]}>
                         {data.map((entry, index) => (

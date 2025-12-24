@@ -1,7 +1,7 @@
 "use client";
 
 import { Download, Activity, Layers, FileText, FileCheck, AlertTriangle } from "lucide-react";
-import { jsPDF } from "jspdf";
+
 import dynamic from "next/dynamic";
 import { AnalysisSegment } from "@/lib/ai-config";
 import { clsx, type ClassValue } from "clsx";
@@ -41,7 +41,8 @@ export default function ReportView({ score, reportData, readOnly = false }: Repo
             reason: s.isSuspected ? "Result from analysis." : "Human Pattern"
         }));
 
-    const handleDownloadPdf = () => {
+    const handleDownloadPdf = async () => {
+        const { jsPDF } = await import("jspdf");
         const doc = new jsPDF();
         let y = 20;
         const margin = 20;

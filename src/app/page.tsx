@@ -46,7 +46,7 @@ export default function Home() {
           </p>
           <div className="pt-8">
             <Link
-              href="/student/submit"
+              href="/student/login"
               className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg shadow-lg transition-all transform hover:scale-105"
             >
               Join Class & Submit
