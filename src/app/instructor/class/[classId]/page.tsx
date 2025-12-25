@@ -2,7 +2,28 @@
 
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase';
-import { FileText, Download, Lock, Unlock, ArrowLeft, Users, Calendar, Plus, Trash2, Clock, CheckCircle, Settings, Brain, Save, AlertCircle, X } from 'lucide-react';
+import {
+    Users,
+    FileText,
+    Calendar,
+    Settings,
+    Plus,
+    MoreVertical,
+    Trash2,
+    ExternalLink,
+    Search,
+    Filter,
+    ArrowLeft,
+    Clock,
+    CheckCircle,
+    Download,
+    X,
+    ChevronRight,
+    Lock,
+    Unlock,
+    AlertCircle
+} from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Database } from '@/lib/database.types';
 import { MODELS, MODEL_LABELS, ScoringMethod, Granularity } from '@/lib/ai-config';
@@ -26,12 +47,14 @@ export default function ClassDetailsParams({ params }: { params: Promise<{ class
     return <ClassDetails classId={classId} />
 }
 
-import { useSearchParams } from 'next/navigation';
+
 
 function ClassDetails({ classId }: { classId: string }) {
     const supabase = createClient();
+    const router = useRouter();
     const searchParams = useSearchParams();
-    const initialTab = searchParams.get('tab') as 'overview' | 'assignments' | 'resources' | 'students' | 'submissions' || 'overview';
+    const initialTab = searchParams.get('tab') as 'overview' | 'assignments' | 'resources' | 'submissions' || 'overview';
+
 
     // ...
 
@@ -40,10 +63,11 @@ function ClassDetails({ classId }: { classId: string }) {
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [enrollments, setEnrollments] = useState<EnrollmentProfile[]>([]);
     const [resources, setResources] = useState<any[]>([]);
+    const [submissions, setSubmissions] = useState<any[]>([]);
 
     // UI States
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'overview' | 'assignments' | 'resources' | 'students' | 'submissions'>(initialTab);
+    const [activeTab, setActiveTab] = useState<'overview' | 'assignments' | 'resources' | 'submissions'>(initialTab);
     const [isCreatingAssignment, setIsCreatingAssignment] = useState(false);
     const [dueDateError, setDueDateError] = useState<string | null>(null);
 
@@ -58,8 +82,34 @@ function ClassDetails({ classId }: { classId: string }) {
     const [isCreatingResource, setIsCreatingResource] = useState(false);
     const [newResource, setNewResource] = useState({ title: '', content: '', file_url: '' });
 
-    // Settings State
+    // Modals State
+    // Modals State
     const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [showStudentsModal, setShowStudentsModal] = useState(false);
+    const [showAssignmentsModal, setShowAssignmentsModal] = useState(false);
+    const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
+
+    // Submissions Tracking
+    const [lastViewedAt, setLastViewedAt] = useState<Date>(new Date(0));
+
+    useEffect(() => {
+        const key = `scholarSync_lastViewed_${classId}`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            setLastViewedAt(new Date(stored));
+        }
+    }, [classId]);
+
+    const updateLastViewed = () => {
+        const now = new Date();
+        setLastViewedAt(now);
+        localStorage.setItem(`scholarSync_lastViewed_${classId}`, now.toISOString());
+    };
+
+    const newSubmissionsCount = submissions.filter(s => new Date(s.created_at) > lastViewedAt).length;
+    const ungradedSubmissionsCount = submissions.filter(s => s.grade === null).length;
+
+    // Settings State
     const [globalSettings, setGlobalSettings] = useState<any>(null);
     const [settingsForm, setSettingsForm] = useState({
         model: MODELS.ROBERTA_LARGE,
@@ -73,6 +123,28 @@ function ClassDetails({ classId }: { classId: string }) {
 
     useEffect(() => {
         fetchAllData();
+
+        // Realtime subscription for Submissions
+        const channel = supabase
+            .channel('public:submissions')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'submissions', filter: `class_id=eq.${classId}` },
+                (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        setSubmissions((prev) => [...prev, payload.new]);
+                    } else if (payload.eventType === 'UPDATE') {
+                        setSubmissions((prev) => prev.map((s) => (s.id === payload.new.id ? payload.new : s)));
+                    } else if (payload.eventType === 'DELETE') {
+                        setSubmissions((prev) => prev.filter((s) => s.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [classId]);
 
     const fetchAllData = async () => {
@@ -81,12 +153,13 @@ function ClassDetails({ classId }: { classId: string }) {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const [clsRes, assignRes, enrollRes, resRes, profileRes] = await Promise.all([
+            const [clsRes, assignRes, enrollRes, resRes, profileRes, subRes] = await Promise.all([
                 supabase.from('classes').select('*').eq('id', classId).single(),
                 supabase.from('assignments').select('*').eq('class_id', classId).order('due_date', { ascending: true }),
                 supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url)`).eq('class_id', classId),
                 supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false }),
-                supabase.from('profiles').select('settings').eq('id', user.id).single()
+                supabase.from('profiles').select('settings').eq('id', user.id).single(),
+                supabase.from('submissions').select('*').eq('class_id', classId) // Fetch all class submissions
             ]);
 
             if (clsRes.error) throw clsRes.error;
@@ -138,6 +211,8 @@ function ClassDetails({ classId }: { classId: string }) {
             if (assignRes.data) setAssignments(assignRes.data);
             if (resRes.data) setResources(resRes.data);
             if (enrollRes.data) setEnrollments(enrollRes.data as unknown as EnrollmentProfile[]);
+            if (subRes.data) setSubmissions(subRes.data);
+
 
         } catch (error) {
             console.error("Error fetching class data", error);
@@ -342,7 +417,7 @@ function ClassDetails({ classId }: { classId: string }) {
 
                 {/* Tabs */}
                 <div className="flex gap-1 bg-slate-200/50 p-1 rounded-xl mb-8 w-fit flex-wrap">
-                    {(['overview', 'assignments', 'resources', 'students', 'submissions'] as const).map(tab => (
+                    {(['overview', 'assignments', 'resources', 'submissions'] as const).map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -356,41 +431,185 @@ function ClassDetails({ classId }: { classId: string }) {
                     ))}
                 </div>
 
-                {/* Overview View */}
-                {
-                    activeTab === 'overview' && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Users className="w-5 h-5" /></div>
-                                    <h3 className="font-bold text-slate-700">Total Students</h3>
-                                </div>
-                                <p className="text-4xl font-black text-slate-900">{enrollments.length}</p>
+                {/* Overview View (Dashboard) */}
+                {activeTab === 'overview' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+                        {/* Total Students */}
+                        <div
+                            onClick={() => setShowStudentsModal(true)}
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-indigo-400 hover:shadow-md transition-all group"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors"><Users className="w-5 h-5" /></div>
+                                <h3 className="font-bold text-slate-700 group-hover:text-indigo-700">Total Students</h3>
                             </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><FileText className="w-5 h-5" /></div>
-                                    <h3 className="font-bold text-slate-700">Assignments</h3>
-                                </div>
-                                <p className="text-4xl font-black text-slate-900">{assignments.length}</p>
+                            <p className="text-4xl font-black text-slate-900">{enrollments.length}</p>
+                        </div>
+
+                        {/* Assignments */}
+                        <div
+                            onClick={() => setShowAssignmentsModal(true)}
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all group"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors"><FileText className="w-5 h-5" /></div>
+                                <h3 className="font-bold text-slate-700 group-hover:text-emerald-700">Assignments</h3>
                             </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-2 bg-amber-50 text-amber-600 rounded-lg"><Download className="w-5 h-5" /></div>
-                                    <h3 className="font-bold text-slate-700">Resources</h3>
+                            <p className="text-4xl font-black text-slate-900">{assignments.length}</p>
+                        </div>
+
+                        {/* Submissions (New & Ungraded) */}
+                        <div
+                            onClick={() => setShowSubmissionsModal(true)}
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors"><Clock className="w-5 h-5" /></div>
+                                <h3 className="font-bold text-slate-700 group-hover:text-blue-700">Submissions</h3>
+                            </div>
+                            <div className="flex items-end justify-between">
+                                <div>
+                                    <p className="text-4xl font-black text-slate-900">{ungradedSubmissionsCount}</p>
+                                    <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-wider">Ungraded</p>
                                 </div>
-                                <p className="text-4xl font-black text-slate-900">{resources.length}</p>
+                                {newSubmissionsCount > 0 && (
+                                    <div className="text-right">
+                                        <p className="text-4xl font-black text-blue-600">+{newSubmissionsCount}</p>
+                                        <p className="text-xs text-blue-400 mt-2 font-bold uppercase tracking-wider">New</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    )
+                    </div>
+
+                )}{/* Quick View Modals */}
+
+                {/* Assignments Quick View */}
+                {showAssignmentsModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[80vh] flex flex-col">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+                                <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-emerald-600" /> Assignment Overview
+                                </h3>
+                                <button onClick={() => setShowAssignmentsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="p-6 overflow-y-auto">
+                                <div className="space-y-4">
+                                    {assignments.map(a => (
+                                        <div
+                                            key={a.id}
+                                            onClick={() => router.push(`/instructor/assignment/${a.id}`)}
+                                            className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer hover:border-emerald-300 hover:shadow-sm transition-all group"
+                                        >
+                                            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
+                                                <FileText className="w-4 h-4" />
+                                            </div>
+
+                                            <h4 className="font-bold text-slate-800 group-hover:text-emerald-700 transition-colors truncate flex-1">{a.title}</h4>
+
+                                            <div className="flex items-center gap-6 text-xs text-slate-500 font-medium shrink-0">
+                                                <div className="flex items-center gap-1.5 min-w-[120px]">
+                                                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                                    <span>{a.due_date ? new Date(a.due_date).toLocaleDateString() : 'No Due Date'}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 min-w-[70px]">
+                                                    <CheckCircle className="w-3.5 h-3.5 text-slate-400" />
+                                                    <span>{a.max_points} Pts</span>
+                                                </div>
+                                            </div>
+
+                                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors shrink-0" />
+                                        </div>
+                                    ))}
+                                    {assignments.length === 0 && <p className="text-center text-slate-400 py-4">No assignments yet.</p>}
+                                </div>
+                            </div>
+                            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                                <button
+                                    onClick={() => {
+                                        setActiveTab('assignments');
+                                        setShowAssignmentsModal(false);
+                                    }}
+                                    className="text-emerald-600 hover:text-emerald-700 font-bold text-sm px-4 py-2 transition-colors"
+                                >
+                                    Go to Full Manager
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Submissions Quick View */}
+                {showSubmissionsModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[80vh] flex flex-col">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+                                <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-blue-600" /> Recent Activity
+                                </h3>
+                                <button onClick={() => setShowSubmissionsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="p-6 overflow-y-auto">
+                                <div className="space-y-4">
+                                    {assignments.map(a => {
+                                        const assignmentSubs = submissions.filter(s => s.assignment_id === a.id);
+                                        const ungraded = assignmentSubs.filter(s => s.grade === null).length;
+                                        const newSubs = assignmentSubs.filter(s => new Date(s.created_at) > lastViewedAt).length;
+
+                                        if (ungraded === 0 && newSubs === 0) return null;
+
+                                        return (
+                                            <div key={a.id} className="flex justify-between items-center p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                                <h4 className="font-bold text-slate-800">{a.title}</h4>
+                                                <div className="flex gap-2">
+                                                    {ungraded > 0 && (
+                                                        <span className="bg-slate-200 text-slate-600 px-2 py-1 rounded-lg text-xs font-bold">
+                                                            {ungraded} Ungraded
+                                                        </span>
+                                                    )}
+                                                    {newSubs > 0 && (
+                                                        <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold">
+                                                            {newSubs} New
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {ungradedSubmissionsCount === 0 && newSubmissionsCount === 0 && (
+                                        <p className="text-center text-slate-400 py-4">No new or ungraded submissions.</p>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                                <button
+                                    onClick={() => {
+                                        updateLastViewed();
+                                        setActiveTab('submissions');
+                                        setShowSubmissionsModal(false);
+                                    }}
+                                    className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-lg"
+                                >
+                                    Check Submissions
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
                 }
 
                 {/* Assignments View */}
                 {
                     activeTab === 'assignments' && (
-                        <div className="space-y-6 animate-fade-in">
+                        <div className="animate-fade-in space-y-6">
                             <div className="flex justify-between items-center">
-                                <h2 className="text-lg font-bold text-slate-800">Class Assignments</h2>
+                                <h2 className="text-lg font-bold text-slate-800">Manage Assignments</h2>
                                 <button
                                     onClick={() => {
                                         setIsCreatingAssignment(true);
@@ -490,7 +709,7 @@ function ClassDetails({ classId }: { classId: string }) {
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => {
                                                     setNewAssignment({
@@ -534,15 +753,13 @@ function ClassDetails({ classId }: { classId: string }) {
                     activeTab === 'resources' && (
                         <div className="animate-fade-in space-y-6">
                             <div className="flex justify-between items-center">
-                                <h2 className="text-lg font-bold text-slate-800">Class Resources</h2>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setIsCreatingResource(true)}
-                                        className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-black transition-all shadow-md active:scale-95"
-                                    >
-                                        <Plus className="w-4 h-4" /> Add Note
-                                    </button>
-                                </div>
+                                <h2 className="text-lg font-bold text-slate-800">Shared Files & Notes</h2>
+                                <button
+                                    onClick={() => setIsCreatingResource(true)}
+                                    className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-black transition-all shadow-md active:scale-95"
+                                >
+                                    <Plus className="w-4 h-4" /> Add Note
+                                </button>
                             </div>
 
                             {isCreatingResource && (
@@ -615,57 +832,7 @@ function ClassDetails({ classId }: { classId: string }) {
                     )
                 }
 
-                {/* Students View (Roster) */}
-                {
-                    activeTab === 'students' && (
-                        <div className="animate-fade-in">
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <table className="w-full text-left">
-                                    <thead className="bg-slate-50">
-                                        <tr>
-                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Student</th>
-                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Email</th>
-                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Joined</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {enrollments.map((enroll) => (
-                                            <tr key={enroll.id} className="hover:bg-slate-50 transition-colors">
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
-                                                            {enroll.profiles?.avatar_url ? (
-                                                                <img src={enroll.profiles.avatar_url} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <Users className="w-4 h-4 text-slate-400" />
-                                                            )}
-                                                        </div>
-                                                        <span className="font-bold text-slate-700">{enroll.profiles?.full_name || 'Unknown'}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4 text-sm text-slate-500 font-mono">
-                                                    {enroll.profiles?.email || '-'}
-                                                </td>
-                                                <td className="p-4 text-sm text-slate-400 text-right font-medium">
-                                                    {new Date(enroll.joined_at).toLocaleDateString()}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {enrollments.length === 0 && (
-                                            <tr>
-                                                <td colSpan={3} className="p-12 text-center text-slate-400">
-                                                    No students enrolled yet. Share the code
-                                                    <span className="mx-2 font-mono font-bold bg-slate-100 px-2 py-1 rounded text-slate-800">{classData?.invite_code}</span>
-                                                    to invite them!
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )
-                }
+
 
                 {/* Submissions View */}
                 {
@@ -711,123 +878,197 @@ function ClassDetails({ classId }: { classId: string }) {
                     )
                 }
 
-            </div>
 
-            {/* Class Settings Modal */}
-            {showSettingsModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                            <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
-                                <Settings className="w-5 h-5 text-indigo-600" /> Class Configuration
-                            </h3>
-                            <button onClick={() => setShowSettingsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                <X className="w-5 h-5 text-slate-400" />
-                            </button>
-                        </div>
 
-                        <div className="p-6 space-y-6">
-                            {/* Inheritance Toggle */}
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
-                                <div>
-                                    <span className="block font-bold text-slate-700 text-sm">Override Global Defaults</span>
-                                    <p className="text-xs text-slate-500">Enable to customize rules for this class.</p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        checked={isOverriding}
-                                        onChange={(e) => setIsOverriding(e.target.checked)}
-                                    />
-                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                                </label>
+            </div >
+
+            {/* Students List Modal */}
+            {
+                showStudentsModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+                                <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
+                                    <Users className="w-5 h-5 text-indigo-600" /> Enrolled Students
+                                </h3>
+                                <button onClick={() => setShowStudentsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
                             </div>
-
-                            <div className={`space-y-6 transition-opacity ${isOverriding ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-
-                                {/* AI Model */}
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">AI Model</label>
-                                    <select
-                                        value={settingsForm.model}
-                                        onChange={(e) => setSettingsForm({ ...settingsForm, model: e.target.value })}
-                                        className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    >
-                                        {Object.entries(MODELS).map(([key, value]) => (
-                                            <option key={value} value={value}>{MODEL_LABELS[value] || key}</option>
+                            <div className="overflow-y-auto p-0">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 sticky top-0 outline outline-1 outline-slate-100">
+                                        <tr>
+                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Student</th>
+                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Email</th>
+                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Joined</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {enrollments.map((enroll) => (
+                                            <tr key={enroll.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                                                            {enroll.profiles?.avatar_url ? (
+                                                                <img src={enroll.profiles.avatar_url} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <Users className="w-4 h-4 text-slate-400" />
+                                                            )}
+                                                        </div>
+                                                        <span className="font-bold text-slate-700">{enroll.profiles?.full_name || 'Unknown'}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-sm text-slate-500 font-mono">
+                                                    {enroll.profiles?.email || '-'}
+                                                </td>
+                                                <td className="p-4 text-sm text-slate-400 text-right font-medium">
+                                                    {new Date(enroll.joined_at).toLocaleDateString()}
+                                                </td>
+                                            </tr>
                                         ))}
-                                    </select>
-                                </div>
-
-                                {/* Late Policy */}
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Late Policy</label>
-                                    <div className="space-y-2">
-                                        {[
-                                            { id: 'strict', label: 'Strict' },
-                                            { id: 'grace_48h', label: '48h Grace' },
-                                            { id: 'class_end', label: 'Until Class End' }
-                                        ].map(policy => (
-                                            <label key={policy.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${settingsForm.late_policy === policy.id
-                                                ? 'border-indigo-600 bg-indigo-50'
-                                                : 'border-slate-200 hover:bg-slate-50'
-                                                }`}>
-                                                <input
-                                                    type="radio"
-                                                    name="class_late_policy"
-                                                    value={policy.id}
-                                                    checked={settingsForm.late_policy === policy.id}
-                                                    onChange={(e) => setSettingsForm({ ...settingsForm, late_policy: e.target.value })}
-                                                    className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                                <span className="font-bold text-sm text-slate-700">{policy.label}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* File Types */}
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Allowed Files</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {['pdf', 'docx', 'txt', 'jpg', 'png', 'zip'].map(type => (
-                                            <label key={type} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer ${settingsForm.allowed_file_types.includes(type)
-                                                ? 'border-indigo-600 bg-indigo-50'
-                                                : 'border-slate-200 hover:bg-slate-50'
-                                                }`}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={settingsForm.allowed_file_types.includes(type)}
-                                                    onChange={() => toggleFileType(type)}
-                                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                                <span className="font-bold text-xs uppercase text-slate-700">{type}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
+                                        {enrollments.length === 0 && (
+                                            <tr>
+                                                <td colSpan={3} className="p-12 text-center text-slate-400">
+                                                    No students enrolled yet. Share the code
+                                                    <span className="mx-2 font-mono font-bold bg-slate-100 px-2 py-1 rounded text-slate-800">{classData?.invite_code}</span>
+                                                    to invite them!
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>
-
-                        <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                            <button
-                                onClick={() => setShowSettingsModal(false)}
-                                className="px-5 py-2.5 text-slate-500 font-bold text-sm hover:text-slate-700"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={saveSettings}
-                                disabled={savingSettings}
-                                className="px-6 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-black transition-all shadow-lg active:scale-95 flex items-center gap-2"
-                            >
-                                {savingSettings ? 'Saving...' : 'Save Configuration'}
-                            </button>
+                            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                                <button
+                                    onClick={() => setShowStudentsModal(false)}
+                                    className="px-5 py-2.5 text-slate-500 font-bold text-sm hover:text-slate-700"
+                                >
+                                    Close
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+
+            {/* Class Settings Modal */}
+            {
+                showSettingsModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                                <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
+                                    <Settings className="w-5 h-5 text-indigo-600" /> Class Configuration
+                                </h3>
+                                <button onClick={() => setShowSettingsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                {/* Inheritance Toggle */}
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                                    <div>
+                                        <span className="block font-bold text-slate-700 text-sm">Override Global Defaults</span>
+                                        <p className="text-xs text-slate-500">Enable to customize rules for this class.</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={isOverriding}
+                                            onChange={(e) => setIsOverriding(e.target.checked)}
+                                        />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+
+                                <div className={`space-y-6 transition-opacity ${isOverriding ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+
+                                    {/* AI Model */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">AI Model</label>
+                                        <select
+                                            value={settingsForm.model}
+                                            onChange={(e) => setSettingsForm({ ...settingsForm, model: e.target.value })}
+                                            className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        >
+                                            {Object.entries(MODELS).map(([key, value]) => (
+                                                <option key={value} value={value}>{MODEL_LABELS[value] || key}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Late Policy */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Late Policy</label>
+                                        <div className="space-y-2">
+                                            {[
+                                                { id: 'strict', label: 'Strict' },
+                                                { id: 'grace_48h', label: '48h Grace' },
+                                                { id: 'class_end', label: 'Until Class End' }
+                                            ].map(policy => (
+                                                <label key={policy.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${settingsForm.late_policy === policy.id
+                                                    ? 'border-indigo-600 bg-indigo-50'
+                                                    : 'border-slate-200 hover:bg-slate-50'
+                                                    }`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="class_late_policy"
+                                                        value={policy.id}
+                                                        checked={settingsForm.late_policy === policy.id}
+                                                        onChange={(e) => setSettingsForm({ ...settingsForm, late_policy: e.target.value })}
+                                                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
+                                                    />
+                                                    <span className="font-bold text-sm text-slate-700">{policy.label}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* File Types */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Allowed Files</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {['pdf', 'docx', 'txt', 'jpg', 'png', 'zip'].map(type => (
+                                                <label key={type} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer ${settingsForm.allowed_file_types.includes(type)
+                                                    ? 'border-indigo-600 bg-indigo-50'
+                                                    : 'border-slate-200 hover:bg-slate-50'
+                                                    }`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={settingsForm.allowed_file_types.includes(type)}
+                                                        onChange={() => toggleFileType(type)}
+                                                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                    />
+                                                    <span className="font-bold text-xs uppercase text-slate-700">{type}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowSettingsModal(false)}
+                                    className="px-5 py-2.5 text-slate-500 font-bold text-sm hover:text-slate-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={saveSettings}
+                                    disabled={savingSettings}
+                                    className="px-6 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-black transition-all shadow-lg active:scale-95 flex items-center gap-2"
+                                >
+                                    {savingSettings ? 'Saving...' : 'Save Configuration'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }
