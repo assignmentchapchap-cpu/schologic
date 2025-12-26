@@ -18,8 +18,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No text provided" }, { status: 400 });
         }
 
-        // Default to RoBERTa if no model provided
-        const selectedModel = model || MODELS.ROBERTA_LARGE;
+        // Default to PirateXX (Database Default) if no model provided
+        const selectedModel = model || MODELS.AI_DETECTOR_PIRATE;
+        // Default to Weighted (Database Default) if no method provided
+        const selectedMethod = method || 'weighted';
         const units = granularity === 'sentence' ? splitIntoSentences(text) : splitIntoParagraphs(text);
 
         const results = [];
@@ -78,10 +80,10 @@ export async function POST(req: NextRequest) {
                 let contribution = 0;
                 let finalIsFlagged = false;
 
-                if (method === 'strict') {
+                if (selectedMethod === 'strict') {
                     finalIsFlagged = aiProb > 0.9;
                     contribution = finalIsFlagged ? words : 0;
-                } else if (method === 'weighted') {
+                } else if (selectedMethod === 'weighted') {
                     finalIsFlagged = aiProb > 0.5;
                     contribution = words * aiProb;
                 } else {
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest) {
                     contribution = finalIsFlagged ? words : 0;
                 }
 
-                if (finalIsFlagged || (method === 'weighted' && aiProb > 0.5)) {
+                if (finalIsFlagged || (selectedMethod === 'weighted' && aiProb > 0.5)) {
                     suspectedWords += contribution;
                 }
 
@@ -111,10 +113,10 @@ export async function POST(req: NextRequest) {
         const globalScore = totalWords > 0 ? Math.round((suspectedWords / totalWords) * 100) : 0;
 
         return NextResponse.json({
-            score: globalScore,
+            globalScore: globalScore,
             segments: results,
             totalWords: totalWords,
-            overallReason: `Analysis via ${selectedModel} (${method || 'binary'})`
+            overallReason: `Analysis via ${selectedModel} (${selectedMethod})`
         });
 
     } catch (error) {

@@ -1,16 +1,18 @@
 'use client';
 
 import { createClient } from '@/lib/supabase';
-import { Home, Plus, Calendar, Users, ArrowRight, X, GraduationCap, Lock, Unlock, AlertCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Home, Plus, Calendar, Users, ArrowRight, X, GraduationCap, AlertCircle } from 'lucide-react';
+import { useEffect, useState, Suspense } from 'react';
 import { isDateFuture, isDateAfter } from '@/lib/date-utils';
 import Link from 'next/link';
 import { Database } from '@/lib/database.types';
+import { useSearchParams } from 'next/navigation';
 
 type ClassItem = Database['public']['Tables']['classes']['Row'];
 
-export default function InstructorClassesPage() {
+function ClassesContent() {
     const supabase = createClient();
+    const searchParams = useSearchParams();
     const [user, setUser] = useState<any>(null);
     const [classes, setClasses] = useState<ClassItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -18,6 +20,8 @@ export default function InstructorClassesPage() {
     // Modal State
     const [creating, setCreating] = useState(false);
     const [newClassName, setNewClassName] = useState('');
+    const [classCode, setClassCode] = useState('');
+    const [codeError, setCodeError] = useState<string | undefined>(undefined);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
@@ -41,6 +45,13 @@ export default function InstructorClassesPage() {
         };
         getData();
     }, []);
+
+    // Auto-open modal if query param present
+    useEffect(() => {
+        if (searchParams.get('new') === 'true') {
+            setCreating(true);
+        }
+    }, [searchParams]);
 
     const createClass = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -77,6 +88,7 @@ export default function InstructorClassesPage() {
                         name: newClassName,
                         instructor_id: user.id,
                         invite_code: inviteCode,
+                        class_code: classCode || null,
                         start_date: startDate ? new Date(startDate).toISOString() : null,
                         end_date: endDate ? new Date(endDate).toISOString() : null
                     }
@@ -88,6 +100,7 @@ export default function InstructorClassesPage() {
 
             setClasses([data, ...classes]);
             setNewClassName('');
+            setClassCode('');
             setStartDate('');
             setEndDate('');
             setErrors({});
@@ -186,6 +199,34 @@ export default function InstructorClassesPage() {
                                         />
                                     </div>
                                 </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Class Code (Optional)</label>
+                                    <div className="relative">
+                                        <GraduationCap className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                                        <input
+                                            className={`w-full pl-10 p-3 border rounded-xl focus:ring-2 outline-none font-medium font-mono ${codeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
+                                            placeholder="e.g. BIO101"
+                                            value={classCode}
+                                            onChange={e => {
+                                                const val = e.target.value.toUpperCase();
+                                                if (val.length <= 8) {
+                                                    if (/^[A-Z0-9\-#/]*$/.test(val)) {
+                                                        setClassCode(val);
+                                                        if (codeError) setCodeError(undefined);
+                                                    } else {
+                                                        setCodeError('Only letters, numbers, -, #, / allowed');
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                        {codeError && (
+                                            <div className="flex items-start gap-1 mt-1 text-red-500 animate-fade-in">
+                                                <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                                <span className="text-xs font-medium">{codeError}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Start Date</label>
@@ -227,15 +268,28 @@ export default function InstructorClassesPage() {
                                     </div>
                                 </div>
                                 <div className="pt-4">
-                                    <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95">
+                                    <button
+                                        type="submit"
+                                        disabled={!!codeError}
+                                        className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
                                         Create Class
                                     </button>
                                 </div>
                             </form>
                         </div>
                     </div>
-                )}
-            </div>
-        </div>
+                )
+                }
+            </div >
+        </div >
+    );
+}
+
+export default function InstructorClassesPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-slate-50 p-8 flex items-center justify-center text-slate-400">Loading Classes...</div>}>
+            <ClassesContent />
+        </Suspense>
     );
 }

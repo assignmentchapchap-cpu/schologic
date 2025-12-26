@@ -19,6 +19,7 @@ export interface Database {
                     bio: string | null
                     avatar_url: string | null
                     preferences: Json | null
+                    registration_number: string | null
                 }
                 Insert: {
                     id: string
@@ -29,6 +30,7 @@ export interface Database {
                     bio?: string | null
                     avatar_url?: string | null
                     preferences?: Json | null
+                    registration_number?: string | null
                 }
                 Update: {
                     id?: string
@@ -39,6 +41,7 @@ export interface Database {
                     bio?: string | null
                     avatar_url?: string | null
                     preferences?: Json | null
+                    registration_number?: string | null
                 }
             }
             classes: {
@@ -52,6 +55,7 @@ export interface Database {
                     settings: Json | null
                     start_date: string | null
                     end_date: string | null
+                    class_code: string | null
                 }
                 Insert: {
                     id?: string
@@ -63,6 +67,7 @@ export interface Database {
                     settings?: Json | null
                     start_date?: string | null
                     end_date?: string | null
+                    class_code?: string | null
                 }
                 Update: {
                     id?: string
@@ -74,6 +79,7 @@ export interface Database {
                     settings?: Json | null
                     start_date?: string | null
                     end_date?: string | null
+                    class_code?: string | null
                 }
             }
             enrollments: {
@@ -105,6 +111,9 @@ export interface Database {
                     due_date: string | null
                     max_points: number
                     created_at: string
+                    short_code: string | null
+                    word_count: number | null
+                    reference_style: string | null
                 }
                 Insert: {
                     id?: string
@@ -114,6 +123,9 @@ export interface Database {
                     due_date?: string | null
                     max_points?: number
                     created_at?: string
+                    short_code?: string | null
+                    word_count?: number | null
+                    reference_style?: string | null
                 }
                 Update: {
                     id?: string
@@ -123,6 +135,9 @@ export interface Database {
                     due_date?: string | null
                     max_points?: number
                     created_at?: string
+                    short_code?: string | null
+                    word_count?: number | null
+                    reference_style?: string | null
                 }
             }
             class_resources: {

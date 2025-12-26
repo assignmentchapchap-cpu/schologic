@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
-import { ArrowRight, Loader2, Home } from 'lucide-react';
+import { ArrowRight, Loader2, Home, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function StudentLoginPage() {
     const [inviteCode, setInviteCode] = useState('');
     const [studentName, setStudentName] = useState('');
+    const [regNumber, setRegNumber] = useState('');
+    const [regError, setRegError] = useState<string | null>(null);
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -31,6 +33,7 @@ export default function StudentLoginPage() {
                     id: authData.user.id,
                     role: 'student',
                     full_name: studentName,
+                    registration_number: regNumber,
                     email: email,
                 }, { onConflict: 'id', ignoreDuplicates: true });
 
@@ -103,6 +106,31 @@ export default function StudentLoginPage() {
                             placeholder="John Doe"
                             required
                         />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Registration No</label>
+                        <input
+                            value={regNumber} onChange={e => {
+                                const val = e.target.value.toUpperCase();
+                                if (val.length <= 12) {
+                                    if (/^[A-Z0-9\-#/]*$/.test(val)) {
+                                        setRegNumber(val);
+                                        setRegError(null);
+                                    } else {
+                                        setRegError('Only letters, numbers, -, #, / allowed');
+                                    }
+                                }
+                            }}
+                            className={`w-full p-4 border rounded-xl focus:ring-2 outline-none transition-all font-mono ${regError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-emerald-500 focus:border-transparent'}`}
+                            placeholder="e.g. A001-1234/2023"
+                            required
+                        />
+                        {regError && (
+                            <div className="flex items-start gap-1 mt-1 text-red-500 animate-fade-in pl-1">
+                                <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                <span className="text-xs font-medium">{regError}</span>
+                            </div>
+                        )}
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email (Optional)</label>

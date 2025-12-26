@@ -18,6 +18,10 @@ type AssignmentDetails = Database['public']['Tables']['assignments']['Row'] & {
             settings: any;
         } | null;
     } | null;
+} & {
+    word_count: number | null;
+    reference_style: string | null;
+    short_code: string | null;
 };
 
 type SubmissionDetails = Database['public']['Tables']['submissions']['Row'];
@@ -234,7 +238,7 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
                     className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 mb-8 transition-colors font-medium text-sm"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    {assignment ? 'Back to Class' : 'Back to Dashboard'}
+                    {assignment ? 'Back to Class Dashboard' : 'Back to Home'}
                 </Link>
 
                 {/* Assignment Details Card */}
@@ -246,153 +250,177 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
                                 <p className="text-slate-500 font-medium">{assignment?.classes?.name}</p>
                             </div>
                             <div className="text-right">
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${new Date(assignment?.due_date!) < new Date()
-                                    ? 'bg-red-50 text-red-600 border-red-100'
-                                    : 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                    }`}>
-                                    <Calendar className="w-3 h-3" />
-                                    Due: {assignment?.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No Date'}
-                                </span>
-                                <div className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                    {assignment?.max_points} Points
+                                <div className="flex flex-col items-end gap-2">
+                                    <div className="flex items-center gap-2">
+                                        {assignment?.short_code && (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                                ID: {assignment.short_code}
+                                            </span>
+                                        )}
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border ${new Date(assignment?.due_date!) < new Date()
+                                            ? 'bg-red-50 text-red-600 border-red-100'
+                                            : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                            }`}>
+                                            <Calendar className="w-3.5 h-3.5" />
+                                            {new Date(assignment?.due_date!).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {assignment?.word_count && (
+                                            <span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                                                Max {assignment.word_count} words
+                                            </span>
+                                        )}
+                                        {assignment?.reference_style && (
+                                            <span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                                                {assignment.reference_style}
+                                            </span>
+                                        )}
+                                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
+                                            {assignment?.max_points} Pts
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        {assignment?.description && (
-                            <div className="bg-white p-4 rounded-xl border border-slate-200 text-slate-600 text-sm leading-relaxed">
-                                {assignment.description}
-                            </div>
-                        )}
                     </div>
-
-                    {/* Action Bar */}
-                    <div className="p-6 bg-white flex justify-end items-center gap-4">
-                        {submission ? (
-                            <div className="flex items-center gap-4 w-full justify-between">
-                                <div className="flex items-center gap-2 text-emerald-600 font-bold px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100">
-                                    <CheckCircle className="w-5 h-5" />
-                                    <span>Assignment Submitted</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    {submission.grade !== null ? (
-                                        <span className="font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-                                            Grade: {submission.grade}/{assignment?.max_points}
-                                        </span>
-                                    ) : (
-                                        <span className="text-xs font-medium text-slate-400 italic bg-slate-50 px-3 py-1.5 rounded-lg">
-                                            Not yet graded
-                                        </span>
-                                    )}
-                                    <button
-                                        onClick={() => setShowReport(true)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-100 transition-colors text-sm"
-                                    >
-                                        <Eye className="w-4 h-4" /> View AI Report
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => setShowSubmission(!showSubmission)}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${showSubmission
-                                    ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                    : 'bg-emerald-600 text-white shadow-lg hover:shadow-emerald-200 hover:bg-emerald-700'
-                                    }`}
-                            >
-                                {showSubmission ? (
-                                    <>Cancel Submission <ChevronUp className="w-4 h-4" /></>
-                                ) : (
-                                    <>Submit Work <ChevronDown className="w-4 h-4" /></>
-                                )}
-                            </button>
-                        )}
-                    </div>
+                    {assignment?.description && (
+                        <div className="bg-white p-4 rounded-xl border border-slate-200 text-slate-600 text-sm leading-relaxed">
+                            {assignment.description}
+                        </div>
+                    )}
                 </div>
 
-                {/* Expanded Submission Area (Only if not submitted) */}
-                {showSubmission && !submission && (
-                    <div className="bg-white rounded-3xl shadow-xl border border-emerald-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                        <div className="p-8">
-                            <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                <FileText className="w-6 h-6 text-emerald-600" /> New Submission
-                            </h2>
-
-                            {analyzing || uploading ? (
-                                <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                                    <Loader2 className="w-12 h-12 mx-auto text-emerald-500 animate-spin mb-4" />
-                                    <h3 className="text-lg font-bold text-slate-800 mb-1">Analyzing Submission...</h3>
-                                    <p className="text-slate-500 text-sm">Scanning document patterns...</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <label className="cursor-pointer block relative group">
-                                            <input type="radio" name="method" className="peer sr-only" defaultChecked />
-                                            <div className="p-6 rounded-2xl border-2 border-slate-200 peer-checked:border-indigo-500 peer-checked:bg-indigo-50/30 transition-all text-center h-full flex flex-col items-center justify-center gap-3">
-                                                <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl peer-checked:bg-indigo-600 peer-checked:text-white transition-colors">
-                                                    <Type className="w-6 h-6" />
-                                                </div>
-                                                <span className="font-bold text-slate-700">Paste Text</span>
-                                            </div>
-                                        </label>
-                                        <label className="cursor-pointer block relative group">
-                                            <input type="file" className="sr-only" accept=".docx" onChange={handleFileUpload} />
-                                            <div className="p-6 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 transition-all text-center h-full flex flex-col items-center justify-center gap-3">
-                                                <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                                                    <Upload className="w-6 h-6" />
-                                                </div>
-                                                <span className="font-bold text-slate-700">Upload .docx</span>
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    <div className="relative">
-                                        <textarea
-                                            value={textInput}
-                                            onChange={e => setTextInput(e.target.value)}
-                                            className="w-full h-64 p-4 border border-slate-200 rounded-2xl resize-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none transition-all font-medium text-slate-600"
-                                            placeholder="Paste your essay here..."
-                                        />
-                                        <div className="absolute bottom-4 right-4">
-                                            <button
-                                                disabled={!textInput.trim()}
-                                                onClick={() => handleSubmission(textInput)}
-                                                className="bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:shadow-none active:scale-95 flex items-center gap-2"
-                                            >
-                                                <CheckCircle className="w-4 h-4" /> Analyze & Submit
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                {/* Action Bar */}
+                <div className="p-6 bg-white flex justify-end items-center gap-4">
+                    {submission ? (
+                        <div className="flex items-center gap-4 w-full justify-between">
+                            <div className="flex items-center gap-2 text-emerald-600 font-bold px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100">
+                                <CheckCircle className="w-5 h-5" />
+                                <span>Assignment Submitted</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                {submission.grade !== null ? (
+                                    <span className="font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                                        Grade: {submission.grade}/{assignment?.max_points}
+                                    </span>
+                                ) : (
+                                    <span className="text-xs font-medium text-slate-400 italic bg-slate-50 px-3 py-1.5 rounded-lg">
+                                        Not yet graded
+                                    </span>
+                                )}
+                                <button
+                                    onClick={() => setShowReport(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-100 transition-colors text-sm"
+                                >
+                                    <Eye className="w-4 h-4" /> View AI Report
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <button
+                            onClick={() => setShowSubmission(!showSubmission)}
+                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${showSubmission
+                                ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                : 'bg-emerald-600 text-white shadow-lg hover:shadow-emerald-200 hover:bg-emerald-700'
+                                }`}
+                        >
+                            {showSubmission ? (
+                                <>Cancel Submission <ChevronUp className="w-4 h-4" /></>
+                            ) : (
+                                <>Submit Work <ChevronDown className="w-4 h-4" /></>
+                            )}
+                        </button>
+                    )}
+                </div>
             </div>
 
-            {/* Report Modal */}
-            {showReport && submission && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                            <h2 className="text-xl font-bold text-slate-800">AI Analysis Report</h2>
-                            <button
-                                onClick={() => setShowReport(false)}
-                                className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-                        <div className="p-6 overflow-y-auto">
-                            <ReportView
-                                score={submission.ai_score || 0}
-                                reportData={submission.report_data as any || {}}
-                                readOnly={true}
-                            />
-                        </div>
+            {/* Expanded Submission Area (Only if not submitted) */}
+            {showSubmission && !submission && (
+                <div className="bg-white rounded-3xl shadow-xl border border-emerald-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="p-8">
+                        <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <FileText className="w-6 h-6 text-emerald-600" /> New Submission
+                        </h2>
+
+                        {analyzing || uploading ? (
+                            <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                <Loader2 className="w-12 h-12 mx-auto text-emerald-500 animate-spin mb-4" />
+                                <h3 className="text-lg font-bold text-slate-800 mb-1">Analyzing Submission...</h3>
+                                <p className="text-slate-500 text-sm">Scanning document patterns...</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <label className="cursor-pointer block relative group">
+                                        <input type="radio" name="method" className="peer sr-only" defaultChecked />
+                                        <div className="p-6 rounded-2xl border-2 border-slate-200 peer-checked:border-indigo-500 peer-checked:bg-indigo-50/30 transition-all text-center h-full flex flex-col items-center justify-center gap-3">
+                                            <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl peer-checked:bg-indigo-600 peer-checked:text-white transition-colors">
+                                                <Type className="w-6 h-6" />
+                                            </div>
+                                            <span className="font-bold text-slate-700">Paste Text</span>
+                                        </div>
+                                    </label>
+                                    <label className="cursor-pointer block relative group">
+                                        <input type="file" className="sr-only" accept=".docx" onChange={handleFileUpload} />
+                                        <div className="p-6 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 transition-all text-center h-full flex flex-col items-center justify-center gap-3">
+                                            <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                                <Upload className="w-6 h-6" />
+                                            </div>
+                                            <span className="font-bold text-slate-700">Upload .docx</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div className="relative">
+                                    <textarea
+                                        value={textInput}
+                                        onChange={e => setTextInput(e.target.value)}
+                                        className="w-full h-64 p-4 border border-slate-200 rounded-2xl resize-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none transition-all font-medium text-slate-600"
+                                        placeholder="Paste your essay here..."
+                                    />
+                                    <div className="absolute bottom-4 right-4">
+                                        <button
+                                            disabled={!textInput.trim()}
+                                            onClick={() => handleSubmission(textInput)}
+                                            className="bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:shadow-none active:scale-95 flex items-center gap-2"
+                                        >
+                                            <CheckCircle className="w-4 h-4" /> Analyze & Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
+
+
+            {/* Report Modal */}
+            {
+                showReport && submission && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                                <h2 className="text-xl font-bold text-slate-800">AI Analysis Report</h2>
+                                <button
+                                    onClick={() => setShowReport(false)}
+                                    className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="p-6 overflow-y-auto">
+                                <ReportView
+                                    score={submission!.ai_score || 0}
+                                    reportData={submission!.report_data as any || {}}
+                                    readOnly={true}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
         </div>
     );
 }
