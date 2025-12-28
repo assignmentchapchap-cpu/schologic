@@ -442,6 +442,58 @@ function DashboardContent() {
                     </div>
                 </header>
 
+                {/* Mobile Search Results */}
+                {searchQuery && (
+                    <div className="md:hidden mb-8 animate-in fade-in slide-in-from-top-2">
+                        {searchResults.length === 0 ? (
+                            <div className="p-8 text-center bg-white rounded-2xl border border-slate-200">
+                                <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                <p className="text-slate-500 font-medium">No results found for "{searchQuery}"</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider px-1">Search Results</h3>
+
+                                {searchResults.map((item) => (
+                                    <div
+                                        key={`${item.type}-${item.id}`}
+                                        onClick={() => {
+                                            if (item.type === 'student') {
+                                                router.push(`/instructor/class/${item.classId}?tab=students`);
+                                            } else if (item.url && item.url !== '#') {
+                                                router.push(item.url);
+                                            }
+                                        }}
+                                        className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4 active:scale-[0.98] transition-all"
+                                    >
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.type === 'class' ? 'bg-indigo-50 text-indigo-600' :
+                                                item.type === 'assignment' ? 'bg-emerald-50 text-emerald-600' :
+                                                    item.type === 'event' ? 'bg-blue-50 text-blue-600' :
+                                                        'bg-slate-100 text-slate-500' // student default
+                                            }`}>
+                                            {item.type === 'class' && <Home className="w-5 h-5" />}
+                                            {item.type === 'assignment' && <FileText className="w-5 h-5" />}
+                                            {item.type === 'event' && <CalendarIcon className="w-5 h-5" />}
+                                            {item.type === 'student' && (item.image ?
+                                                <img src={item.image} alt={item.title} className="w-full h-full object-cover rounded-xl" /> :
+                                                <span className="font-bold text-xs">{item.title.substring(0, 1)}</span>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-800 text-sm line-clamp-1">{item.title}</h4>
+                                            <p className="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">
+                                                <span className="uppercase text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mr-2">{item.type}</span>
+                                                {item.subtitle}
+                                            </p>
+                                        </div>
+                                        <ChevronRight className="w-5 h-5 text-slate-300 ml-auto" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* --- Row 1: High-Level Stats --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-in mb-8">
                     {/* Card 1: Classes & Assignments */}

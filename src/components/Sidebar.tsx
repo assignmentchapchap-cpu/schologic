@@ -45,8 +45,8 @@ export default function Sidebar({ role }: SidebarProps) {
         { href: '/profile', label: 'Profile', icon: User },
     ] : [
         { href: '/student/dashboard', label: 'Dashboard', icon: Home },
+        { href: '/student/classes', label: 'My Classes', icon: GraduationCap },
         { href: '/student/grades', label: 'My Grades', icon: FileText },
-        { href: '/student/submit', label: 'Submit Work', icon: Upload },
         { href: '/profile', label: 'Profile', icon: User },
     ];
 
@@ -59,7 +59,8 @@ export default function Sidebar({ role }: SidebarProps) {
 
     const handleMobileSearch = () => {
         // Navigate to dashboard with search param to trigger search overlay
-        router.push('/instructor/dashboard?mobile_search=true');
+        const path = role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard';
+        router.push(`${path}?mobile_search=true`);
     };
 
     return (
@@ -74,12 +75,15 @@ export default function Sidebar({ role }: SidebarProps) {
                     >
                         <Menu className="h-6 w-6" />
                     </button>
-                    <div className="flex items-center gap-2">
+                    <Link href={role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard'} className="flex items-center gap-2">
                         <div className="bg-indigo-600 p-1 rounded-lg">
                             <GraduationCap className="h-4 w-4 text-white" />
                         </div>
-                        <span className="font-bold text-lg tracking-tight">ScholarSync</span>
-                    </div>
+                        <div className="flex flex-col">
+                            <span className="font-bold text-lg tracking-tight block leading-none text-white">ScholarSync</span>
+                            <span className="text-xs font-bold text-slate-200 uppercase tracking-widest block leading-none mt-1">{role}</span>
+                        </div>
+                    </Link>
                 </div>
 
                 {/* Mobile Global Actions */}
@@ -90,13 +94,15 @@ export default function Sidebar({ role }: SidebarProps) {
                     >
                         <Search className="w-5 h-5" />
                     </button>
-                    <Link
-                        href="/instructor/classes?new=true"
-                        className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-lg shadow-indigo-900/20"
-                    >
-                        <Plus className="w-3.5 h-3.5" />
-                        Class
-                    </Link>
+                    {role === 'instructor' && (
+                        <Link
+                            href="/instructor/classes?new=true"
+                            className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-lg shadow-indigo-900/20"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            Class
+                        </Link>
+                    )}
                     <NotificationBell />
                 </div>
             </div>

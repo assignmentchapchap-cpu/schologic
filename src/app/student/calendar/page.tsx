@@ -139,7 +139,7 @@ export default function StudentCalendarPage() {
                                             {dayAssignments.map(assign => (
                                                 <Link
                                                     key={assign.id}
-                                                    href={`/student/submit?assignmentId=${assign.id}`}
+                                                    href={`/student/assignment/${assign.id}`}
                                                     className="block text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-1 rounded border border-emerald-100 hover:border-emerald-300 truncate transition-all"
                                                     title={`${assign.title} (${assign.class_name})`}
                                                 >
@@ -167,7 +167,7 @@ export default function StudentCalendarPage() {
                                     .map(assign => (
                                         <div key={assign.id} className="pb-3 border-b border-slate-50 last:border-0 last:pb-0">
                                             <p className="text-xs font-bold text-slate-400 uppercase mb-0.5">{new Date(assign.due_date).toLocaleDateString()}</p>
-                                            <Link href={`/student/submit?assignmentId=${assign.id}`} className="font-bold text-slate-800 hover:text-indigo-600 transition-colors block mb-0.5">
+                                            <Link href={`/student/assignment/${assign.id}`} className="font-bold text-slate-800 hover:text-indigo-600 transition-colors block mb-0.5">
                                                 {assign.title}
                                             </Link>
                                             <p className="text-xs text-slate-500">{assign.class_name}</p>
