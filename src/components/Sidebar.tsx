@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Terminal, User, Upload, LogOut, GraduationCap, Calendar, Settings, FileText } from 'lucide-react';
+import { Home, Terminal, User, Upload, LogOut, GraduationCap, Calendar, Settings, FileText, Menu, X, Search, Plus, Bell } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import NotificationBell from './NotificationBell';
 import { createClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -48,26 +50,94 @@ export default function Sidebar({ role }: SidebarProps) {
         { href: '/profile', label: 'Profile', icon: User },
     ];
 
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+    // Close mobile menu when route changes
+    useEffect(() => {
+        setIsMobileOpen(false);
+    }, [pathname]);
+
+    const handleMobileSearch = () => {
+        // Navigate to dashboard with search param to trigger search overlay
+        router.push('/instructor/dashboard?mobile_search=true');
+    };
+
     return (
         <>
-            {/* Desktop Sidebar */}
-            <aside className="fixed left-0 top-0 z-40 h-screen w-64 -translate-x-full transition-transform md:translate-x-0 bg-slate-900 text-white border-r border-slate-800">
+            {/* Mobile Top Bar */}
+            <div className="md:hidden sticky top-0 z-40 bg-slate-900/95 backdrop-blur text-white p-3 flex items-center justify-between border-b border-slate-800 shadow-sm">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setIsMobileOpen(true)}
+                        className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                        aria-label="Open Menu"
+                    >
+                        <Menu className="h-6 w-6" />
+                    </button>
+                    <div className="flex items-center gap-2">
+                        <div className="bg-indigo-600 p-1 rounded-lg">
+                            <GraduationCap className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="font-bold text-lg tracking-tight">ScholarSync</span>
+                    </div>
+                </div>
+
+                {/* Mobile Global Actions */}
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleMobileSearch}
+                        className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white"
+                    >
+                        <Search className="w-5 h-5" />
+                    </button>
+                    <Link
+                        href="/instructor/classes?new=true"
+                        className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-lg shadow-indigo-900/20"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        Class
+                    </Link>
+                    <NotificationBell />
+                </div>
+            </div>
+
+            {/* Backdrop for Mobile */}
+            {isMobileOpen && (
+                <div
+                    className="fixed inset-0 bg-black/10 z-40 md:hidden backdrop-blur-[1px] animate-fade-in"
+                    onClick={() => setIsMobileOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={cn(
+                "fixed left-0 top-0 z-50 h-screen w-[240px] md:w-64 bg-slate-900 text-white border-r border-slate-800 transition-transform duration-300 ease-in-out font-sans shadow-2xl md:shadow-none",
+                isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+            )}>
                 <div className="flex h-full flex-col">
                     {/* Logo Area */}
-                    <div className="flex items-center gap-3 p-6 border-b border-slate-800">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-900/20">
-                            <GraduationCap className="h-6 w-6" />
+                    <div className="flex items-center justify-between p-6 border-b border-slate-800">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-900/20">
+                                <GraduationCap className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-bold tracking-tight">ScholarSync</h1>
+                                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{role}</p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-lg font-bold tracking-tight">ScholarSync</h1>
-                            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{role}</p>
-                        </div>
+                        {/* Close Button Mobile */}
+                        <button
+                            onClick={() => setIsMobileOpen(false)}
+                            className="md:hidden p-1 text-slate-400 hover:text-white transition-colors"
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 space-y-1 px-4 py-8">
+                    <nav className="flex-1 space-y-1 px-4 py-8 overflow-y-auto">
                         {links.map((link) => {
-                            // Check active state exact or sub-path
                             const isActive = pathname === link.href || (link.href !== '/profile' && pathname?.startsWith(link.href));
 
                             return (
@@ -75,7 +145,7 @@ export default function Sidebar({ role }: SidebarProps) {
                                     key={link.href}
                                     href={link.href}
                                     className={cn(
-                                        "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group",
+                                        "flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group",
                                         isActive
                                             ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/20"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800"
@@ -92,7 +162,7 @@ export default function Sidebar({ role }: SidebarProps) {
                     <div className="p-4 border-t border-slate-800">
                         <button
                             onClick={handleSignOut}
-                            className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-xl transition-all"
+                            className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-xl transition-all"
                         >
                             <LogOut className="h-5 w-5" />
                             Sign Out
@@ -100,13 +170,6 @@ export default function Sidebar({ role }: SidebarProps) {
                     </div>
                 </div>
             </aside>
-
-            {/* Mobile Header (Visible only on small screens) */}
-            {/* NOTE: For simplicity in MVP, we might rely on the main page content padding, 
-                but let's add a small hamburger trigger or just rely on the existing layout structure. 
-                For this MVP step, I will stick to the Desktop Sidebar and ensure MD+ works perfectly.
-                Mobile users often need a dedicated drawer, but let's ensure the desktop layout doesn't break first.
-            */}
         </>
     );
 }

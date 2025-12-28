@@ -2,10 +2,12 @@
 
 import { useEffect, useState, use } from 'react';
 import { createClient } from '@/lib/supabase';
+import { useToast } from '@/context/ToastContext';
 import {
     Users, FileText, Calendar, Settings, Plus, MoreVertical, Trash2,
     ExternalLink, Search, Filter, ArrowLeft, Clock, CheckCircle, Download,
-    X, Lock, Unlock, AlertCircle, ChevronRight, Loader2, BookOpen, Edit, Shield, PlayCircle, Copy, Check
+    X, Lock, Unlock, AlertCircle, ChevronRight, Loader2, BookOpen, Edit, Shield, PlayCircle, Copy, Check, ChevronUp, ChevronDown, ArrowUpRight,
+    Eye, EyeOff
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -30,17 +32,17 @@ type EnrollmentProfile = {
     } | null; // Join result
 };
 
-export default function ClassDetailsParams({ params }: { params: Promise<{ classId: string }> }) {
+export default function ClassDetailsPage({ params }: { params: Promise<{ classId: string }> }) {
     const { classId } = use(params);
-    return <ClassDetails classId={classId} />
-
+    return <ClassDetailsContent classId={classId} />;
 }
 
-function ClassDetails({ classId }: { classId: string }) {
+function ClassDetailsContent({ classId }: { classId: string }) {
 
     const supabase = createClient();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { showToast } = useToast();
     const initialTab = searchParams.get('tab') as 'overview' | 'assignments' | 'resources' || 'overview';
 
 
@@ -165,6 +167,9 @@ function ClassDetails({ classId }: { classId: string }) {
     const [gradesSort, setGradesSort] = useState<'name' | 'score_high' | 'score_low' | 'ai_high' | 'ai_low'>('name');
     const [gradesFilter, setGradesFilter] = useState<'all' | 'passing' | 'failing' | 'missing_submissions' | 'needs_grading'>('all');
     const [copied, setCopied] = useState(false);
+    const [isHeaderExpanded, setIsHeaderExpanded] = useState(true);
+    const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+    const [showMobileNames, setShowMobileNames] = useState(true);
 
     // Edit Class State
     const [showEditClassModal, setShowEditClassModal] = useState(false);
@@ -265,9 +270,9 @@ function ClassDetails({ classId }: { classId: string }) {
 
             setClassData(data);
             setShowEditClassModal(false);
-            alert("Class Details Updated!");
+            showToast("Class Details Updated!", 'success');
         } catch (err: any) {
-            alert("Error updating class: " + err.message);
+            showToast("Error updating class: " + err.message, 'error');
         } finally {
             setSavingClass(false);
         }
@@ -397,7 +402,7 @@ function ClassDetails({ classId }: { classId: string }) {
                 if (error) throw error;
 
                 setAssignments(assignments.map(a => a.id === updated.id ? updated : a));
-                alert("Assignment Updated!");
+                showToast("Assignment Updated!", 'success');
             } else {
                 // Create new
                 const { data: created, error } = await supabase
@@ -408,13 +413,13 @@ function ClassDetails({ classId }: { classId: string }) {
 
                 if (error) throw error;
                 setAssignments([...assignments, created]);
-                alert("Assignment Created!");
+                showToast("Assignment Created Successfully!", 'success');
             }
 
             setIsCreatingAssignment(false);
             setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
         } catch (err: any) {
-            alert("Error saving assignment: " + err.message);
+            showToast("Error saving assignment: " + err.message, 'error');
         }
     };
 
@@ -437,9 +442,9 @@ function ClassDetails({ classId }: { classId: string }) {
             setResources([data, ...resources]);
             setIsCreatingResource(false);
             setNewResource({ title: '', content: '', file_url: '' });
-            alert("Resource Added!");
+            showToast("Resource Added!", 'success');
         } catch (err: any) {
-            alert("Error adding resource: " + err.message);
+            showToast("Error adding resource: " + err.message, 'error');
         }
     };
 
@@ -492,10 +497,10 @@ function ClassDetails({ classId }: { classId: string }) {
             }
 
             setShowSettingsModal(false);
-            alert("Class Settings Saved!");
+            showToast("Class Settings Saved!", 'success');
         } catch (err) {
             console.error("Error saving settings", err);
-            alert("Failed to save settings");
+            showToast("Failed to save settings", 'error');
         } finally {
             setSavingSettings(false);
         }
@@ -511,11 +516,16 @@ function ClassDetails({ classId }: { classId: string }) {
         });
     };
 
-    const handleCopyCode = () => {
+    const handleCopyCode = async () => {
         if (!classData?.invite_code) return;
-        navigator.clipboard.writeText(classData.invite_code);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        try {
+            await navigator.clipboard.writeText(classData.invite_code);
+            setCopied(true);
+            showToast('Class code copied!', 'success');
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            showToast('Failed to copy code.', 'error');
+        }
     };
 
     const exportToPDF = () => {
@@ -580,7 +590,7 @@ function ClassDetails({ classId }: { classId: string }) {
     if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8"><span className="text-slate-500 font-bold animate-pulse">Loading Class Data...</span></div>;
 
     return (
-        <div className="min-h-screen bg-slate-50 p-6 md:p-8">
+        <div className="min-h-screen bg-slate-50 p-2 md:p-8">
             <div className="max-w-6xl mx-auto">
                 <Link href="/instructor/classes" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 mb-6 transition-colors font-medium text-sm">
                     <ArrowLeft className="w-4 h-4" /> Back to Classes
@@ -589,26 +599,66 @@ function ClassDetails({ classId }: { classId: string }) {
                 {/* Header */}
                 <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                     {/* Header */}
-                    <div className="p-8 border-b border-slate-100 bg-white">
-                        <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-                            {/* Left: Title & Info */}
-                            <div>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-                                        <span>
+                    <div className="p-4 md:p-8 border-b border-slate-100 bg-white">
+                        <div className="flex flex-col gap-3 animate-fade-in">
+                            {/* Row 1: Title & Actions */}
+                            <div className="flex justify-between items-start gap-4">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <h1 className="text-xl md:text-3xl font-bold text-slate-900 flex items-center gap-2 truncate">
+                                        <span className="truncate">
                                             <span className="text-indigo-600">{classData?.class_code}:</span> {classData?.name}
                                         </span>
-                                        <button
-                                            onClick={() => setShowEditClassModal(true)}
-                                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all opacity-100"
-                                            title="Edit Class Details"
-                                        >
-                                            <Edit className="w-5 h-5" />
-                                        </button>
                                     </h1>
-
+                                    <button
+                                        onClick={() => setShowEditClassModal(true)}
+                                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all shrink-0"
+                                        title="Edit Class Details"
+                                    >
+                                        <Edit className="w-5 h-5" />
+                                    </button>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-medium">
+
+                                {/* Actions */}
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <button
+                                        onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                                        className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors md:hidden"
+                                        title={isHeaderExpanded ? "Collapse Header" : "Expand Header"}
+                                    >
+                                        {isHeaderExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowSettingsModal(true)}
+                                        className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
+                                        title="Class Settings"
+                                    >
+                                        <Settings className="w-5 h-5" />
+                                    </button>
+                                    {/* Lock/Active button - keep visible always? User said "leaving the first row only". Yes, keep row 1 intact. */}
+                                    <button
+                                        onClick={toggleLock}
+                                        className={`px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 border shadow-sm ${classData?.is_locked
+                                            ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100'
+                                            : 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
+                                            }`}
+                                        title={classData?.is_locked ? "Click to Unlock Class" : "Click to Lock Class"}
+                                    >
+                                        {classData?.is_locked ? (
+                                            <>
+                                                <Lock className="w-3 h-3 md:w-4 md:h-4" /> <span className="hidden md:inline">Locked</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Unlock className="w-3 h-3 md:w-4 md:h-4" /> <span className="hidden md:inline">Active</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Row 2: Metadata (Collapsible) */}
+                            {isHeaderExpanded && (
+                                <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm text-slate-500 font-medium animate-slide-in">
                                     <button
                                         onClick={() => setShowStudentsModal(true)}
                                         className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900 transition-all group"
@@ -627,60 +677,26 @@ function ClassDetails({ classId }: { classId: string }) {
                                         <span className="text-xs font-bold opacity-75 uppercase tracking-wider">CODE</span>
                                         <span className="font-mono font-bold select-all">{classData?.invite_code}</span>
                                         {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />}
-
-                                        {/* Tooltip feedback */}
-                                        <span className={`absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded shadow-lg transition-all ${copied ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 pointer-events-none'}`}>
-                                            Copied!
-                                        </span>
                                     </button>
                                     {classData?.start_date && (
-                                        <span className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                                        <span className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs md:text-sm">
                                             <Calendar className="w-4 h-4 text-slate-400" />
                                             {new Date(classData.start_date).toLocaleDateString()} - {new Date(classData.end_date!).toLocaleDateString()}
                                         </span>
                                     )}
                                 </div>
-                            </div>
-
-                            {/* Right: Actions */}
-                            <div className="flex items-center gap-3 shrink-0">
-                                <button
-                                    onClick={() => setShowSettingsModal(true)}
-                                    className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
-                                    title="Class Settings"
-                                >
-                                    <Settings className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={toggleLock}
-                                    className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 border shadow-sm ${classData?.is_locked
-                                        ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100'
-                                        : 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
-                                        }`}
-                                    title={classData?.is_locked ? "Click to Unlock Class" : "Click to Lock Class"}
-                                >
-                                    {classData?.is_locked ? (
-                                        <>
-                                            <Lock className="w-4 h-4" /> Locked
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Unlock className="w-4 h-4" /> Active
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 {/* Tabs Navigation */}
-                <div className="flex gap-1 bg-slate-200/50 p-1 rounded-xl mb-8 w-fit flex-wrap">
+                <div className="flex gap-1 bg-slate-200/50 p-0.5 rounded-xl mb-8 w-full md:w-fit">
                     {(['overview', 'assignments', 'resources', 'grades'] as const).map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`px-6 py-2.5 rounded-lg text-sm font-bold capitalize transition-all ${activeTab === tab
+                            className={`flex-1 md:flex-none px-2 py-2.5 rounded-lg text-sm font-bold capitalize transition-all ${activeTab === tab
                                 ? 'bg-white text-indigo-600 shadow-sm'
                                 : 'text-slate-500 hover:text-slate-700'
                                 }`}
@@ -704,33 +720,42 @@ function ClassDetails({ classId }: { classId: string }) {
                         {/* Assignments */}
                         <div
                             onClick={() => setShowAssignmentsModal(true)}
-                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all group"
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all group flex flex-col justify-between relative"
                         >
-                            <div className="flex items-center gap-3 mb-4">
+                            <div className="absolute top-4 right-4 text-slate-300 group-hover:text-emerald-500 transition-colors">
+                                <ArrowUpRight className="w-5 h-5" />
+                            </div>
+                            <div className="flex items-center gap-3 mb-3">
                                 <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors"><FileText className="w-5 h-5" /></div>
                                 <h3 className="font-bold text-slate-700 group-hover:text-emerald-700">Assignments</h3>
                             </div>
-                            <p className="text-4xl font-black text-slate-900">{assignments.length}</p>
+                            <div>
+                                <p className="text-3xl md:text-4xl font-black text-slate-900">{assignments.length}</p>
+                                <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Total Assignments</p>
+                            </div>
                         </div>
 
                         {/* Submissions (New & Ungraded) */}
                         <div
                             onClick={() => setShowSubmissionsModal(true)}
-                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group"
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group flex flex-col justify-between relative"
                         >
-                            <div className="flex items-center gap-3 mb-4">
+                            <div className="absolute top-4 right-4 text-slate-300 group-hover:text-blue-500 transition-colors">
+                                <ArrowUpRight className="w-5 h-5" />
+                            </div>
+                            <div className="flex items-center gap-3 mb-3">
                                 <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors"><Clock className="w-5 h-5" /></div>
                                 <h3 className="font-bold text-slate-700 group-hover:text-blue-700">Submissions</h3>
                             </div>
                             <div className="flex items-end justify-between">
                                 <div>
-                                    <p className="text-4xl font-black text-slate-900">{ungradedSubmissionsCount}</p>
-                                    <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-wider">Ungraded</p>
+                                    <p className="text-3xl md:text-4xl font-black text-slate-900">{ungradedSubmissionsCount}</p>
+                                    <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Ungraded</p>
                                 </div>
                                 {newSubmissionsCount > 0 && (
                                     <div className="text-right">
-                                        <p className="text-4xl font-black text-blue-600">+{newSubmissionsCount}</p>
-                                        <p className="text-xs text-blue-400 mt-2 font-bold uppercase tracking-wider">New</p>
+                                        <p className="text-3xl md:text-4xl font-black text-blue-600">+{newSubmissionsCount}</p>
+                                        <p className="text-xs text-blue-400 mt-1 font-bold uppercase tracking-wider">New</p>
                                     </div>
                                 )}
                             </div>
@@ -932,41 +957,41 @@ function ClassDetails({ classId }: { classId: string }) {
                     activeTab === 'assignments' && (
                         <div className="animate-fade-in space-y-6">
                             <div className="flex justify-between items-center">
-                                <h2 className="text-lg font-bold text-slate-800">Manage Assignments</h2>
+                                <h2 className="text-base md:text-xl font-bold text-slate-800">Manage Assignments</h2>
                                 <button
                                     onClick={() => {
                                         setIsCreatingAssignment(true);
                                         setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
                                     }}
-                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95"
+                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold transition-all shadow-md active:scale-95"
                                 >
-                                    <Plus className="w-4 h-4" /> Create Assignment
+                                    <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Create Assignment
                                 </button>
                             </div>
 
                             {isCreatingAssignment && (
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100 ring-4 ring-indigo-50/50 mb-6">
-                                    <h3 className="font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                                <div className="bg-white p-4 rounded-2xl shadow-sm border border-indigo-100 ring-4 ring-indigo-50/50 mb-6">
+                                    <h3 className="font-bold text-indigo-900 mb-3 flex items-center gap-2">
                                         <Plus className="w-4 h-4" /> {newAssignment.id ? 'Edit Assignment' : 'New Assignment'}
                                     </h3>
-                                    <form onSubmit={handleCreateAssignment} className="space-y-4">
-                                        <div className="grid md:grid-cols-2 gap-4">
+                                    <form onSubmit={handleCreateAssignment} className="space-y-3">
+                                        <div className="grid md:grid-cols-2 gap-3">
                                             <div className="col-span-2">
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Title</label>
+                                                <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Title</label>
                                                 <input
-                                                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
+                                                    className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-sm md:text-base"
                                                     placeholder="e.g. Midterm Essay"
                                                     value={newAssignment.title}
                                                     onChange={e => setNewAssignment({ ...newAssignment, title: e.target.value })}
                                                     required
                                                 />
                                             </div>
-                                            <div className="col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <div className="col-span-2 grid grid-cols-3 gap-3 md:gap-6">
                                                 <div>
-                                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Short Code</label>
+                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Short Code</label>
                                                     <input
-                                                        className={`w-full p-3 border rounded-xl focus:ring-2 outline-none font-bold font-mono ${shortCodeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
-                                                        placeholder="e.g. CAT 1"
+                                                        className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold font-mono text-sm md:text-base ${shortCodeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
+                                                        placeholder="CAT 1"
                                                         value={newAssignment.short_code || ''}
                                                         required
                                                         onChange={e => {
@@ -976,32 +1001,26 @@ function ClassDetails({ classId }: { classId: string }) {
                                                                     setNewAssignment({ ...newAssignment, short_code: val });
                                                                     setShortCodeError(null);
                                                                 } else {
-                                                                    setShortCodeError('Only letters, numbers, -, #, / allowed');
+                                                                    setShortCodeError('Invalid char');
                                                                 }
                                                             }
                                                         }}
                                                     />
-                                                    {shortCodeError && (
-                                                        <div className="flex items-start gap-1 mt-1 text-red-500 animate-fade-in">
-                                                            <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                                                            <span className="text-xs font-medium">{shortCodeError}</span>
-                                                        </div>
-                                                    )}
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Word Count</label>
+                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Word Count</label>
                                                     <input
                                                         type="number"
-                                                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
+                                                        className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-sm md:text-base"
                                                         placeholder="500"
                                                         value={newAssignment.word_count || ''}
                                                         onChange={e => setNewAssignment({ ...newAssignment, word_count: parseInt(e.target.value) || 0 })}
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Ref. Style</label>
+                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Style</label>
                                                     <select
-                                                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold bg-white"
+                                                        className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold bg-white text-sm md:text-base"
                                                         value={newAssignment.reference_style}
                                                         onChange={e => setNewAssignment({ ...newAssignment, reference_style: e.target.value })}
                                                     >
@@ -1013,60 +1032,78 @@ function ClassDetails({ classId }: { classId: string }) {
                                                     </select>
                                                 </div>
                                             </div>
+                                            {shortCodeError && (
+                                                <div className="col-span-2 flex items-start gap-1 -mt-1 text-red-500 animate-fade-in">
+                                                    <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                                    <span className="text-[10px] font-medium">{shortCodeError}</span>
+                                                </div>
+                                            )}
                                             <div className="col-span-2">
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label>
+                                                <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Description</label>
                                                 <textarea
-                                                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none"
-                                                    placeholder="Instructions for students..."
+                                                    className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none overflow-hidden min-h-[64px] max-h-[300px] text-sm md:text-base"
+                                                    placeholder="Instructions..."
                                                     value={newAssignment.description}
+                                                    maxLength={1000}
                                                     onChange={e => setNewAssignment({ ...newAssignment, description: e.target.value })}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Due Date</label>
-                                                <input
-                                                    type="datetime-local"
-                                                    className={`w-full p-3 border rounded-xl focus:ring-2 outline-none text-slate-600 font-medium ${dueDateError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
-                                                    value={newAssignment.due_date}
-                                                    onChange={e => {
-                                                        setNewAssignment({ ...newAssignment, due_date: e.target.value });
-                                                        if (dueDateError) setDueDateError(null);
+                                                    onInput={(e) => {
+                                                        e.currentTarget.style.height = 'auto';
+                                                        e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
                                                     }}
                                                 />
-                                                {dueDateError && (
-                                                    <div className="flex items-start gap-1 mt-1 text-red-500 animate-fade-in">
-                                                        <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                                                        <span className="text-xs font-medium">{dueDateError}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Max Points</label>
-                                                <div className="relative">
-                                                    <input
-                                                        type="number"
-                                                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold pr-16"
-                                                        placeholder="100"
-                                                        value={newAssignment.max_points}
-                                                        onChange={e => setNewAssignment({ ...newAssignment, max_points: parseInt(e.target.value) })}
-                                                        required
-                                                    />
-                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold pointer-events-none">/ 100</span>
+                                                <div className="text-right text-[10px] md:text-xs text-slate-400 mt-1 font-mono">
+                                                    {(newAssignment.description || '').length}/1000
                                                 </div>
                                             </div>
+
+                                            {/* Due Date & Points Row */}
+                                            <div className="col-span-2 grid grid-cols-2 gap-3 md:gap-6">
+                                                <div>
+                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Due Date</label>
+                                                    <input
+                                                        type="datetime-local"
+                                                        className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none text-slate-600 font-medium text-xs md:text-sm ${dueDateError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
+                                                        value={newAssignment.due_date}
+                                                        onChange={e => {
+                                                            setNewAssignment({ ...newAssignment, due_date: e.target.value });
+                                                            if (dueDateError) setDueDateError(null);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Points</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold pr-12 text-sm md:text-base"
+                                                            placeholder="100"
+                                                            value={newAssignment.max_points}
+                                                            onChange={e => setNewAssignment({ ...newAssignment, max_points: parseInt(e.target.value) })}
+                                                            required
+                                                        />
+                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs pointer-events-none">/ 100</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {dueDateError && (
+                                                <div className="col-span-2 flex items-start gap-1 -mt-1 text-red-500 animate-fade-in">
+                                                    <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                                    <span className="text-[10px] font-medium">{dueDateError}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="flex justify-end gap-3 pt-4">
+                                        <div className="flex justify-end gap-3 pt-2 md:pt-6">
                                             <button
                                                 type="button"
                                                 onClick={() => {
                                                     setIsCreatingAssignment(false);
                                                     setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
                                                 }}
-                                                className="px-4 py-2 text-slate-500 hover:text-slate-700 font-bold text-sm"
+                                                className="px-3 py-2 md:px-6 md:py-2.5 text-slate-500 hover:text-slate-700 font-bold text-xs md:text-sm transition-colors"
                                             >
                                                 Cancel
                                             </button>
-                                            <button className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg">
+                                            <button className="bg-indigo-600 text-white px-4 py-2 md:px-8 md:py-2.5 rounded-xl font-bold text-xs md:text-sm hover:bg-indigo-700 shadow-lg transition-transform active:scale-95">
                                                 {newAssignment.id ? 'Update' : 'Publish'} Assignment
                                             </button>
                                         </div>
@@ -1195,12 +1232,12 @@ function ClassDetails({ classId }: { classId: string }) {
                     activeTab === 'resources' && (
                         <div className="animate-fade-in space-y-6">
                             <div className="flex justify-between items-center">
-                                <h2 className="text-lg font-bold text-slate-800">Shared Files & Notes</h2>
+                                <h2 className="text-base md:text-xl font-bold text-slate-800">Shared Files & Notes</h2>
                                 <button
                                     onClick={() => setIsCreatingResource(true)}
-                                    className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-black transition-all shadow-md active:scale-95"
+                                    className="flex items-center gap-2 bg-slate-900 text-white px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold hover:bg-black transition-all shadow-md active:scale-95"
                                 >
-                                    <Plus className="w-4 h-4" /> Add Note
+                                    <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Add Note
                                 </button>
                             </div>
 
@@ -1288,52 +1325,133 @@ function ClassDetails({ classId }: { classId: string }) {
                         <div className="animate-fade-in space-y-6">
                             {/* Controls */}
                             {/* Controls */}
-                            <div className="flex flex-col md:flex-row justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                                <div className="relative flex-1 max-w-md">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            {/* Desktop Toolbar (Hidden on Mobile) */}
+                            <div className="hidden md:flex items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl flex-1 max-w-sm">
+                                    <Search className="w-4 h-4 text-slate-400" />
                                     <input
-                                        placeholder="Search by name or reg no..."
-                                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="Search by name or reg no"
+                                        className="bg-transparent outline-none text-sm font-bold text-slate-700 w-full"
                                         value={gradesSearch}
                                         onChange={(e) => setGradesSearch(e.target.value)}
                                     />
                                 </div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-xs font-bold text-slate-500 uppercase">Filter:</span>
-                                    <select
-                                        className="p-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                                        value={gradesFilter}
-                                        onChange={(e) => setGradesFilter(e.target.value as any)}
-                                    >
-                                        <option value="all">All Students</option>
-                                        <option value="passing">Passing ({'>'}= 50%)</option>
-                                        <option value="failing">Failing ({'<'} 50%)</option>
-                                        <option value="missing_submissions">Missing Submissions</option>
-                                        <option value="needs_grading">Needs Grading</option>
-                                    </select>
 
-                                    <div className="w-px h-6 bg-slate-200 mx-2"></div>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">FILTER:</span>
+                                        <div className="relative">
+                                            <select
+                                                className="appearance-none bg-slate-50 border border-slate-200 pl-3 pr-8 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
+                                                value={gradesFilter}
+                                                onChange={(e) => setGradesFilter(e.target.value as any)}
+                                            >
+                                                <option value="all">All Students</option>
+                                                <option value="passing">Passing</option>
+                                                <option value="failing">Failing</option>
+                                                <option value="missing_submissions">Missing</option>
+                                                <option value="needs_grading">Needs Grading</option>
+                                            </select>
+                                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        </div>
+                                    </div>
 
-                                    <span className="text-xs font-bold text-slate-500 uppercase">Sort:</span>
-                                    <select
-                                        className="p-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                                        value={gradesSort}
-                                        onChange={(e) => setGradesSort(e.target.value as any)}
-                                    >
-                                        <option value="name">Name (A-Z)</option>
-                                        <option value="score_high">Total Score (High-Low)</option>
-                                        <option value="score_low">Total Score (Low-High)</option>
-                                        <option value="ai_high">Avg AI % (High-Low)</option>
-                                        <option value="ai_low">Avg AI % (Low-High)</option>
-                                    </select>
+                                    <div className="w-px h-6 bg-slate-200"></div>
+
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">SORT:</span>
+                                        <div className="relative">
+                                            <select
+                                                className="appearance-none bg-slate-50 border border-slate-200 pl-3 pr-8 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
+                                                value={gradesSort}
+                                                onChange={(e) => setGradesSort(e.target.value as any)}
+                                            >
+                                                <option value="name">Name (A-Z)</option>
+                                                <option value="score_high">Score (High-Low)</option>
+                                                <option value="score_low">Score (Low-High)</option>
+                                                <option value="ai_high">AI (High-Low)</option>
+                                                <option value="ai_low">AI (Low-High)</option>
+                                            </select>
+                                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        </div>
+                                    </div>
 
                                     <button
                                         onClick={exportToPDF}
-                                        className="ml-2 flex items-center gap-2 bg-slate-900 text-white px-3 py-2 rounded-xl font-bold text-sm hover:bg-black transition-all shadow-md active:scale-95"
+                                        className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-black transition-all shadow-md active:scale-95 ml-2"
                                     >
-                                        <Download className="w-4 h-4" /> Export PDF
+                                        <Download className="w-4 h-4" />
+                                        <span className="font-bold text-sm">Export PDF</span>
                                     </button>
                                 </div>
+                            </div>
+
+                            {/* Mobile Toolbar (Hidden on Desktop) */}
+                            <div className="flex md:hidden items-center justify-between gap-2 bg-white p-2 md:p-4 rounded-2xl border border-slate-200 shadow-sm transition-all">
+                                {isSearchExpanded ? (
+                                    <div className="flex-1 flex items-center gap-2 animate-fade-in w-full">
+                                        <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                                        <input
+                                            autoFocus
+                                            placeholder="Search by name or reg no..."
+                                            className="flex-1 bg-transparent outline-none text-sm font-bold min-w-0"
+                                            value={gradesSearch}
+                                            onChange={(e) => setGradesSearch(e.target.value)}
+                                        />
+                                        <button
+                                            onClick={() => { setIsSearchExpanded(false); setGradesSearch(''); }}
+                                            className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 shrink-0"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-2 flex-1 overflow-x-auto no-scrollbar mask-grad-r">
+                                            <button
+                                                onClick={() => setIsSearchExpanded(true)}
+                                                className="p-2 md:p-2.5 text-slate-500 hover:bg-slate-50 rounded-lg shrink-0 transition-colors"
+                                                title="Search"
+                                            >
+                                                <Search className="w-4 h-4 md:w-5 md:h-5" />
+                                            </button>
+
+                                            <div className="w-px h-6 bg-slate-200 shrink-0"></div>
+
+                                            <select
+                                                className="p-2 md:p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-slate-600 min-w-fit"
+                                                value={gradesFilter}
+                                                onChange={(e) => setGradesFilter(e.target.value as any)}
+                                            >
+                                                <option value="all">All</option>
+                                                <option value="passing">Passing</option>
+                                                <option value="failing">Failing</option>
+                                                <option value="missing_submissions">Missing</option>
+                                                <option value="needs_grading">Needs Grading</option>
+                                            </select>
+
+                                            <select
+                                                className="p-2 md:p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-slate-600 min-w-fit"
+                                                value={gradesSort}
+                                                onChange={(e) => setGradesSort(e.target.value as any)}
+                                            >
+                                                <option value="name">Name</option>
+                                                <option value="score_high">Score (High-Low)</option>
+                                                <option value="score_low">Score (Low-High)</option>
+                                                <option value="ai_high">AI (High-Low)</option>
+                                                <option value="ai_low">AI (Low-High)</option>
+                                            </select>
+                                        </div>
+
+                                        <button
+                                            onClick={exportToPDF}
+                                            className="p-2 md:p-2.5 bg-slate-900 text-white rounded-xl hover:bg-black transition-all shadow-md active:scale-95 shrink-0"
+                                            title="Export PDF"
+                                        >
+                                            <Download className="w-4 h-4 md:w-5 md:h-5" />
+                                        </button>
+                                    </>
+                                )}
                             </div>
 
                             {/* Gradebook Table */}
@@ -1341,16 +1459,37 @@ function ClassDetails({ classId }: { classId: string }) {
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-slate-50 border-b border-slate-200">
-                                            <th className="p-4 font-bold text-xs text-slate-500 uppercase tracking-wider sticky left-0 bg-slate-50 z-10 w-64 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">Student</th>
-                                            <th className="p-4 font-bold text-xs text-slate-500 uppercase tracking-wider border-l border-slate-200 w-32">Reg No</th>
+                                            <th className={`p-2 md:p-4 font-bold text-[10px] md:text-xs text-slate-500 uppercase tracking-wider sticky left-0 bg-slate-50 z-20 w-32 md:w-64 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] whitespace-nowrap border-r border-slate-300 transition-all ${showMobileNames ? '' : 'hidden md:table-cell'}`}>
+                                                <div className="flex items-center justify-between gap-1">
+                                                    <span>Student</span>
+                                                    <button
+                                                        onClick={() => setShowMobileNames(false)}
+                                                        className="md:hidden p-1 -mr-1 text-slate-400 hover:text-indigo-500 transition-colors"
+                                                    >
+                                                        <EyeOff className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            </th>
+                                            <th className={`p-2 md:p-4 font-bold text-[10px] md:text-xs text-slate-500 uppercase tracking-wider border-l border-slate-200 w-20 md:w-32 whitespace-nowrap transition-all ${!showMobileNames ? 'sticky left-0 bg-slate-50 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] border-r border-slate-300' : ''}`}>
+                                                <div className="flex items-center justify-between gap-1">
+                                                    <span>Reg No</span>
+                                                    {!showMobileNames && (
+                                                        <button
+                                                            onClick={() => setShowMobileNames(true)}
+                                                            className="md:hidden p-1 -mr-1 text-indigo-500 transition-colors"
+                                                        >
+                                                            <Eye className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </th>
                                             {assignments.map(a => (
-                                                <th key={a.id} className="p-4 font-bold text-xs text-slate-500 uppercase tracking-wider border-l border-slate-200 text-center min-w-[100px]" title={a.title}>
+                                                <th key={a.id} className="p-2 md:p-4 font-bold text-[10px] md:text-xs text-slate-500 uppercase tracking-wider border-l border-slate-200 text-center min-w-[80px] md:min-w-[100px] whitespace-nowrap" title={a.title}>
                                                     {a.short_code || a.title.substring(0, 10) + (a.title.length > 10 ? '...' : '')}
-                                                    <span className="block text-[9px] text-slate-400 mt-0.5">/{a.max_points} pts</span>
                                                 </th>
                                             ))}
-                                            <th className="p-4 font-bold text-xs text-indigo-600 uppercase tracking-wider border-l border-slate-200 text-center w-24 bg-indigo-50/30">Avg AI</th>
-                                            <th className="p-4 font-bold text-xs text-emerald-600 uppercase tracking-wider border-l border-slate-200 text-center w-24 bg-emerald-50/30">Total</th>
+                                            <th className="p-2 md:p-4 font-bold text-[10px] md:text-xs text-indigo-600 uppercase tracking-wider border-l border-slate-200 text-center w-16 md:w-24 bg-indigo-50/30 whitespace-nowrap">Avg AI</th>
+                                            <th className="p-2 md:p-4 font-bold text-[10px] md:text-xs text-emerald-600 uppercase tracking-wider border-l border-slate-200 text-center w-16 md:w-24 bg-emerald-50/30 whitespace-nowrap">Total</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -1423,32 +1562,26 @@ function ClassDetails({ classId }: { classId: string }) {
                                                 )
                                             }
 
-                                            return processed.map(({ enroll, studentSubs, totalScore, avgAi }) => (
+                                            return processed.map(({ enroll, studentSubs, totalScore, avgAi }, i) => (
                                                 <tr key={enroll.id} className="hover:bg-slate-50 transition-colors group">
-                                                    <td className="p-4 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
-                                                                {enroll.profiles?.avatar_url ? (
-                                                                    <img src={enroll.profiles.avatar_url} className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <Users className="w-4 h-4 text-slate-400" />
-                                                                )}
-                                                            </div>
-                                                            <div>
-                                                                <div className="font-bold text-slate-700 text-sm whitespace-nowrap">{enroll.profiles?.full_name || 'Unknown'}</div>
+                                                    <td className={`p-2 md:p-4 sticky left-0 bg-white group-hover:bg-slate-50 z-20 border-r border-slate-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] whitespace-nowrap transition-all ${showMobileNames ? '' : 'hidden md:table-cell'}`}>
+                                                        <div className="flex items-center gap-2 md:gap-3">
+                                                            <div className="text-slate-400 font-mono text-[10px] md:text-sm font-bold w-4 md:w-6 text-right flex-shrink-0">{i + 1}.</div>
+                                                            <div className="min-w-0">
+                                                                <div className="font-bold text-slate-700 text-xs md:text-sm whitespace-nowrap truncate max-w-[80px] md:max-w-none">{enroll.profiles?.full_name || 'Unknown'}</div>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="p-4 border-l border-slate-100 text-xs font-mono font-bold text-slate-500">
+                                                    <td className={`p-2 md:p-4 border-l border-slate-100 text-[10px] md:text-xs font-mono font-bold text-slate-500 whitespace-nowrap transition-all ${!showMobileNames ? 'sticky left-0 bg-white group-hover:bg-slate-50 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] border-r border-slate-300' : ''}`}>
                                                         {enroll.profiles?.registration_number || '-'}
                                                     </td>
                                                     {assignments.map(a => {
                                                         const sub = studentSubs.find(s => s.assignment_id === a.id);
                                                         return (
-                                                            <td key={a.id} className="p-4 border-l border-slate-100 text-center">
+                                                            <td key={a.id} className="p-2 md:p-4 border-l border-slate-100 text-center whitespace-nowrap">
                                                                 {sub ? (
                                                                     <div className="flex flex-col items-center">
-                                                                        <span className={`font-bold text-sm ${sub.grade !== null ? 'text-slate-800' : 'text-slate-400 italic'}`}>
+                                                                        <span className={`font-bold text-xs md:text-sm ${sub.grade !== null ? 'text-slate-800' : 'text-slate-400 italic'}`}>
                                                                             {sub.grade !== null ? sub.grade : 'Ungraded'}
                                                                         </span>
                                                                     </div>
@@ -1458,9 +1591,9 @@ function ClassDetails({ classId }: { classId: string }) {
                                                             </td>
                                                         );
                                                     })}
-                                                    <td className="p-4 border-l border-slate-100 text-center bg-indigo-50/10">
+                                                    <td className="p-2 md:p-4 border-l border-slate-100 text-center bg-indigo-50/10 whitespace-nowrap">
                                                         {avgAi !== null ? (
-                                                            <span className={`px-2 py-1 rounded text-xs font-bold ${avgAi < 20 ? 'bg-emerald-100 text-emerald-700' :
+                                                            <span className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded text-[10px] md:text-xs font-bold ${avgAi < 20 ? 'bg-emerald-100 text-emerald-700' :
                                                                 avgAi < 50 ? 'bg-amber-100 text-amber-700' :
                                                                     'bg-red-100 text-red-700'
                                                                 }`}>
@@ -1470,7 +1603,7 @@ function ClassDetails({ classId }: { classId: string }) {
                                                             <span className="text-slate-300">-</span>
                                                         )}
                                                     </td>
-                                                    <td className="p-4 border-l border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/10">
+                                                    <td className="p-2 md:p-4 border-l border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/10 whitespace-nowrap text-xs md:text-sm">
                                                         {totalScore}
                                                     </td>
                                                 </tr>

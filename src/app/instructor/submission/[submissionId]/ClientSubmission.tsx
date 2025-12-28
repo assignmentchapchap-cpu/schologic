@@ -36,7 +36,7 @@ export default function ClientSubmission({ submissionId }: { submissionId: strin
                 </Link>
 
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-slate-800">Submission Analysis</h1>
+                    <h1 className="text-xl md:text-3xl font-bold text-slate-800">Submission Analysis</h1>
                     <div className="flex items-center gap-2 mt-2 text-slate-600">
                         <span className="font-semibold">{submission.profiles?.full_name}</span>
                         <span>&bull;</span>

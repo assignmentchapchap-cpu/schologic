@@ -29,6 +29,10 @@ export default function AIStatsCard({ averageScore, studentCount, trend = 2.4, o
                 <Activity className="w-24 h-24 text-indigo-600" />
             </div>
 
+            <div className="absolute top-4 right-4 text-slate-300 group-hover:text-indigo-500 transition-colors z-20">
+                <ArrowUpRight className="w-5 h-5" />
+            </div>
+
             <div className="flex justify-between items-start mb-4 relative z-10">
                 <div>
                     <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-1">Class Integrity</h3>

@@ -1,14 +1,17 @@
 'use client';
 
+import { useToast } from '@/context/ToastContext';
 import { createClient } from '@/lib/supabase';
-import { Home, Plus, Calendar, Users, ArrowRight, X, GraduationCap, AlertCircle } from 'lucide-react';
+import { Plus, Users, Calendar, ArrowRight, X, GraduationCap, AlertCircle, FileText, Clock, Home } from 'lucide-react';
 import { useEffect, useState, Suspense } from 'react';
 import { isDateFuture, isDateAfter } from '@/lib/date-utils';
 import Link from 'next/link';
 import { Database } from '@/lib/database.types';
 import { useSearchParams } from 'next/navigation';
 
-type ClassItem = Database['public']['Tables']['classes']['Row'];
+type ClassItem = Database['public']['Tables']['classes']['Row'] & {
+    enrollments?: { count: number }[];
+};
 
 function ClassesContent() {
     const supabase = createClient();
@@ -16,6 +19,7 @@ function ClassesContent() {
     const [user, setUser] = useState<any>(null);
     const [classes, setClasses] = useState<ClassItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const { showToast } = useToast();
 
     // Modal State
     const [creating, setCreating] = useState(false);
@@ -36,11 +40,11 @@ function ClassesContent() {
 
             const { data, error } = await supabase
                 .from('classes')
-                .select('*')
+                .select('*, enrollments(count)')
                 .eq('instructor_id', user.id)
                 .order('created_at', { ascending: false });
 
-            if (data) setClasses(data);
+            if (data) setClasses(data as unknown as ClassItem[]);
             setLoading(false);
         };
         getData();
@@ -98,39 +102,43 @@ function ClassesContent() {
 
             if (error) throw error;
 
-            setClasses([data, ...classes]);
+            setClasses([data as ClassItem, ...classes]);
             setNewClassName('');
             setClassCode('');
             setStartDate('');
             setEndDate('');
             setErrors({});
             setCreating(false);
+            showToast('Class Created Successfully!', 'success');
         } catch (error: any) {
             console.error('Error creating class:', error);
-            alert('Error creating class');
+            showToast(error.message, 'error');
         }
+    };
+
+    const getClassStatus = (cls: ClassItem) => {
+        if (cls.is_locked) return { label: 'LOCKED', color: 'bg-slate-100 text-slate-500', icon: AlertCircle };
+        if (cls.end_date && new Date(cls.end_date) < new Date()) return { label: 'COMPLETED', color: 'bg-indigo-50 text-indigo-600', icon: GraduationCap };
+        return { label: 'ACTIVE', color: 'bg-emerald-50 text-emerald-600', icon: Calendar };
     };
 
     return (
         <div className="min-h-screen bg-slate-50 p-6 md:p-8">
             <div className="max-w-6xl mx-auto">
-                <header className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8 animate-fade-in">
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div>
-                            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">My Classes</h1>
-                            <p className="text-slate-500 font-medium">Manage your classrooms and students</p>
-                        </div>
+                <header className="flex flex-row justify-between items-center mb-8 gap-4 animate-fade-in">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">My Classes</h1>
+                        <p className="text-slate-500 font-bold text-sm mt-1">Manage classrooms</p>
                     </div>
 
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        <button
-                            onClick={() => setCreating(true)}
-                            className="bg-slate-900 hover:bg-black text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95 text-sm uppercase tracking-wide"
-                        >
-                            <Plus className="w-4 h-4" />
-                            New Class
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => setCreating(true)}
+                        className="bg-slate-900 hover:bg-black text-white p-2.5 md:px-5 md:py-3 rounded-xl font-bold hidden md:flex items-center gap-2 transition-all shadow-lg active:scale-95 text-xs md:text-sm"
+                        title="Create New Class"
+                    >
+                        <Plus className="w-5 h-5 md:w-4 md:h-4" />
+                        <span className="hidden md:inline uppercase tracking-wide">New Class</span>
+                    </button>
                 </header>
 
                 {/* Class List */}
@@ -145,31 +153,78 @@ function ClassesContent() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-in">
-                        {classes.map(cls => (
-                            <Link href={`/instructor/class/${cls.id}`} key={cls.id} className="group">
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-indigo-500 hover:shadow-md transition-all h-full flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                                <Users className="w-6 h-6" />
+                        {classes.map(cls => {
+                            const status = getClassStatus(cls);
+                            const studentCount = cls.enrollments?.[0]?.count || 0;
+
+                            return (
+                                <Link href={`/instructor/class/${cls.id}`} key={cls.id} className="group block">
+                                    {/* Desktop Card Layout (Hidden on Mobile) */}
+                                    <div className="hidden md:flex bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-indigo-500 hover:shadow-md transition-all h-full flex-col justify-between">
+                                        <div>
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                                    <Users className="w-6 h-6" />
+                                                </div>
+                                                <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-mono font-bold">{cls.invite_code}</span>
                                             </div>
-                                            <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-mono font-bold">{cls.invite_code}</span>
+                                            <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-700 transition-colors">{cls.name}</h3>
+                                            {cls.start_date && (
+                                                <div className="flex items-center gap-2 text-sm text-slate-500">
+                                                    <Calendar className="w-4 h-4" />
+                                                    <span>{new Date(cls.start_date).toLocaleDateString()}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-700 transition-colors">{cls.name}</h3>
-                                        {cls.start_date && (
-                                            <div className="flex items-center gap-2 text-sm text-slate-500">
-                                                <Calendar className="w-4 h-4" />
-                                                <span>{new Date(cls.start_date).toLocaleDateString()}</span>
+                                        <div className="mt-6 flex items-center gap-2 text-indigo-600 font-bold text-sm">
+                                            Manage Class <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                        </div>
+                                    </div>
+
+                                    {/* Mobile Card Layout (Visible only on Mobile) */}
+                                    <div className="flex md:hidden flex-col bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-indigo-500 transition-all">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                                    <Users className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-slate-900 text-lg leading-tight group-active:text-indigo-700">{cls.name}</h3>
+                                                    {cls.class_code && <p className="text-xs font-bold text-slate-400 font-mono mt-0.5">{cls.class_code}</p>}
+                                                </div>
                                             </div>
-                                        )}
+                                            <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${status.color}`}>
+                                                {status.label}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-y-3 gap-x-4 py-3 border-t border-slate-50">
+                                            <div className="flex items-center gap-2">
+                                                <Users className="w-3.5 h-3.5 text-slate-400" />
+                                                <span className="text-xs font-bold text-slate-600">{studentCount} Students</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                                <span className="text-xs font-bold text-slate-600">
+                                                    {cls.start_date ? new Date(cls.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'No Date'}
+                                                    {cls.end_date && ` - ${new Date(cls.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center">
+                                            <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase">Code:</span>
+                                                <span className="text-xs font-mono font-bold text-slate-700">{cls.invite_code}</span>
+                                            </div>
+                                            <span className="text-indigo-600 font-bold text-xs flex items-center gap-1">
+                                                Manage Class <ArrowRight className="w-3.5 h-3.5" />
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="mt-6 flex items-center gap-2 text-indigo-600 font-bold text-sm">
-                                        Manage Class <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                    </div>
-                                </div>
-                            </Link>
-                        ))
-                        }
+                                </Link>
+                            )
+                        })}
                     </div>
                 )}
 

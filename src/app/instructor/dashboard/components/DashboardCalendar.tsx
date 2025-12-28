@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, List, Grid, Plus, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
+import { useToast } from '@/context/ToastContext';
 
 interface DashboardCalendarProps {
     assignments: any[];
@@ -12,6 +13,7 @@ interface DashboardCalendarProps {
 
 export default function DashboardCalendar({ assignments, events = [], onEventCreated }: DashboardCalendarProps) {
     const supabase = createClient();
+    const { showToast } = useToast();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -102,45 +104,49 @@ export default function DashboardCalendar({ assignments, events = [], onEventCre
                     setNewEventTitle('');
                     setNewEventDesc('');
                     setNewEventTime('09:00');
+                    showToast('Event created successfully!', 'success');
+                } else if (error) {
+                    throw new Error(error.message);
                 }
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
+            showToast(err.message || 'Failed to create event.', 'error');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-full flex flex-col relative overflow-hidden">
-            <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold text-slate-700 flex items-center gap-2">
+        <div className="bg-white p-3 md:p-6 rounded-3xl border border-slate-200 shadow-sm h-full flex flex-col relative overflow-hidden">
+            <div className="flex flex-row justify-between items-center mb-2 md:mb-6 gap-2 md:gap-4">
+                <h3 className="font-bold text-slate-700 flex items-center gap-2 shrink-0">
                     <CalendarIcon className="w-5 h-5 text-indigo-500" />
                     Calendar
                 </h3>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1 md:gap-4">
                     <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`p-1 md:p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                         >
-                            <Grid className="w-4 h-4" />
+                            <Grid className="w-3 h-3 md:w-4 md:h-4" />
                         </button>
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`p-1 md:p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                         >
-                            <List className="w-4 h-4" />
+                            <List className="w-3 h-3 md:w-4 md:h-4" />
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-2 text-sm font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">
-                        <button onClick={prevMonth} className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600">
-                            <ChevronLeft className="w-4 h-4" />
+                    <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm font-bold text-slate-600 bg-slate-50 px-1.5 md:px-2 py-1 rounded-lg">
+                        <button onClick={prevMonth} className="p-0.5 md:p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600">
+                            <ChevronLeft className="w-3 h-3 md:w-4 md:h-4" />
                         </button>
-                        <span className="w-32 text-center">{monthName} {year}</span>
-                        <button onClick={nextMonth} className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600">
-                            <ChevronRight className="w-4 h-4" />
+                        <span className="w-20 md:w-32 text-center truncate">{monthName} {year}</span>
+                        <button onClick={nextMonth} className="p-0.5 md:p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600">
+                            <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
                         </button>
                     </div>
                 </div>

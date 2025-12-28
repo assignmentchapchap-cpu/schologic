@@ -81,20 +81,20 @@ export default function CalendarPage() {
     return (
         <div className="min-h-screen bg-slate-50 p-6 md:p-8">
             <div className="max-w-6xl mx-auto">
-                <header className="flex justify-between items-center mb-8">
+                <header className="flex items-center justify-between mb-6 md:mb-8 gap-2">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">Calendar</h1>
-                        <p className="text-slate-500 font-medium">Manage Deadlines & Events</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Calendar</h1>
+                        <p className="hidden md:block text-slate-500 font-medium text-sm">Manage Deadlines & Events</p>
                     </div>
-                    <div className="flex items-center gap-4 bg-white p-2 rounded-xl shadow-sm border border-slate-200">
-                        <button onClick={prevMonth} className="p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                            <ChevronLeft className="w-5 h-5 text-slate-600" />
+                    <div className="flex items-center gap-1 md:gap-4 bg-white p-1 md:p-2 rounded-xl shadow-sm border border-slate-200 shrink-0">
+                        <button onClick={prevMonth} className="p-1.5 md:p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                            <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-slate-600" />
                         </button>
-                        <span className="font-bold text-slate-800 w-40 text-center">
+                        <span className="font-bold text-slate-800 text-sm md:text-base w-28 md:w-40 text-center whitespace-nowrap">
                             {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                         </span>
-                        <button onClick={nextMonth} className="p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                            <ChevronRight className="w-5 h-5 text-slate-600" />
+                        <button onClick={nextMonth} className="p-1.5 md:p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-slate-600" />
                         </button>
                     </div>
                 </header>

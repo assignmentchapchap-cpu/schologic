@@ -203,7 +203,7 @@ export default function AiScoringLab() {
                             <Terminal className="w-5 h-5" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-slate-900 leading-tight">AI Lab Studio</h1>
+                            <h1 className="text-xl md:text-3xl font-bold text-slate-900 leading-tight">AI Lab Studio</h1>
                             <p className="text-sm text-slate-500 font-medium">Advanced Detection & Analysis</p>
                         </div>
                     </div>
@@ -383,7 +383,7 @@ export default function AiScoringLab() {
                                     <div className="animate-fade-in">
                                         <div className="text-center mb-8">
                                             <span className={cn(
-                                                "text-6xl font-bold tracking-tight",
+                                                "text-4xl md:text-6xl font-bold tracking-tight",
                                                 calculatedReport.score > 50 ? "text-red-500" : "text-emerald-500"
                                             )}>
                                                 {calculatedReport.score}%

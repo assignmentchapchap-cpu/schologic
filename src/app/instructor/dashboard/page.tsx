@@ -1,16 +1,18 @@
 'use client';
 
 import { createClient } from '@/lib/supabase';
-import { Home, Clock, ChevronRight, X, FileText, Search, Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { Home, Clock, ChevronRight, X, FileText, Search, Plus, Calendar as CalendarIcon, ArrowUpRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NotificationBell from '@/components/NotificationBell';
 import AIStatsCard from '@/components/AIStatsCard';
 import AIInsightsModal from '@/components/AIInsightsModal';
 import DashboardCalendar from './components/DashboardCalendar';
 import DashboardTodo from './components/DashboardTodo';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function InstructorDashboard() {
+import { Suspense } from 'react';
+
+function DashboardContent() {
     const supabase = createClient();
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
@@ -26,9 +28,20 @@ export default function InstructorDashboard() {
     const [showAIInsights, setShowAIInsights] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // Search State
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [showMobileSearch, setShowMobileSearch] = useState(false);
+
+    // Check URL params for mobile search trigger
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        if (searchParams.get('mobile_search') === 'true') {
+            setShowMobileSearch(true);
+            // Optional: Clean URL
+            // router.replace('/instructor/dashboard', { scroll: false }); 
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const query = searchQuery.toLowerCase().trim();
@@ -263,16 +276,33 @@ export default function InstructorDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 p-6 md:p-8">
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 animate-fade-in relative z-30">
-                    <div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Dashboard</h1>
-                        <p className="text-slate-500 font-medium mt-1">Welcome back, Instructor</p>
+                <header className="flex flex-row justify-between items-center mb-6 md:mb-10 gap-4 animate-fade-in relative z-30">
+                    {/* Mobile Search Overlay */}
+                    {showMobileSearch && (
+                        <div className="absolute inset-x-0 -top-2 bottom-0 bg-white z-[60] flex items-center gap-2 p-2 rounded-xl shadow-xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+                            <Search className="w-5 h-5 text-indigo-600 flex-shrink-0 ml-2" />
+                            <input
+                                autoFocus
+                                className="flex-1 bg-transparent border-none outline-none font-bold text-slate-700 placeholder:text-slate-300 text-sm h-full py-2"
+                                placeholder="Search students, classes..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                            />
+                            <button onClick={() => { setShowMobileSearch(false); setSearchQuery(''); }} className="p-2 bg-slate-50 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+
+                    <div className={showMobileSearch ? 'opacity-0' : 'opacity-100 transition-opacity'}>
+                        <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Dashboard</h1>
+                        <p className="text-slate-500 font-bold text-sm mt-1">Welcome back, Instructor</p>
                     </div>
 
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        {/* Search Bar */}
+                    <div className={`flex items-center gap-3 w-auto ${showMobileSearch ? 'opacity-0 pointer-events-none' : ''}`}>
+                        {/* Desktop Search Bar */}
                         <div className="relative hidden md:block group z-50">
                             <div className="relative">
                                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
@@ -397,7 +427,7 @@ export default function InstructorDashboard() {
                         {/* New Class Button */}
                         <button
                             onClick={() => router.push('/instructor/classes?new=true')}
-                            className="bg-slate-900 hover:bg-slate-800 text-white p-2 px-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group"
+                            className="bg-slate-900 hover:bg-slate-800 text-white p-2 px-3 rounded-xl transition-all shadow-sm hidden md:flex items-center justify-center gap-2 group"
                             title="Create New Class"
                         >
                             <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -406,7 +436,9 @@ export default function InstructorDashboard() {
                             </span>
                         </button>
 
-                        <NotificationBell />
+                        <div className="hidden md:block">
+                            <NotificationBell />
+                        </div>
                     </div>
                 </header>
 
@@ -415,10 +447,13 @@ export default function InstructorDashboard() {
                     {/* Card 1: Classes & Assignments */}
                     <div
                         onClick={() => setShowAssignmentsModal(true)}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all group flex flex-col justify-between"
+                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all group flex flex-col justify-between relative"
                     >
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <div className="absolute top-4 right-4 text-slate-300 group-hover:text-emerald-500 transition-colors">
+                            <ArrowUpRight className="w-5 h-5" />
+                        </div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                                 <FileText className="w-6 h-6" />
                             </div>
                             <div>
@@ -428,8 +463,8 @@ export default function InstructorDashboard() {
                         </div>
                         <div className="flex items-end justify-between">
                             <div>
-                                <p className="text-4xl font-black text-slate-900">{allAssignments.length}</p>
-                                <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-wider">Total Assignments</p>
+                                <p className="text-3xl md:text-4xl font-black text-slate-900">{allAssignments.length}</p>
+                                <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Total Assignments</p>
                             </div>
                         </div>
                     </div>
@@ -437,10 +472,13 @@ export default function InstructorDashboard() {
                     {/* Card 2: Global Submissions */}
                     <div
                         onClick={() => setShowSubmissionsModal(true)}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group flex flex-col justify-between"
+                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group flex flex-col justify-between relative"
                     >
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <div className="absolute top-4 right-4 text-slate-300 group-hover:text-blue-500 transition-colors">
+                            <ArrowUpRight className="w-5 h-5" />
+                        </div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                 <Clock className="w-6 h-6" />
                             </div>
                             <div>
@@ -450,12 +488,12 @@ export default function InstructorDashboard() {
                         </div>
                         <div className="flex items-end justify-between">
                             <div>
-                                <p className="text-4xl font-black text-slate-900">{stats.ungraded}</p>
-                                <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-wider">Ungraded</p>
+                                <p className="text-3xl md:text-4xl font-black text-slate-900">{stats.ungraded}</p>
+                                <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Ungraded</p>
                             </div>
                             {stats.new > 0 && (
                                 <div className="text-right">
-                                    <p className="text-4xl font-black text-blue-600">+{stats.new}</p>
+                                    <p className="text-3xl md:text-4xl font-black text-blue-600">+{stats.new}</p>
                                     <p className="text-xs text-blue-400 mt-2 font-bold uppercase tracking-wider">New</p>
                                 </div>
                             )}
@@ -616,5 +654,13 @@ export default function InstructorDashboard() {
                 }
             </div >
         </div >
+    );
+}
+
+export default function InstructorDashboard() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>}>
+            <DashboardContent />
+        </Suspense>
     );
 }

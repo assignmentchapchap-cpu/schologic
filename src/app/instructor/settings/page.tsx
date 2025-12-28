@@ -90,10 +90,10 @@ export default function InstructorSettingsPage() {
         <div className="min-h-screen bg-slate-50 p-8">
             <div className="max-w-3xl mx-auto">
                 <header className="mb-8">
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
                         <Settings className="w-8 h-8 text-slate-400" /> Global Settings
                     </h1>
-                    <p className="text-slate-500 font-medium mt-2">Configure defaults for all your classes.</p>
+                    <p className="text-slate-500 font-medium text-sm mt-2">Configure defaults for all your classes.</p>
                 </header>
 
                 <div className="flex gap-1 bg-slate-200/50 p-1 rounded-xl mb-8 w-fit">
@@ -214,8 +214,8 @@ export default function InstructorSettingsPage() {
                                         { id: 'class_end', label: 'Until Class End', desc: 'Accepted until the class end date. Marked as "Late".' }
                                     ].map(policy => (
                                         <label key={policy.id} className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${settingsForm.late_policy === policy.id
-                                                ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600'
-                                                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                            ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600'
+                                            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                                             }`}>
                                             <input
                                                 type="radio"
@@ -245,8 +245,8 @@ export default function InstructorSettingsPage() {
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                     {['pdf', 'docx', 'txt', 'jpg', 'png', 'zip'].map(type => (
                                         <label key={type} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${settingsForm.allowed_file_types.includes(type)
-                                                ? 'border-indigo-600 bg-indigo-50/50'
-                                                : 'border-slate-200 hover:border-slate-300'
+                                            ? 'border-indigo-600 bg-indigo-50/50'
+                                            : 'border-slate-200 hover:border-slate-300'
                                             }`}>
                                             <input
                                                 type="checkbox"

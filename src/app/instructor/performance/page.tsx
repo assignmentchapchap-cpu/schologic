@@ -38,10 +38,10 @@ export default function PerformancePage() {
         <div className="min-h-screen bg-slate-50 p-8">
             <div className="max-w-4xl mx-auto">
                 <header className="mb-8">
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
                         <BarChart2 className="w-8 h-8 text-indigo-600" /> Performance Overview
                     </h1>
-                    <p className="text-slate-500 font-medium mt-2">Select a class to view detailed grading performance.</p>
+                    <p className="text-slate-500 font-medium text-sm mt-2">Select a class to view detailed grading performance.</p>
                 </header>
 
                 <div className="grid gap-4">
