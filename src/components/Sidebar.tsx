@@ -42,12 +42,12 @@ export default function Sidebar({ role }: SidebarProps) {
         { href: '/instructor/calendar', label: 'Calendar', icon: Calendar },
         { href: '/instructor/lab', label: 'AI Lab', icon: Terminal },
         { href: '/instructor/settings', label: 'Settings', icon: Settings },
-        { href: '/profile', label: 'Profile', icon: User },
+        { href: '/instructor/profile', label: 'Profile', icon: User },
     ] : [
         { href: '/student/dashboard', label: 'Dashboard', icon: Home },
         { href: '/student/classes', label: 'My Classes', icon: GraduationCap },
         { href: '/student/grades', label: 'My Grades', icon: FileText },
-        { href: '/profile', label: 'Profile', icon: User },
+        { href: '/student/profile', label: 'Profile', icon: User },
     ];
 
     const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -81,7 +81,7 @@ export default function Sidebar({ role }: SidebarProps) {
                         </div>
                         <div className="flex flex-col">
                             <span className="font-bold text-lg tracking-tight block leading-none text-white">ScholarSync</span>
-                            <span className="text-xs font-bold text-slate-200 uppercase tracking-widest block leading-none mt-1">{role}</span>
+                            <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block leading-none mt-1">{role}</span>
                         </div>
                     </Link>
                 </div>

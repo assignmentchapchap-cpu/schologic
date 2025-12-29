@@ -5,10 +5,11 @@ import { createClient } from '@/lib/supabase';
 import { User, Mail, School, Save, Loader2, Home } from 'lucide-react';
 import Link from 'next/link';
 import { Database } from '@/lib/database.types';
+import { useRouter } from 'next/navigation';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-export default function ProfilePage() {
+export default function InstructorProfilePage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -19,6 +20,7 @@ export default function ProfilePage() {
     });
 
     const supabase = createClient();
+    const router = useRouter();
 
     useEffect(() => {
         fetchProfile();
@@ -27,7 +29,10 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return; // Should redirect to login
+            if (!user) {
+                router.push('/login');
+                return;
+            }
 
             const { data, error } = await supabase
                 .from('profiles')
@@ -89,9 +94,6 @@ export default function ProfilePage() {
                         <h1 className="text-xl md:text-3xl font-bold text-slate-800">My Profile</h1>
                         <p className="text-slate-500 text-xs md:text-base">Manage your personal information</p>
                     </div>
-                    <Link href="/" className="p-2 bg-white rounded-xl shadow-sm border border-slate-200 text-slate-400 hover:text-slate-600">
-                        <Home className="w-5 h-5" />
-                    </Link>
                 </header>
 
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
