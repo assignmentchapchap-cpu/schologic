@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
-import { User, Mail, School, Save, Loader2, Home } from 'lucide-react';
-import Link from 'next/link';
+import { User, Mail, School, Save, Loader2 } from 'lucide-react';
 import { Database } from '@/lib/database.types';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/context/ToastContext';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -14,13 +14,16 @@ export default function InstructorProfilePage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({
-        full_name: '',
+        title: '',
+        first_name: '',
+        last_name: '',
         bio: '',
         avatar_url: ''
     });
 
     const supabase = createClient();
     const router = useRouter();
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchProfile();
@@ -38,15 +41,59 @@ export default function InstructorProfilePage() {
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
 
-            if (error) throw error;
+            if (error) {
+                console.error("Fetch profile error:", error);
+            }
+
             if (data) {
                 setProfile(data);
+
+                // Logic to handle names:
+                // 1. Try first_name/last_name from DB if they exist (assuming user added columns)
+                // 2. If not, fallback to splitting full_name
+                let fName = (data as any).first_name || '';
+                let lName = (data as any).last_name || '';
+
+                if (!fName && !lName && data.full_name) {
+                    const parts = data.full_name.split(' ');
+                    fName = parts[0];
+                    lName = parts.slice(1).join(' ');
+                }
+
                 setFormData({
-                    full_name: data.full_name || '',
+                    title: (data as any).title || '',
+                    first_name: fName,
+                    last_name: lName,
                     bio: data.bio || '',
                     avatar_url: data.avatar_url || ''
+                });
+            } else {
+                // Fallback if no profile data found but user is logged in
+                setProfile({
+                    id: user.id,
+                    email: user.email,
+                    role: 'instructor'
+                } as any);
+
+                // Populate form from metadata if available
+                const meta = user.user_metadata || {};
+                let fName = meta.first_name || '';
+                let lName = meta.last_name || '';
+
+                if (!fName && !lName && meta.full_name) {
+                    const parts = meta.full_name.split(' ');
+                    fName = parts[0];
+                    lName = parts.slice(1).join(' ');
+                }
+
+                setFormData({
+                    title: (meta as any).title || '',
+                    first_name: fName,
+                    last_name: lName,
+                    bio: '',
+                    avatar_url: meta.avatar_url || ''
                 });
             }
         } catch (error) {
@@ -63,22 +110,44 @@ export default function InstructorProfilePage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
+            const fullName = `${formData.first_name} ${formData.last_name}`.trim();
+
             const { error } = await supabase
                 .from('profiles')
-                .update({
-                    full_name: formData.full_name,
+                .upsert({
+                    id: user.id,
+                    title: formData.title,
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    full_name: fullName,
                     bio: formData.bio,
-                    avatar_url: formData.avatar_url
-                })
-                .eq('id', user.id);
+                    avatar_url: formData.avatar_url,
+                    role: 'instructor',
+                    email: user.email
+                } as any);
 
             if (error) throw error;
+
+            // Sync with Auth Metadata
+            const { error: authError } = await supabase.auth.updateUser({
+                data: {
+                    title: formData.title,
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    full_name: fullName,
+                    avatar_url: formData.avatar_url,
+                    bio: formData.bio
+                }
+            });
+
+            if (authError) console.error("Failed to sync auth metadata:", authError);
+
             // Optimistic update
-            if (profile) setProfile({ ...profile, ...formData });
-            alert("Profile updated successfully!");
-        } catch (error) {
+            if (profile) setProfile({ ...profile, full_name: fullName, ...formData } as any);
+            showToast('Profile updated successfully!', 'success');
+        } catch (error: any) {
             console.error('Error updating profile', error);
-            alert("Failed to update profile.");
+            showToast(error.message || 'Failed to update profile.', 'error');
         } finally {
             setSaving(false);
         }
@@ -122,17 +191,53 @@ export default function InstructorProfilePage() {
                         </div>
 
                         <div className="grid gap-6">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
-                                <div className="relative">
-                                    <User className="w-5 h-5 text-slate-400 absolute left-3 top-3.5" />
-                                    <input
-                                        type="text"
-                                        value={formData.full_name}
-                                        onChange={e => setFormData({ ...formData, full_name: e.target.value })}
-                                        className="w-full p-3 pl-10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        required
-                                    />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
+                                    <div className="relative">
+                                        <School className="w-5 h-5 text-slate-400 absolute left-3 top-3.5" />
+                                        <select
+                                            value={formData.title}
+                                            onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                            className="w-full p-3 pl-10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-white"
+                                        >
+                                            <option value="">Select...</option>
+                                            <option value="Mr.">Mr.</option>
+                                            <option value="Mrs.">Mrs.</option>
+                                            <option value="Miss">Miss</option>
+                                            <option value="Dr.">Dr.</option>
+                                            <option value="Prof.">Prof.</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">First Name</label>
+                                    <div className="relative">
+                                        <User className="w-5 h-5 text-slate-400 absolute left-3 top-3.5" />
+                                        <input
+                                            type="text"
+                                            value={formData.first_name}
+                                            onChange={e => setFormData({ ...formData, first_name: e.target.value })}
+                                            className="w-full p-3 pl-10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            required
+                                            placeholder="First Name"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Last Name</label>
+                                    <div className="relative">
+                                        <User className="w-5 h-5 text-slate-400 absolute left-3 top-3.5" />
+                                        <input
+                                            type="text"
+                                            value={formData.last_name}
+                                            onChange={e => setFormData({ ...formData, last_name: e.target.value })}
+                                            className="w-full p-3 pl-10 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            required
+                                            placeholder="Last Name"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -153,11 +258,13 @@ export default function InstructorProfilePage() {
                                         <Mail className="w-5 h-5 text-slate-400 absolute left-3 top-3.5" />
                                         <input
                                             type="email"
+                                            // Prefer profile email, fall back to auth email if not in profile yet
                                             value={profile?.email || ''}
                                             disabled
                                             className="w-full p-3 pl-10 border border-slate-200 rounded-xl bg-slate-50 text-slate-500 cursor-not-allowed"
                                         />
                                     </div>
+                                    <p className="text-xs text-slate-400 mt-1">Managed via account settings</p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-1">Role</label>

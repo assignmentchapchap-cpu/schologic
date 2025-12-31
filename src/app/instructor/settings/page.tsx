@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
-import { Settings, Save, Brain, CheckCircle, Clock } from 'lucide-react';
+import { Settings, Save, Brain, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { MODELS, MODEL_LABELS, ScoringMethod, Granularity } from '@/lib/ai-config';
 
 export default function InstructorSettingsPage() {
     const supabase = createClient();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'ai' | 'submission'>('ai');
+    const [activeTab, setActiveTab] = useState<'ai' | 'submission' | 'security'>('ai');
+    const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
 
     // Settings State
     const [settingsForm, setSettingsForm] = useState({
@@ -33,7 +34,7 @@ export default function InstructorSettingsPage() {
                 .from('profiles')
                 .select('settings')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle(); // Use maybeSingle to handle missing profiles gracefully
 
             if (error) throw error;
 
@@ -51,6 +52,34 @@ export default function InstructorSettingsPage() {
             console.error("Error fetching settings", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const updatePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+                alert("Passwords do not match");
+                return;
+            }
+            if (passwordForm.newPassword.length < 6) {
+                alert("Password must be at least 6 characters");
+                return;
+            }
+
+            const { error } = await supabase.auth.updateUser({
+                password: passwordForm.newPassword
+            });
+
+            if (error) throw error;
+            alert("Password updated successfully!");
+            setPasswordForm({ newPassword: '', confirmPassword: '' });
+        } catch (error: any) {
+            console.error("Error updating password", error);
+            alert(error.message || "Failed to update password");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -96,10 +125,10 @@ export default function InstructorSettingsPage() {
                     <p className="text-slate-500 font-medium text-sm mt-2">Configure defaults for all your classes.</p>
                 </header>
 
-                <div className="flex gap-1 bg-slate-200/50 p-1 rounded-xl mb-8 w-fit">
+                <div className="flex gap-1 bg-slate-200/50 p-1 rounded-xl mb-8 w-fit overflow-x-auto">
                     <button
                         onClick={() => setActiveTab('ai')}
-                        className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'ai'
+                        className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'ai'
                             ? 'bg-white text-indigo-600 shadow-sm'
                             : 'text-slate-500 hover:text-slate-700'
                             }`}
@@ -108,16 +137,74 @@ export default function InstructorSettingsPage() {
                     </button>
                     <button
                         onClick={() => setActiveTab('submission')}
-                        className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'submission'
+                        className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'submission'
                             ? 'bg-white text-indigo-600 shadow-sm'
                             : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
                         Submission Settings
                     </button>
+                    <button
+                        onClick={() => setActiveTab('security')}
+                        className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'security'
+                            ? 'bg-white text-indigo-600 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                    >
+                        Security
+                    </button>
                 </div>
 
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 animate-fade-in relative">
+
+                    {activeTab === 'security' && (
+                        <form onSubmit={updatePassword} className="space-y-6 animate-fade-in">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                    <CheckCircle className="w-6 h-6 text-emerald-500" /> Password & Security
+                                </h2>
+                                <p className="text-slate-500 text-sm mb-6">Update your password to keep your account secure.</p>
+
+                                <div className="space-y-4 max-w-md">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">New Password</label>
+                                        <input
+                                            type="password"
+                                            value={passwordForm.newPassword}
+                                            onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                                            className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            minLength={6}
+                                            required
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">Confirm New Password</label>
+                                        <input
+                                            type="password"
+                                            value={passwordForm.confirmPassword}
+                                            onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                                            className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            minLength={6}
+                                            required
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-6 border-t border-slate-100 flex justify-end">
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-black transition-all shadow-lg active:scale-95 flex items-center gap-2"
+                                >
+                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
+                    )}
 
                     {activeTab === 'ai' && (
                         <div className="space-y-8 animate-fade-in">
@@ -271,19 +358,21 @@ export default function InstructorSettingsPage() {
                         </div>
                     )}
 
-                    <div className="pt-8 mt-8 border-t border-slate-100 flex justify-end">
-                        <button
-                            onClick={saveSettings}
-                            disabled={saving}
-                            className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-black transition-all shadow-lg active:scale-95 flex items-center gap-2"
-                        >
-                            {saving ? 'Saving...' : (
-                                <>
-                                    <Save className="w-4 h-4" /> Save Configuration
-                                </>
-                            )}
-                        </button>
-                    </div>
+                    {activeTab !== 'security' && (
+                        <div className="pt-8 mt-8 border-t border-slate-100 flex justify-end">
+                            <button
+                                onClick={saveSettings}
+                                disabled={saving}
+                                className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-black transition-all shadow-lg active:scale-95 flex items-center gap-2"
+                            >
+                                {saving ? 'Saving...' : (
+                                    <>
+                                        <Save className="w-4 h-4" /> Save Configuration
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

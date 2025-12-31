@@ -121,12 +121,35 @@ function DashboardContent() {
         setSearchResults(results);
     }, [searchQuery, classes, allAssignments, allEvents, allEnrollments]);
 
+    const [firstName, setFirstName] = useState('Instructor');
+
+    // ... existing search logic ...
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 setUser(user);
+
+                // Fetch Profile for Name
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('first_name, last_name, full_name')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (profile) {
+                    let fName = (profile as any).first_name;
+                    if (!fName && profile.full_name) {
+                        fName = profile.full_name.split(' ')[0];
+                    }
+                    if (fName) setFirstName(fName);
+                } else if (user.user_metadata?.first_name) {
+                    setFirstName(user.user_metadata.first_name);
+                } else if (user.user_metadata?.full_name) {
+                    setFirstName(user.user_metadata.full_name.split(' ')[0]);
+                }
 
                 // Fetch Classes
                 const { data: classesData } = await supabase
@@ -298,7 +321,7 @@ function DashboardContent() {
 
                     <div className={showMobileSearch ? 'opacity-0' : 'opacity-100 transition-opacity'}>
                         <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Dashboard</h1>
-                        <p className="text-slate-500 font-bold text-sm mt-1">Welcome back, Instructor</p>
+                        <p className="text-slate-500 font-bold text-sm mt-1">Welcome back, {firstName}</p>
                     </div>
 
                     <div className={`flex items-center gap-3 w-auto ${showMobileSearch ? 'opacity-0 pointer-events-none' : ''}`}>
@@ -467,9 +490,9 @@ function DashboardContent() {
                                         className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4 active:scale-[0.98] transition-all"
                                     >
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.type === 'class' ? 'bg-indigo-50 text-indigo-600' :
-                                                item.type === 'assignment' ? 'bg-emerald-50 text-emerald-600' :
-                                                    item.type === 'event' ? 'bg-blue-50 text-blue-600' :
-                                                        'bg-slate-100 text-slate-500' // student default
+                                            item.type === 'assignment' ? 'bg-emerald-50 text-emerald-600' :
+                                                item.type === 'event' ? 'bg-blue-50 text-blue-600' :
+                                                    'bg-slate-100 text-slate-500' // student default
                                             }`}>
                                             {item.type === 'class' && <Home className="w-5 h-5" />}
                                             {item.type === 'assignment' && <FileText className="w-5 h-5" />}

@@ -3,11 +3,13 @@
 import { useEffect, useState, use, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { createClient } from '@/lib/supabase';
-import { ArrowLeft, FileText, CheckCircle, Clock, Pencil, Save, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Bot, History, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle, Clock, Pencil, Save, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Bot, History, AlertTriangle, Sparkles } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Database } from '@/lib/database.types';
+import TAInsightsModal from '@/components/instructor/TAInsightsModal';
+import RubricComponent from '@/components/RubricComponent';
 
 type SubmissionWithProfile = Database['public']['Tables']['submissions']['Row'] & {
     profiles: {
@@ -22,6 +24,7 @@ type AssignmentDetails = Database['public']['Tables']['assignments']['Row'] & {
     classes: {
         name: string;
     } | null;
+    rubric: any; // specific type if possible, or jsonb
 };
 
 export default function GradingPageParams({ params }: { params: Promise<{ assignmentId: string }> }) {
@@ -33,7 +36,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
     const supabase = createClient();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const initialTab = (searchParams.get('tab') as 'overview' | 'submissions') || 'overview';
+    const initialTab = (searchParams.get('tab') as 'overview' | 'rubric' | 'submissions') || 'overview';
     const { showToast } = useToast();
 
     const [submissions, setSubmissions] = useState<SubmissionWithProfile[]>([]);
@@ -50,6 +53,10 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
     const [isGradingFormVisible, setIsGradingFormVisible] = useState(true);
     const [sortBy, setSortBy] = useState<'recent' | 'ai_score'>('recent');
     const [filterStatus, setFilterStatus] = useState<'all' | 'graded' | 'ungraded' | 'late'>('all');
+
+    // TA Assistant State
+    const [showTAModal, setShowTAModal] = useState(false);
+    const [instructorName, setInstructorName] = useState('');
 
     // Navigation Helpers
     const currentIndex = submissions.findIndex(s => s.id === selectedSub?.id);
@@ -105,7 +112,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ title: '', description: '', due_date: '', max_points: 100 });
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'submissions'>(initialTab);
+    const [activeTab, setActiveTab] = useState<'overview' | 'rubric' | 'submissions'>(initialTab);
 
     useEffect(() => {
         fetchData();
@@ -138,6 +145,13 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                     .eq('class_id', assignRes.data.class_id);
 
                 setTotalStudents(count || 0);
+
+                // 3. Fetch Current Instructor Name
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+                    if (profile?.full_name) setInstructorName(profile.full_name);
+                }
             }
             if (subRes.data) setSubmissions(subRes.data as unknown as SubmissionWithProfile[]);
 
@@ -224,26 +238,26 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
 
                 <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                     {/* Header & Tabs */}
-                    <div className="p-6 md:p-8 pb-0 border-b border-slate-100 bg-white">
-                        <div className="flex justify-between items-start mb-6">
+                    <div className="p-4 md:p-8 pb-0 border-b border-slate-100 bg-white">
+                        <div className="flex justify-between items-start mb-4 md:mb-6">
                             <div>
-                                <h1 className="text-xl md:text-3xl font-bold text-slate-900 mb-2 flex items-center gap-3">
-                                    {assignment?.title}
+                                <h1 className="text-lg md:text-3xl font-bold text-slate-900 mb-2 flex items-center gap-2 md:gap-3">
+                                    <span className="truncate max-w-[220px] md:max-w-none">{assignment?.title}</span>
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all"
+                                        className="p-1 md:p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shrink-0"
                                         title="Edit Assignment"
                                     >
-                                        <Pencil className="w-5 h-5" />
+                                        <Pencil className="w-4 h-4 md:w-5 md:h-5" />
                                     </button>
                                 </h1>
-                                <div className="flex items-center gap-6 text-sm text-slate-500 font-medium">
-                                    <span className="flex items-center gap-2">
-                                        <Clock className="w-4 h-4" />
-                                        Due: {assignment?.due_date ? new Date(assignment.due_date).toLocaleString() : 'No Due Date'}
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs md:text-sm text-slate-500 font-medium">
+                                    <span className="flex items-center gap-1.5">
+                                        <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                        Due: {assignment?.due_date ? new Date(assignment.due_date).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : 'No Due Date'}
                                     </span>
-                                    <span className="flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4" />
+                                    <span className="flex items-center gap-1.5">
+                                        <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                         {assignment?.max_points} Points
                                     </span>
                                 </div>
@@ -251,20 +265,21 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                         </div>
 
                         {/* Tabs Navigation */}
-                        <div className="flex gap-8">
+                        <div className="flex gap-6 md:gap-8 overflow-x-auto no-scrollbar">
                             {[
                                 { id: 'overview', label: 'Overview', icon: FileText },
+                                { id: 'rubric', label: 'Rubric', icon: Sparkles },
                                 { id: 'submissions', label: 'Submissions', icon: CheckCircle }
                             ].map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
-                                    className={`pb-4 border-b-2 font-bold text-sm flex items-center gap-2 transition-colors ${activeTab === tab.id
+                                    className={`pb-3 md:pb-4 border-b-2 font-bold text-xs md:text-sm flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === tab.id
                                         ? 'border-indigo-600 text-indigo-600'
                                         : 'border-transparent text-slate-400 hover:text-slate-600'
                                         }`}
                                 >
-                                    <tab.icon className="w-4 h-4" />
+                                    <tab.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                     {tab.label}
                                 </button>
                             ))}
@@ -276,7 +291,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
 
                         {/* OVERVIEW TAB */}
                         {activeTab === 'overview' && (
-                            <div className="p-8 animate-fade-in">
+                            <div className="p-6 md:p-8 animate-fade-in">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                     <div className="col-span-2 space-y-8">
                                         <section>
@@ -286,7 +301,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                                             </div>
                                         </section>
                                     </div>
-                                    <div className="col-span-1 space-y-6">
+                                    <div className="col-span-3">
                                         <div className="bg-white p-6 rounded-2xl border border-slate-200">
                                             <h3 className="font-bold text-slate-900 mb-4 text-base md:text-lg">Class Stats</h3>
                                             <div className="space-y-4">
@@ -307,6 +322,23 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* RUBRIC TAB */}
+                        {activeTab === 'rubric' && (
+                            <div className="p-8 animate-fade-in">
+                                <div className="max-w-4xl mx-auto">
+                                    <RubricComponent
+                                        rubric={assignment?.rubric}
+                                        isEditable={true}
+                                        assignmentId={assignmentId}
+                                        maxPoints={assignment?.max_points}
+                                        onUpdate={() => fetchData()}
+                                        title={assignment?.title}
+                                        description={assignment?.description || ''}
+                                    />
                                 </div>
                             </div>
                         )}
@@ -363,17 +395,17 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                                                     // On mobile, auto-show form if graded, else hide
                                                     setIsGradingFormVisible(!sub.grade);
                                                 }}
-                                                className={`w-full text-left p-4 border-b border-slate-100 hover:bg-slate-50 transition-all ${selectedSub?.id === sub.id ? 'bg-indigo-50/50 border-l-4 border-l-indigo-600 pl-3' : 'border-l-4 border-l-transparent'}`}
+                                                className={`w-full text-left p-3 md:p-4 border-b border-slate-100 hover:bg-slate-50 transition-all ${selectedSub?.id === sub.id ? 'bg-indigo-50/50 border-l-4 border-l-indigo-600 pl-2 md:pl-3' : 'border-l-4 border-l-transparent'}`}
                                             >
                                                 <div className="flex justify-between items-start mb-1 gap-2">
                                                     <div className="flex items-center gap-2 overflow-hidden">
-                                                        <span className="text-slate-400 font-mono text-sm pt-0.5 flex-shrink-0">
+                                                        <span className="text-slate-400 font-mono text-xs md:text-sm pt-0.5 flex-shrink-0">
                                                             {(index + 1).toString().padStart(2, '0')}.
                                                         </span>
                                                         <div className="flex items-center gap-1 min-w-0 font-bold text-slate-900 text-sm md:text-base truncate leading-tight">
                                                             {sub.profiles?.registration_number ? (
                                                                 <>
-                                                                    <span className="text-slate-700 whitespace-nowrap">{sub.profiles.registration_number}</span>
+                                                                    <span className="text-slate-700 whitespace-nowrap text-xs md:text-sm">{sub.profiles.registration_number}</span>
                                                                     <span className="text-slate-400 font-normal">:</span>
                                                                     <span className="truncate">{sub.profiles.full_name || 'Unknown'}</span>
                                                                 </>
@@ -385,34 +417,41 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
 
                                                     <div className="flex-shrink-0">
                                                         {sub.grade !== null ? (
-                                                            <span className="bg-emerald-100 text-emerald-700 text-xs md:text-sm font-bold px-2 py-1 rounded-lg border border-emerald-200 whitespace-nowrap block">
+                                                            <span className="bg-emerald-100 text-emerald-700 text-[10px] md:text-sm font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-emerald-200 whitespace-nowrap block">
                                                                 {sub.grade} / {assignment?.max_points}
                                                             </span>
                                                         ) : (
-                                                            <span className="bg-slate-100 text-slate-500 text-xs md:text-sm font-bold px-2 py-1 rounded-lg border border-slate-200 whitespace-nowrap block">
+                                                            <span className="bg-slate-100 text-slate-500 text-[10px] md:text-sm font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-slate-200 whitespace-nowrap block">
                                                                 Ungraded
                                                             </span>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1.5 pl-8">
-                                                    <span className="text-xs md:text-sm text-slate-500 flex items-center gap-1.5 font-medium">
-                                                        <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                                        {new Date(sub.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-
-                                                    {isLate && (
-                                                        <span className="flex items-center gap-1.5 bg-orange-50 text-orange-700 text-xs md:text-sm px-2 py-0.5 rounded border border-orange-200 font-semibold">
-                                                            <AlertTriangle className="w-3.5 h-3.5 md:w-4 md:h-4" /> Late
+                                                <div className="flex justify-between items-end pl-6 md:pl-8">
+                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                                                        <span className="text-[10px] md:text-sm text-slate-500 flex items-center gap-1 font-medium">
+                                                            <Clock className="w-3 h-3 md:w-4 md:h-4" />
+                                                            {new Date(sub.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                         </span>
-                                                    )}
 
-                                                    {sub.ai_score !== null && sub.ai_score !== undefined && (
-                                                        <span className={`flex items-center gap-1.5 text-xs md:text-sm px-2 py-0.5 rounded border font-semibold ${sub.ai_score > 70 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                                                            <Bot className="w-3.5 h-3.5 md:w-4 md:h-4" /> {sub.ai_score.toFixed(0)}% AI
-                                                        </span>
-                                                    )}
+                                                        {isLate && (
+                                                            <span className="flex items-center gap-1 bg-orange-50 text-orange-700 text-[10px] md:text-sm px-1.5 py-0.5 rounded border border-orange-200 font-semibold">
+                                                                <AlertTriangle className="w-3 h-3 md:w-4 md:h-4" /> Late
+                                                            </span>
+                                                        )}
+
+                                                        {sub.ai_score !== null && sub.ai_score !== undefined && (
+                                                            <span className={`flex items-center gap-1 text-[10px] md:text-sm px-1.5 py-0.5 rounded border font-semibold ${sub.ai_score > 70 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                                                                <Bot className="w-3 h-3 md:w-4 md:h-4" /> {sub.ai_score.toFixed(0)}% AI
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Navigation Arrow */}
+                                                    <div className="text-slate-300">
+                                                        <ChevronRight className="w-4 h-4 md:hidden" />
+                                                    </div>
                                                 </div>
                                             </button>
                                         );
@@ -447,8 +486,8 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                                                             <h2 className="text-sm md:text-lg font-bold text-slate-900 flex items-center gap-2 truncate">
                                                                 {selectedSub.profiles?.registration_number || selectedSub.profiles?.full_name}
                                                                 {selectedSub?.ai_score !== null && selectedSub?.ai_score !== undefined && (
-                                                                    <span className={`text-[10px] md:text-sm px-1.5 py-0.5 md:px-3 md:py-1 rounded-full border font-bold ${selectedSub.ai_score > 70 ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                                                                        AI Score: {selectedSub.ai_score.toFixed(0)}%
+                                                                    <span className={`text-[10px] md:text-sm px-2 py-0.5 md:px-3 md:py-1 rounded-full border font-bold ${selectedSub.ai_score > 70 ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                                                        AI: {selectedSub.ai_score.toFixed(0)}%
                                                                     </span>
                                                                 )}
                                                             </h2>
@@ -480,9 +519,22 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                                                             </button>
                                                         </div>
 
-                                                        {/* View Report - Text Button */}
-                                                        <Link href={`/instructor/submission/${selectedSub.id}`} target="_blank" className="flex items-center gap-1.5 px-2 py-1.5 md:px-5 md:py-2.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-800 rounded-lg font-bold text-[10px] md:text-sm transition-colors border border-indigo-100 whitespace-nowrap shadow-sm md:shadow-none" title="View Report">
-                                                            <FileText className="w-3 h-3 md:w-5 md:h-5" /> View AI Report
+                                                        {/* Generate TA Insight Button - Magic Border Effect */}
+                                                        <button
+                                                            onClick={() => setShowTAModal(true)}
+                                                            className="relative inline-flex h-8 md:h-10 overflow-hidden rounded-lg p-[1px] focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-50 shadow-sm"
+                                                        >
+                                                            <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2E8F0_0%,#6366f1_50%,#f59e0b_60%,#E2E8F0_100%)]" />
+                                                            <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-lg bg-white px-3 py-1 text-[10px] md:text-sm font-bold text-indigo-600 backdrop-blur-3xl gap-1.5 transition-all hover:bg-indigo-50/50">
+                                                                <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-500 fill-indigo-100" />
+                                                                <span className="hidden sm:inline">Generate TA Insight</span>
+                                                                <span className="sm:hidden">TA Insight</span>
+                                                            </span>
+                                                        </button>
+
+                                                        {/* View Report - Desktop Only */}
+                                                        <Link href={`/instructor/submission/${selectedSub.id}`} target="_blank" className="hidden md:flex items-center gap-1.5 px-2 py-1.5 md:px-5 md:py-2.5 text-slate-500 bg-white hover:bg-slate-50 hover:text-indigo-600 rounded-lg font-bold text-[10px] md:text-sm transition-colors border border-slate-200 whitespace-nowrap" title="View Report">
+                                                            <FileText className="w-3 h-3 md:w-5 md:h-5" /> View Report
                                                         </Link>
 
                                                         {/* Full Screen Toggle */}
@@ -499,27 +551,44 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                                                 {/* Content Area */}
                                                 <div className="flex-1 flex flex-col gap-6 overflow-hidden">
                                                     {/* Text Content */}
-                                                    <div className={`bg-white p-6 rounded-2xl border border-slate-200 shadow-sm overflow-y-auto font-serif text-slate-700 leading-chill ${isFullScreen ? 'flex-1' : 'max-h-[500px]'}`}>
+                                                    <div className={`bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm overflow-y-auto font-serif text-slate-700 leading-relaxed text-sm md:text-base ${isFullScreen ? 'flex-1' : 'max-h-[500px]'}`}>
                                                         {selectedSub.content}
                                                     </div>
 
                                                     {/* Grading Form */}
                                                     {/* Grading Form */}
                                                     <div className="w-full transition-all duration-300">
-                                                        {/* Mobile Toggle Button */}
-                                                        <button
-                                                            onClick={() => setIsGradingFormVisible(!isGradingFormVisible)}
-                                                            className="flex md:hidden w-full items-center justify-between p-3 bg-slate-100 rounded-t-xl text-xs font-bold text-slate-600 border border-slate-200 border-b-0"
-                                                        >
-                                                            <span className="flex items-center gap-2">
+                                                        {/* Mobile Toggle Bar */}
+                                                        <div className="flex md:hidden w-full items-center justify-between p-3 bg-slate-100 rounded-t-xl border border-slate-200 border-b-0">
+                                                            <button
+                                                                onClick={() => setIsGradingFormVisible(!isGradingFormVisible)}
+                                                                className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors"
+                                                            >
                                                                 <CheckCircle className="w-4 h-4 text-indigo-600" /> Grade & Feedback
-                                                            </span>
-                                                            <span className="text-indigo-600 tracking-wide">{isGradingFormVisible ? 'Hide' : 'Show'}</span>
-                                                        </button>
+                                                            </button>
+
+                                                            <div className="flex items-center gap-3">
+                                                                <Link
+                                                                    href={`/instructor/submission/${selectedSub.id}`}
+                                                                    target="_blank"
+                                                                    className="text-[10px] font-bold text-slate-500 hover:text-indigo-600 flex items-center gap-1 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm"
+                                                                >
+                                                                    <FileText className="w-3 h-3" /> View AI Report
+                                                                </Link>
+                                                                <button
+                                                                    onClick={() => setIsGradingFormVisible(!isGradingFormVisible)}
+                                                                    className="text-indigo-600 text-xs font-bold tracking-wide hover:text-indigo-800"
+                                                                >
+                                                                    {isGradingFormVisible ? 'Hide' : 'Show'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
 
                                                         {/* Form Container */}
                                                         <div className={`${isGradingFormVisible ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'} transition-all duration-300 md:max-h-none md:opacity-100`}>
                                                             <form onSubmit={handleSaveGrade} className="bg-white p-3 md:p-6 rounded-b-xl md:rounded-2xl border border-indigo-100 shadow-lg ring-2 md:ring-4 ring-indigo-50/50">
+
+                                                                {/* Form Header */}
                                                                 <div className="hidden md:flex justify-between items-center mb-4">
                                                                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
                                                                         <CheckCircle className="w-5 h-5 text-indigo-600" /> Grade & Feedback
@@ -724,6 +793,23 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                         </div>
                     </div>,
                     document.body
+                )}
+
+                {/* TA Assistant Modal */}
+                {assignment && selectedSub && (
+                    <TAInsightsModal
+                        isOpen={showTAModal}
+                        onClose={() => setShowTAModal(false)}
+                        className={assignment.classes?.name || 'Unknown Class'}
+                        assignmentTitle={assignment.title}
+                        instructions={assignment.description || 'No instructions provided.'}
+                        submissionText={selectedSub.content || ''}
+                        aiScore={selectedSub.ai_score || 0}
+                        maxPoints={assignment.max_points}
+                        studentName={selectedSub.profiles?.registration_number || selectedSub.profiles?.full_name || 'Student'}
+                        instructorName={instructorName || 'Your Instructor'}
+                        rubric={assignment.rubric}
+                    />
                 )}
             </div>
         </div>

@@ -7,7 +7,7 @@ import {
     Users, FileText, Calendar, Settings, Plus, MoreVertical, Trash2,
     ExternalLink, Search, Filter, ArrowLeft, Clock, CheckCircle, Download,
     X, Lock, Unlock, AlertCircle, ChevronRight, Loader2, BookOpen, Edit, Shield, PlayCircle, Copy, Check, ChevronUp, ChevronDown, ArrowUpRight,
-    Eye, EyeOff
+    Eye, EyeOff, Sparkles
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -73,6 +73,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
         word_count: number;
         reference_style: string;
     }>({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
+    const [autoGenerateRubric, setAutoGenerateRubric] = useState(false);
+    const [isGeneratingRubric, setIsGeneratingRubric] = useState(false);
     const [isCreatingResource, setIsCreatingResource] = useState(false);
     const [newResource, setNewResource] = useState({ title: '', content: '', file_url: '' });
 
@@ -388,7 +390,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 }
             }
 
-            let data;
+            let insertedId: string | null = null;
 
             if (newAssignment.id) {
                 // Update existing
@@ -400,7 +402,6 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                     .single();
 
                 if (error) throw error;
-
                 setAssignments(assignments.map(a => a.id === updated.id ? updated : a));
                 showToast("Assignment Updated!", 'success');
             } else {
@@ -413,11 +414,61 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
                 if (error) throw error;
                 setAssignments([...assignments, created]);
+                insertedId = created.id;
                 showToast("Assignment Created Successfully!", 'success');
+            }
+
+            // TRIGGER AI RUBRIC GENERATION (New Assignments only mostly, or updates if user toggles)
+            // Logic: Only if toggle is ON and we have an ID (created or existing) and it is NOT an update where we might overwrite existing rubric unintentionally?
+            // User requested: "rubric generation will be triggered when the instructor hits the 'publish assignment' button"
+            // TRIGGER AI RUBRIC GENERATION
+            if (autoGenerateRubric && insertedId) {
+                try {
+                    setIsGeneratingRubric(true);
+
+                    const res = await fetch('/api/rubric/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: assignmentData.title,
+                            description: assignmentData.description,
+                            max_points: assignmentData.max_points
+                        })
+                    });
+
+                    if (!res.ok) {
+                        const errorData = await res.text();
+                        console.error("API Error Body:", errorData);
+                        throw new Error(`Rubric generation failed: ${res.status} ${res.statusText} - ${errorData}`);
+                    }
+
+                    const data = await res.json();
+                    if (data.rubric) {
+                        await supabase
+                            .from('assignments')
+                            .update({ rubric: data.rubric })
+                            .eq('id', insertedId);
+
+                        showToast("Rubric Generated and Saved!", 'success');
+
+                        // Redirect to the new rubric tab
+                        router.push(`/instructor/assignment/${insertedId}?tab=rubric`);
+                        return; // Exit here, don't just close modal, we are navigating away
+                    }
+                } catch (err: any) {
+                    console.error("Rubric Gen Failed:", err);
+                    showToast("Assignment created, but Rubric generation failed: " + err.message, 'error');
+                    setIsGeneratingRubric(false);
+                    // We still close the modal below because the assignment was created
+                }
             }
 
             setIsCreatingAssignment(false);
             setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
+            setAutoGenerateRubric(false);
+            setIsGeneratingRubric(false);
+            setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
+            setAutoGenerateRubric(false);
         } catch (err: any) {
             showToast("Error saving assignment: " + err.message, 'error');
         }
@@ -1031,6 +1082,18 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                         <option value="IEEE">IEEE</option>
                                                     </select>
                                                 </div>
+
+                                                <div className="col-span-2 flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                                    <div className="flex items-center gap-2">
+                                                        <Sparkles className="w-4 h-4 text-indigo-600" />
+                                                        <span className="text-xs font-bold text-slate-700 uppercase">Auto-generate Rubric with AI</span>
+                                                    </div>
+                                                    <div className="relative inline-flex items-center cursor-pointer" onClick={() => setAutoGenerateRubric(!autoGenerateRubric)}>
+                                                        <div className={`w-11 h-6 rounded-full transition-colors ${autoGenerateRubric ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                                                            <div className={`absolute top-1 left-1 bg-white border border-slate-300 rounded-full h-4 w-4 transition-transform ${autoGenerateRubric ? 'translate-x-5 border-transparent' : ''}`}></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                             {shortCodeError && (
                                                 <div className="col-span-2 flex items-start gap-1 -mt-1 text-red-500 animate-fade-in">
@@ -1078,7 +1141,10 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                             className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold pr-12 text-sm md:text-base"
                                                             placeholder="100"
                                                             value={newAssignment.max_points}
-                                                            onChange={e => setNewAssignment({ ...newAssignment, max_points: parseInt(e.target.value) })}
+                                                            onChange={e => {
+                                                                const val = parseInt(e.target.value);
+                                                                setNewAssignment({ ...newAssignment, max_points: isNaN(val) ? 0 : val });
+                                                            }}
                                                             required
                                                         />
                                                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs pointer-events-none">/ 100</span>
@@ -1098,6 +1164,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                 onClick={() => {
                                                     setIsCreatingAssignment(false);
                                                     setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
+                                                    setAutoGenerateRubric(false);
                                                 }}
                                                 className="px-3 py-2 md:px-6 md:py-2.5 text-slate-500 hover:text-slate-700 font-bold text-xs md:text-sm transition-colors"
                                             >
@@ -1903,6 +1970,22 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                     }}
                 />
             </div>
+            {/* AI Loading Overlay */}
+            {isGeneratingRubric && (
+                <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center flex-col animate-in fade-in duration-300">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center space-y-6">
+                        <div className="relative w-20 h-20 mx-auto">
+                            <div className="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
+                            <div className="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+                            <Sparkles className="absolute inset-0 m-auto w-8 h-8 text-indigo-600 animate-pulse" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Designing Rubric...</h3>
+                            <p className="text-slate-500 text-sm">Our AI is analyzing your assignment details to create a perfect grading criteria.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

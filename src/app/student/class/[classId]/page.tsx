@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Database } from '@/lib/database.types';
 
 type ClassData = Database['public']['Tables']['classes']['Row'] & {
-    instructor_profile?: { full_name: string | null }
+    instructor_profile?: { full_name: string | null, title?: string | null }
 };
 type Assignment = Database['public']['Tables']['assignments']['Row'];
 type Resource = Database['public']['Tables']['class_resources']['Row'];
@@ -53,7 +53,7 @@ function StudentClassPage({ classId }: { classId: string }) {
             const { data: { user } } = await supabase.auth.getUser();
 
             const promises = [
-                supabase.from('classes').select('*, profiles:instructor_id(full_name)').eq('id', classId).single(),
+                supabase.from('classes').select('*, profiles:instructor_id(full_name, title)').eq('id', classId).single(),
                 supabase.from('assignments').select('*').eq('class_id', classId).order('due_date', { ascending: true }),
                 supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false }),
                 supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId)
@@ -81,7 +81,7 @@ function StudentClassPage({ classId }: { classId: string }) {
             if (clsRes.data) {
                 setClassData({
                     ...clsRes.data,
-                    instructor_profile: clsRes.data.profiles as unknown as { full_name: string }
+                    instructor_profile: clsRes.data.profiles as unknown as { full_name: string, title?: string }
                 });
             }
             if (assignRes.data) setAssignments(assignRes.data);
@@ -143,7 +143,7 @@ function StudentClassPage({ classId }: { classId: string }) {
                             </div>
 
                             <p className="text-slate-500 font-medium flex items-center gap-2">
-                                Instructor: <span className="text-slate-800 font-bold">{classData.instructor_profile?.full_name || 'Unknown'}</span>
+                                Instructor: <span className="text-slate-800 font-bold">{classData.instructor_profile?.title ? `${classData.instructor_profile.title} ` : ''}{classData.instructor_profile?.full_name || 'Unknown'}</span>
                             </p>
 
                             {/* Row 2: Metadata (Collapsible) */}
