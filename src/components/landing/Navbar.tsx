@@ -36,11 +36,11 @@ export default function Navbar({ onOpenDemo }: NavbarProps) {
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <Link href="/student/login" className="text-sm font-bold text-emerald-400 hover:text-emerald-300 transition-colors hidden md:block">
-                        Student Login
-                    </Link>
                     <Link href="/login" className="text-sm font-bold text-white hover:text-indigo-300 transition-colors hidden md:block">
                         Instructor Login
+                    </Link>
+                    <Link href="/student/login" className="text-sm font-bold text-emerald-400 hover:text-emerald-300 transition-colors hidden md:block">
+                        Student Login
                     </Link>
                     <button
                         onClick={onOpenDemo}
