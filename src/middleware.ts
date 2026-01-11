@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // 1b. Block Demo Users from /instructor/lab and /instructor/settings
-    const isDemoUser = user?.email?.toLowerCase().endsWith('@scholarsync.demo');
+    const isDemoUser = user?.email?.toLowerCase().endsWith('@schologic.demo');
     const isRestrictedRoute = request.nextUrl.pathname.startsWith('/instructor/lab') ||
         request.nextUrl.pathname.startsWith('/instructor/settings');
 

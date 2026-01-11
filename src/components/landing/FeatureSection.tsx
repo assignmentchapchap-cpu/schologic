@@ -31,12 +31,12 @@ export default function FeatureSection() {
         <section className="py-24 bg-slate-900 border-t border-slate-800">
             <div className="container mx-auto px-6">
                 <div className="text-center mb-16">
-                    <h2 className="text-sm font-bold text-indigo-400 uppercase tracking-widest mb-3">Why ScholarSync?</h2>
+                    <h2 className="text-sm font-bold text-indigo-400 uppercase tracking-widest mb-3">Why Schologic LMS?</h2>
                     <h3 className="text-3xl md:text-5xl font-black text-white mb-6">
-                        Reclaim your weekends.
+                        Why Choose Schologic LMS?
                     </h3>
                     <p className="text-slate-400 max-w-2xl mx-auto text-lg">
-                        Our platform handles the tedious parts of grading so you can focus on what matters: teaching and mentoring students.
+                        Unified experience for modern academia. Schologic LMS combines powerful AI with intuitive management.
                     </p>
                 </div>
 

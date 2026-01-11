@@ -38,7 +38,7 @@ export default function DemoTour() {
                     currentSteps = [
                         {
                             target: 'body',
-                            content: 'Welcome to ScholarSync! This interactive demo will guide you through the AI-powered grading workflow.',
+                            content: "Welcome to Schologic LMS! Let's take a quick 2-minute tour of how you can manage your classes and assignments with AI efficiency.",
                             placement: 'center',
                             disableBeacon: true,
                         },

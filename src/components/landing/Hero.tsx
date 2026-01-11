@@ -54,7 +54,7 @@ export default function Hero({ onOpenDemo }: HeroProps) {
 
                     {/* Subhead */}
                     <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
-                        Grade essays in seconds, not hours. Provide deep, personalized feedback with the power of AI. ScholarSync redefines the academic workflow for modern educators.
+                        Grade essays in seconds, not hours. Provide deep, personalized feedback with the power of AI. Schologic LMS redefines the academic workflow for modern educators.
                     </p>
 
                     {/* CTAs */}
@@ -90,7 +90,7 @@ export default function Hero({ onOpenDemo }: HeroProps) {
                                 <div className="w-3 h-3 rounded-full bg-red-400"></div>
                                 <div className="w-3 h-3 rounded-full bg-amber-400"></div>
                                 <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
-                                <div className="flex-1 text-center text-[10px] text-slate-500 font-mono">dashboard.scholarsync.com</div>
+                                <div className="flex-1 text-center text-[10px] text-slate-500 font-mono">dashboard.schologic.com</div>
                             </div>
 
                             {/* Screenshots Carousel with SLIDE Effect */}

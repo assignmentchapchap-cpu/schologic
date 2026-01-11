@@ -91,7 +91,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     const [lastViewedAt, setLastViewedAt] = useState<Date>(new Date(0));
 
     useEffect(() => {
-        const key = `scholarSync_lastViewed_${classId}`;
+        const key = `schologic_lastViewed_${classId}`;
         const stored = localStorage.getItem(key);
         if (stored) {
             setLastViewedAt(new Date(stored));
@@ -99,7 +99,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     }, [classId]);
 
     const updateLastViewed = () => {
-        const key = `scholarSync_lastViewed_${classId}`;
+        const key = `schologic_lastViewed_${classId}`;
         const now = new Date().toISOString();
         localStorage.setItem(key, now);
         // We purposefully DO NOT update the state here, so the "New" badges persist for the current session.
@@ -1980,6 +1980,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                             <Sparkles className="absolute inset-0 m-auto w-8 h-8 text-indigo-600 animate-pulse" />
                         </div>
                         <div>
+                            <h1 className="text-2xl font-bold">Schologic LMS</h1>
                             <h3 className="text-xl font-bold text-slate-900 mb-2">Designing Rubric...</h3>
                             <p className="text-slate-500 text-sm">Our AI is analyzing your assignment details to create a perfect grading criteria.</p>
                         </div>

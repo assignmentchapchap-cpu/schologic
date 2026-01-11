@@ -82,7 +82,7 @@ export async function POST(req: Request) {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`,
-                'User-Agent': 'ScholarSync/1.0'
+                'User-Agent': 'SchologicLMS/1.0'
             },
             body: JSON.stringify({
                 model: 'swiss-ai/apertus-70b-instruct',
@@ -92,7 +92,44 @@ export async function POST(req: Request) {
                 ],
                 temperature: 0.1,
                 max_tokens: 1000,
-                response_format: { type: 'json_object' }
+                response_format: {
+                    type: 'json_schema',
+                    json_schema: {
+                        name: 'teaching_assistant_analysis',
+                        strict: true,
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                strengths: {
+                                    type: 'array',
+                                    items: { type: 'string' }
+                                },
+                                weaknesses: {
+                                    type: 'array',
+                                    items: { type: 'string' }
+                                },
+                                rubric_breakdown: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            criterion: { type: 'string' },
+                                            performance_level: { type: 'string' },
+                                            score: { type: 'number' },
+                                            max: { type: 'number' },
+                                            reason: { type: 'string' }
+                                        },
+                                        required: ['criterion', 'performance_level', 'score', 'max', 'reason'],
+                                        additionalProperties: false
+                                    }
+                                },
+                                score: { type: 'number' }
+                            },
+                            required: ['strengths', 'weaknesses', 'rubric_breakdown', 'score'],
+                            additionalProperties: false
+                        }
+                    }
+                }
             })
         });
 

@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ScholarSync",
+  title: "Schologic LMS",
   description: "AI-Powered Assignment Grading",
 };
 

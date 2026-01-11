@@ -128,8 +128,8 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
                                 <Sparkles className="w-6 h-6" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800 leading-tight">Try Demo</h2>
-                                <p className="text-slate-500 text-sm">Experience ScholarSync instantly.</p>
+                                <h3 className="text-xl font-bold">Try Schologic LMS</h3>
+                                <p className="text-slate-400 text-sm">Experience the instructor dashboard immediately.</p>
                             </div>
                         </div>
 

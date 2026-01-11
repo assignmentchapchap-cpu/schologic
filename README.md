@@ -1,9 +1,8 @@
-# ScholarSync
-
-> AI-Powered Grading Assistant for Modern Educators.
+# Schologic LMS 🎓
+**AI-Powered Learning Management System** (formerly ScholarSync) for Modern Educators.
  (MVP)
 
-ScholarSync is a web application designed to help instructors and students verify academic integrity using AI detection. It provides a simple classroom management system where instructors can create classes, generates invite codes for students, and analyzes submissions for AI-generated content using the Hugging Face Inference API.
+Schologic LMS is a web application designed to help instructors and students verify academic integrity using AI detection. It provides a simple classroom management system where instructors can create classes, generates invite codes for students, and analyzes submissions for AI-generated content using the Hugging Face Inference API.
 
 ## Features
 

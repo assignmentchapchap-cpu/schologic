@@ -57,7 +57,7 @@ export default function Sidebar({ role }: SidebarProps) {
     useEffect(() => {
         const checkUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (user?.email?.endsWith('@scholarsync.demo')) {
+            if (user?.email?.endsWith('@schologic.demo')) {
                 setIsDemo(true);
             }
         };
@@ -89,10 +89,10 @@ export default function Sidebar({ role }: SidebarProps) {
                     </button>
                     <Link href={role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard'} className="flex items-center gap-2">
                         <div className="relative w-8 h-8 rounded-lg overflow-hidden shrink-0">
-                            <Image src="/logo.png" alt="ScholarSync" fill className="object-cover" />
+                            <Image src="/logo.png" alt="Schologic LMS" fill className="object-cover" />
                         </div>
                         <div className="flex flex-col">
-                            <span className="font-bold text-lg tracking-tight block leading-none text-white">ScholarSync</span>
+                            <span className="font-bold text-lg tracking-tight block leading-none text-white">Schologic LMS</span>
                             <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block leading-none mt-1">{role}</span>
                         </div>
                     </Link>
@@ -137,10 +137,12 @@ export default function Sidebar({ role }: SidebarProps) {
                     <div className="flex items-center justify-between p-6 border-b border-slate-800">
                         <div className="flex items-center gap-3">
                             <div className="relative w-10 h-10 shrink-0">
-                                <Image src="/logo.png" alt="ScholarSync" fill className="object-cover rounded-xl" />
+                                <Image src="/logo.png" alt="Schologic LMS" fill className="object-cover rounded-xl" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-bold tracking-tight">ScholarSync</h1>
+                                <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                                    Schologic LMS
+                                </span>
                                 <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{role}</p>
                             </div>
                         </div>

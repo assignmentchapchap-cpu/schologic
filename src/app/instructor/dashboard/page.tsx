@@ -218,7 +218,7 @@ function DashboardContent() {
             totalUngraded += classSubs.filter(s => s.grade === null).length;
 
             // New (based on LocalStorage timestamp for that class)
-            const key = `scholarSync_lastViewed_${cls.id}`;
+            const key = `schologic_lastViewed_${cls.id}`;
             const storedDate = localStorage.getItem(key);
             const lastViewedAt = storedDate ? new Date(storedDate) : new Date(0); // If never viewed, all are new
 
@@ -297,7 +297,7 @@ function DashboardContent() {
         const classSubs = allSubmissions.filter(s => s.class_id === classId);
         const ungraded = classSubs.filter(s => s.grade === null).length;
 
-        const key = `scholarSync_lastViewed_${classId}`;
+        const key = `schologic_lastViewed_${classId}`;
         const storedDate = localStorage.getItem(key);
         const lastViewedAt = storedDate ? new Date(storedDate) : new Date(0);
 
