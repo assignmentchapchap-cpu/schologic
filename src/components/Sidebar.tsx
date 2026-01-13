@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Home, Terminal, User, Upload, LogOut, GraduationCap, Calendar, Settings, FileText, Menu, X, Search, Plus, Bell } from 'lucide-react';
+import { Home, Terminal, User, Upload, LogOut, GraduationCap, Calendar, Settings, FileText, Menu, X, Search, Plus, Bell, BookOpen } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NotificationBell from './NotificationBell';
 import { createClient } from '@/lib/supabase';
@@ -40,6 +40,7 @@ export default function Sidebar({ role }: SidebarProps) {
     const links = role === 'instructor' ? [
         { href: '/instructor/dashboard', label: 'Dashboard', icon: Home },
         { href: '/instructor/classes', label: 'Classes', icon: GraduationCap },
+        { href: '/instructor/library', label: 'Library', icon: BookOpen },
         { href: '/instructor/calendar', label: 'Calendar', icon: Calendar },
         { href: '/instructor/lab', label: 'AI Lab', icon: Terminal },
         { href: '/instructor/settings', label: 'Settings', icon: Settings },
