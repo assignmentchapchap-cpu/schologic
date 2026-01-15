@@ -1,11 +1,11 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { BookOpen, Calendar, Clock, ArrowRight, Plus, Search, User, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Database } from '@/lib/database.types';
+import { Database } from "@schologic/database";
 import NotificationBell from '@/components/NotificationBell';
 import StudentCalendar from '@/components/student/StudentCalendar';
 import GlobalAssignmentsCard from '@/components/student/GlobalAssignmentsCard';

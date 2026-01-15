@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { FileText, Download, ArrowLeft, Calendar, Clock, CheckCircle, AlertCircle, Eye, ArrowUpRight, Users, X, ChevronUp, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
-import { Database } from '@/lib/database.types';
+import { Database } from "@schologic/database";
 
 type ClassData = Database['public']['Tables']['classes']['Row'] & {
     instructor_profile?: { full_name: string | null, title?: string | null }

@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { X, Loader2, Sparkles, User, School } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { useToast } from '@/context/ToastContext';
 
 interface DemoSignupModalProps {

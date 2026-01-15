@@ -2,12 +2,12 @@
 
 import { useEffect, useState, use, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { ArrowLeft, FileText, CheckCircle, Clock, Pencil, Save, X, Maximize2, Minimize2, ChevronLeft, ChevronRight, Bot, History, AlertTriangle, Sparkles } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Database } from '@/lib/database.types';
+import { Database } from "@schologic/database";
 import TAInsightsModal from '@/components/instructor/TAInsightsModal';
 import RubricComponent from '@/components/RubricComponent';
 

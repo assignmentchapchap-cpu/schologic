@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { User, Mail, School, Save, Loader2 } from 'lucide-react';
-import { Database } from '@/lib/database.types';
+import { Database } from "@schologic/database";
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/context/ToastContext';
 

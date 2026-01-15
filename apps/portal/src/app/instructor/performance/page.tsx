@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { BarChart2, ChevronRight, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 

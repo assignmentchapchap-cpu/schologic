@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 

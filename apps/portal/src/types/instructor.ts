@@ -1,4 +1,4 @@
-import { Database } from '@/lib/database.types';
+import { Database } from "@schologic/database";
 
 export type ClassData = Database['public']['Tables']['classes']['Row'];
 export type Assignment = Database['public']['Tables']['assignments']['Row'];

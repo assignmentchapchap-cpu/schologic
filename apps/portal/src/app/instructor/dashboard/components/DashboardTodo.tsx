@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { CheckSquare, Plus, Trash2, Check } from 'lucide-react';
 
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 
 interface Todo {
     id: string;

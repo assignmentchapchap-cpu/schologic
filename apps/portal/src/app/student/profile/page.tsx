@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { User, Mail, School, Save, Loader2, Hash } from 'lucide-react';
 import Link from 'next/link';
-import { Database } from '@/lib/database.types';
+import { Database } from "@schologic/database";
 import { useRouter } from 'next/navigation';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];

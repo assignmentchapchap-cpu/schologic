@@ -1,0 +1,17 @@
+{
+    "name": "@schologic/ai-bridge",
+    "version": "0.1.0",
+    "private": true,
+    "main": "src/index.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "openai": "^4.24.1"
+    },
+    "devDependencies": {
+        "@schologic/config": "*",
+        "@types/node": "^25.0.8",
+        "typescript": "^5"
+    }
+}

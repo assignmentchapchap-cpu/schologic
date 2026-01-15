@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Joyride, { Step } from 'react-joyride'; // Simplified imports
 import { usePathname, useRouter } from 'next/navigation';
 import { useDemoTour } from '@/context/DemoTourContext';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { DEMO_STUDENT_PASSWORD } from '@/lib/demo-data';
 import { useToast } from '@/context/ToastContext';
 

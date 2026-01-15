@@ -8,7 +8,8 @@
         "clean": "turbo clean"
     },
     "devDependencies": {
-        "turbo": "latest"
+        "turbo": "latest",
+        "typescript": "^5.9.3"
     },
     "workspaces": [
         "apps/*",

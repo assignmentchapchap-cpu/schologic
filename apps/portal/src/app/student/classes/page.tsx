@@ -1,10 +1,10 @@
 'use client';
 
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { BookOpen, Calendar, ArrowRight, User, Home, GraduationCap, AlertCircle, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Database } from '@/lib/database.types';
+import { Database } from "@schologic/database";
 
 type EnrolledClass = {
     class_id: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { useToast } from '@/context/ToastContext';
 import {
     Users, FileText, Calendar, Settings, Plus, MoreVertical, Trash2,
@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Database } from '@/lib/database.types';
+import { Database } from "@schologic/database";
 import { MODELS, MODEL_LABELS, ScoringMethod, Granularity } from '@/lib/ai-config';
 import { isDateBetween, isDateAfter } from '@/lib/date-utils';
 import jsPDF from 'jspdf';

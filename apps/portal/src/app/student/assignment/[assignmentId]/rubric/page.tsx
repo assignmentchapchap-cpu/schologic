@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { Loader2, AlertCircle } from 'lucide-react';
 import RubricComponent from '@/components/RubricComponent';
 

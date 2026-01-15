@@ -1,6 +1,6 @@
 'use client';
 
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { Home, Clock, ChevronRight, X, FileText, Search, Plus, Calendar as CalendarIcon, ArrowUpRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NotificationBell from '@/components/NotificationBell';

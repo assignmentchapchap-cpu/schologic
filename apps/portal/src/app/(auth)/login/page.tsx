@@ -3,7 +3,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
 import DemoSignupModal from '@/components/auth/DemoSignupModal';
 

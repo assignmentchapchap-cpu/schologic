@@ -1,12 +1,12 @@
 'use client';
 
 import { useToast } from '@/context/ToastContext';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { Plus, Users, Calendar, ArrowRight, X, GraduationCap, AlertCircle, FileText, Clock, Home } from 'lucide-react';
 import { useEffect, useState, Suspense } from 'react';
 import { isDateFuture, isDateAfter } from '@/lib/date-utils';
 import Link from 'next/link';
-import { Database } from '@/lib/database.types';
+import { Database } from "@schologic/database";
 import { useSearchParams } from 'next/navigation';
 
 type ClassItem = Database['public']['Tables']['classes']['Row'] & {

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Sparkles, Edit2, Check, X, Trash2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { useToast } from '@/context/ToastContext';
 
 type RubricItem = {

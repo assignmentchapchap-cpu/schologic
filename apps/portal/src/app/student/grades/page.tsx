@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { FileText, CheckCircle, Clock, Search, Filter, ChevronDown, Download, GraduationCap, X, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { Database } from '@/lib/database.types';
-import jsPDF from 'jspdf';
+import { Database } from "@schologic/database";
+import { jsPDF } from "jspdf";
 import { useToast } from '@/context/ToastContext';
 
 type EnrollmentProfile = {

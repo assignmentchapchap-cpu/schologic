@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { Settings, Save, Brain, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { MODELS, MODEL_LABELS, ScoringMethod, Granularity } from '@/lib/ai-config';
 

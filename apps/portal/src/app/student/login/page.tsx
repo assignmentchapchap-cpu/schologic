@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { ArrowRight, Loader2, Home, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 

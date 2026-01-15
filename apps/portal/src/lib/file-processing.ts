@@ -1,11 +1,15 @@
-import mammoth from 'mammoth';
+import { extractTextFromDocx } from "@schologic/doc-engine";
 
-export async function extractTextFromDocx(fileBuffer: Buffer): Promise<string> {
+export async function extractTextFromDocxFile(fileBuffer: Buffer): Promise<string> {
     try {
-        const result = await mammoth.extractRawText({ buffer: fileBuffer });
-        return result.value; // The raw text
+        return await extractTextFromDocx(fileBuffer);
     } catch (error) {
-        console.error("Error parsing DOCX:", error);
-        throw new Error("Failed to parse document.");
+        console.error("File Processing Error:", error);
+        throw new Error("Failed to process document");
     }
+}
+
+// For backward compatibility if needed, alias to the same function
+export async function extractTextFromDocx(fileBuffer: Buffer): Promise<string> {
+    return extractTextFromDocxFile(fileBuffer);
 }

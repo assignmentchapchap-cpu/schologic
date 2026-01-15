@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, List, Grid, Plus, X } from 'lucide-react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from "@schologic/database";
 import { useToast } from '@/context/ToastContext';
 
 interface DashboardCalendarProps {
