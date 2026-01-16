@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -54,8 +53,8 @@ export default function InstructorProfilePage() {
                 // Logic to handle names:
                 // 1. Try first_name/last_name from DB if they exist (assuming user added columns)
                 // 2. If not, fallback to splitting full_name
-                let fName = (data as any).first_name || '';
-                let lName = (data as any).last_name || '';
+                let fName = data.first_name || '';
+                let lName = data.last_name || '';
 
                 if (!fName && !lName && data.full_name) {
                     const parts = data.full_name.split(' ');
@@ -64,7 +63,7 @@ export default function InstructorProfilePage() {
                 }
 
                 setFormData({
-                    title: (data as any).title || '',
+                    title: data.title || '',
                     first_name: fName,
                     last_name: lName,
                     bio: data.bio || '',
@@ -74,9 +73,20 @@ export default function InstructorProfilePage() {
                 // Fallback if no profile data found but user is logged in
                 setProfile({
                     id: user.id,
-                    email: user.email,
-                    role: 'instructor'
-                } as any);
+                    email: user.email ?? null,
+                    role: 'instructor',
+                    title: null,
+                    first_name: null,
+                    last_name: null,
+                    honorific: null,
+                    full_name: null,
+                    institution_id: null,
+                    bio: null,
+                    avatar_url: null,
+                    preferences: null,
+                    registration_number: null,
+                    settings: null
+                });
 
                 // Populate form from metadata if available
                 const meta = user.user_metadata || {};
@@ -90,7 +100,7 @@ export default function InstructorProfilePage() {
                 }
 
                 setFormData({
-                    title: (meta as any).title || '',
+                    title: meta.title || '',
                     first_name: fName,
                     last_name: lName,
                     bio: '',
@@ -125,7 +135,7 @@ export default function InstructorProfilePage() {
                     avatar_url: formData.avatar_url,
                     role: 'instructor',
                     email: user.email
-                } as any);
+                });
 
             if (error) throw error;
 
@@ -144,7 +154,7 @@ export default function InstructorProfilePage() {
             if (authError) console.error("Failed to sync auth metadata:", authError);
 
             // Optimistic update
-            if (profile) setProfile({ ...profile, full_name: fullName, ...formData } as any);
+            if (profile) setProfile({ ...profile, full_name: fullName, title: formData.title, first_name: formData.first_name, last_name: formData.last_name, bio: formData.bio, avatar_url: formData.avatar_url });
             showToast('Profile updated successfully!', 'success');
         } catch (error: any) {
             console.error('Error updating profile', error);

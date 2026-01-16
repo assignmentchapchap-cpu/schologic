@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 'use client';
 import { useState, useEffect } from 'react';
 import { Sparkles, Edit2, Check, X, Trash2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
@@ -104,6 +104,12 @@ export default function RubricComponent({
         if (maxPoints && total !== maxPoints) {
             alert(`Warning: Total points (${total}) does not match Assignment Max Points (${maxPoints})`);
             // We allow it but warn
+        }
+
+        if (!assignmentId) {
+            console.error("No assignmentId provided for rubric save");
+            setIsSaving(false);
+            return;
         }
 
         const { error } = await supabase

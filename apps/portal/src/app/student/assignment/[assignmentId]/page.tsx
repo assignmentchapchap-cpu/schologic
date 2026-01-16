@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 'use client';
 
 import { useEffect, useState, use } from 'react';
@@ -169,7 +169,7 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
                     assignment_id: assignment.id,
                     content: cleaned,
                     ai_score: analysis.globalScore,
-                    report_data: analysis
+                    report_data: analysis as any
                 })
                 .select()
                 .single();

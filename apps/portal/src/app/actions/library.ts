@@ -1,6 +1,7 @@
 'use server';
 
-import { createClient } from '@/lib/supabase-server';
+import { createSessionClient } from '@schologic/database';
+import { cookies } from 'next/headers';
 import { put } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 import { Asset, AssetType } from '@/types/library';
@@ -8,7 +9,8 @@ import { extractTextFromFile } from '@/lib/parsing';
 
 export async function getAssets(collectionId?: string | null) {
     try {
-        const supabase = await createClient();
+        const cookieStore = await cookies();
+        const supabase = createSessionClient(cookieStore);
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 
@@ -42,7 +44,8 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
 
     if (!file) throw new Error('No file provided');
 
-    const supabase = await createClient();
+    const cookieStore = await cookies();
+    const supabase = createSessionClient(cookieStore);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Unauthorized');
 
@@ -95,7 +98,8 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
 }
 
 export async function createManualAsset(title: string, content: any, collectionId?: string) {
-    const supabase = await createClient();
+    const cookieStore = await cookies();
+    const supabase = createSessionClient(cookieStore);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Unauthorized');
 

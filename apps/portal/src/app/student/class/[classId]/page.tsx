@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 'use client';
 
 import { useEffect, useState, use } from 'react';
@@ -53,7 +53,7 @@ function StudentClassPage({ classId }: { classId: string }) {
             setLoading(true);
             const { data: { user } } = await supabase.auth.getUser();
 
-            const promises = [
+            const promises: any[] = [
                 supabase.from('classes').select('*, profiles:instructor_id(full_name, title)').eq('id', classId).single(),
                 supabase.from('assignments').select('*').eq('class_id', classId).order('due_date', { ascending: true }),
                 supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false }),

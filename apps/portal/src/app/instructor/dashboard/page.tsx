@@ -1,7 +1,7 @@
-// @ts-nocheck
+
 'use client';
 
-import { createClient } from "@schologic/database";
+import { createClient, Database } from "@schologic/database";
 import { Home, Clock, ChevronRight, X, FileText, Search, Plus, Calendar as CalendarIcon, ArrowUpRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NotificationBell from '@/components/NotificationBell';
@@ -14,16 +14,23 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useToast } from '@/context/ToastContext';
 
+type Profile = Database['public']['Tables']['profiles']['Row'];
+type Class = Database['public']['Tables']['classes']['Row'];
+type Assignment = Database['public']['Tables']['assignments']['Row'];
+type Submission = Database['public']['Tables']['submissions']['Row'];
+type Enrollment = Database['public']['Tables']['enrollments']['Row'] & { profiles: Profile };
+type InstructorEvent = Database['public']['Tables']['instructor_events']['Row'];
+
 function DashboardContent() {
     const supabase = createClient();
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
-    const [classes, setClasses] = useState<any[]>([]);
-    const [allSubmissions, setAllSubmissions] = useState<any[]>([]);
-    const [allAssignments, setAllAssignments] = useState<any[]>([]);
-    const [allEvents, setAllEvents] = useState<any[]>([]);
+    const [classes, setClasses] = useState<Class[]>([]);
+    const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
+    const [allAssignments, setAllAssignments] = useState<Assignment[]>([]);
+    const [allEvents, setAllEvents] = useState<InstructorEvent[]>([]);
     const [stats, setStats] = useState({ ungraded: 0, new: 0 });
-    const [allEnrollments, setAllEnrollments] = useState<any[]>([]);
+    const [allEnrollments, setAllEnrollments] = useState<Enrollment[]>([]);
     const [aiStats, setAiStats] = useState({ averageScore: 0, studentCount: 0, trendData: [] as any[], trend: 0 });
     const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
     const [showAssignmentsModal, setShowAssignmentsModal] = useState(false);
@@ -83,7 +90,7 @@ function DashboardContent() {
                     type: 'assignment',
                     id: a.id,
                     title: a.title,
-                    subtitle: `${cls?.name || 'Unknown Class'} • Due ${new Date(a.due_date).toLocaleDateString()}`,
+                    subtitle: `${cls?.name || 'Unknown Class'} • Due ${a.due_date ? new Date(a.due_date).toLocaleDateString() : 'TBD'}`,
                     url: `/instructor/class/${a.class_id}?tab=assignments` // Can't link direct to assignment modal easily without query param
                 });
             }
@@ -149,7 +156,7 @@ function DashboardContent() {
                     .maybeSingle();
 
                 if (profile) {
-                    let fName = (profile as any).first_name;
+                    let fName = profile.first_name;
                     if (!fName && profile.full_name) {
                         fName = profile.full_name.split(' ')[0];
                     }
@@ -163,7 +170,7 @@ function DashboardContent() {
                 // Fetch Classes
                 const { data: classesData } = await supabase
                     .from('classes')
-                    .select('id, name, class_code')
+                    .select('*')
                     .eq('instructor_id', user.id);
 
                 if (classesData && classesData.length > 0) {
@@ -172,9 +179,9 @@ function DashboardContent() {
 
                     // Fetch All Submissions & Assignments for these classes
                     const [submissionsRes, assignmentsRes, enrollmentsRes, eventsRes] = await Promise.all([
-                        supabase.from('submissions').select('id, class_id, grade, created_at, ai_score, student_id').in('class_id', classIds),
-                        supabase.from('assignments').select('id, class_id, title, short_code, due_date').in('class_id', classIds),
-                        supabase.from('enrollments').select('*, profiles:student_id(full_name, avatar_url, registration_number)').in('class_id', classIds),
+                        supabase.from('submissions').select('*').in('class_id', classIds),
+                        supabase.from('assignments').select('*').in('class_id', classIds),
+                        supabase.from('enrollments').select('*, profiles:student_id(*)').in('class_id', classIds),
                         supabase.from('instructor_events').select('*').eq('user_id', user.id)
                     ]);
 
