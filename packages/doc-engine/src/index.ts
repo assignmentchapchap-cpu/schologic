@@ -1,6 +1,6 @@
 
 import mammoth from "mammoth";
-import pdf from "pdf-parse";
+const pdf = require("pdf-parse");
 
 export async function extractTextFromDocx(buffer: Buffer): Promise<string> {
     try {
