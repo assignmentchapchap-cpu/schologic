@@ -6,7 +6,7 @@ import AssetCard from './AssetCard';
 import AssetUploader from './AssetUploader';
 import AssetEditor from './AssetEditor';
 import ConfirmDialog from '../ConfirmDialog';
-import { Plus, Upload, FileText, Search, LayoutGrid, List, Trash2 } from 'lucide-react';
+import { Plus, Upload, FileText, Search, Grid, List, Trash2 } from 'lucide-react';
 import { deleteAsset, deleteAssets } from '@/app/actions/library'; // We will create this
 import { useToast } from '@/context/ToastContext';
 
@@ -144,7 +144,7 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
                         className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                         title="Toggle View"
                     >
-                        {viewMode === 'grid' ? <List className="w-5 h-5" /> : <LayoutGrid className="w-5 h-5" />}
+                        {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
                     </button>
                 </div>
             </div>

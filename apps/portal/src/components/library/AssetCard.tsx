@@ -1,7 +1,7 @@
 'use client';
 
 import { Asset } from '@/types/library';
-import { FileText, Link as LinkIcon, File, Trash2, Box, BookOpen, MoreVertical, Loader2 } from 'lucide-react';
+import { FileText, Link as LinkIcon, File, Trash2, Layers, BookOpen, MoreVertical, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface AssetCardProps {
@@ -28,7 +28,7 @@ export default function AssetCard({ asset, onDelete, isSelected, onToggleSelect 
         switch (asset.asset_type) {
             case 'document': return <FileText className="w-8 h-8 text-blue-500" />;
             case 'url': return <LinkIcon className="w-8 h-8 text-indigo-500" />;
-            case 'cartridge_root': return <Box className="w-8 h-8 text-orange-500" />;
+            case 'cartridge_root': return <Layers className="w-8 h-8 text-orange-500" />;
             default: return <File className="w-8 h-8 text-slate-400" />;
         }
     };

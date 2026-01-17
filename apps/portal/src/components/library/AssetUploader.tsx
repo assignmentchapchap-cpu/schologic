@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { UploadCloud, File, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, File, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { uploadFileAsset } from '@/app/actions/library';
 import { useToast } from '@/context/ToastContext';
 
@@ -62,7 +62,7 @@ export default function AssetUploader({ onClose, onSuccess }: AssetUploaderProps
                         className="border-2 border-dashed border-slate-300 rounded-2xl h-64 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50/50 transition-all group"
                     >
                         <div className="p-4 bg-slate-100 rounded-full group-hover:bg-white mb-4 transition-colors shadow-sm">
-                            <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                            <Upload className="w-8 h-8 text-slate-400 group-hover:text-indigo-600 transition-colors" />
                         </div>
                         <p className="font-bold text-slate-700 mb-1">Click to browse</p>
                         <p className="text-xs text-slate-500">PDF, DOCX, TXT, or IMSCC</p>
@@ -114,7 +114,7 @@ export default function AssetUploader({ onClose, onSuccess }: AssetUploaderProps
                     disabled={!file || uploading}
                     className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold shadow-sm hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                     {uploading ? 'Uploading...' : 'Upload File'}
                 </button>
             </div>

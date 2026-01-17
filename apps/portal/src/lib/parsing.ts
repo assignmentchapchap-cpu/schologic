@@ -34,11 +34,11 @@ export async function extractTextFromFile(file: File): Promise<{ content: any, t
 }
 
 // Kept for backward compatibility if imported elsewhere, but now uses package
-export async function parsePdf(buffer: Buffer): Promise<string> {
+export async function parsePdf(buffer: Buffer): Promise<string | null> {
     return extractTextFromPdf(buffer);
 }
 
-export async function parseDocx(buffer: Buffer): Promise<string> {
+export async function parseDocx(buffer: Buffer): Promise<string | null> {
     return extractTextFromDocx(buffer);
 }
 

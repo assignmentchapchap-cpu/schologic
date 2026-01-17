@@ -7,6 +7,7 @@ import { BookOpen, Calendar, Clock, ArrowRight, Plus, Search, User, X } from 'lu
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Database } from "@schologic/database";
+import { User } from '@supabase/supabase-js';
 import NotificationBell from '@/components/NotificationBell';
 import StudentCalendar from '@/components/student/StudentCalendar';
 import GlobalAssignmentsCard from '@/components/student/GlobalAssignmentsCard';
@@ -40,7 +41,7 @@ function DashboardContent() {
     const [joining, setJoining] = useState(false);
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
 
     const supabase = createClient();
     const router = useRouter();
@@ -121,13 +122,13 @@ function DashboardContent() {
                 .from('classes')
                 .select('id, is_locked')
                 .eq('invite_code', joinCode.trim().toUpperCase())
-                .single() as any;
+                .single();
 
             if (clsErr || !cls) throw new Error("Invalid code");
             if (cls.is_locked) throw new Error("Class is locked");
 
             // 2. Ensure Profile Exists (Fix for FK Violation)
-            const { error: profErr } = await (supabase.from('profiles') as any).upsert({
+            const { error: profErr } = await supabase.from('profiles').upsert({
                 id: user.id,
                 email: user.email,
                 role: 'student',
@@ -153,8 +154,8 @@ function DashboardContent() {
             setJoinCode('');
             fetchDashboardData(); // Refresh
 
-        } catch (err: any) {
-            alert(err.message);
+        } catch (err: unknown) {
+            alert(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setJoining(false);
         }

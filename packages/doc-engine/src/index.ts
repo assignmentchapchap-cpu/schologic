@@ -21,12 +21,12 @@ export async function extractTextFromFile(buffer: Buffer, mimeType: string, file
         const name = fileName.toLowerCase();
 
         if (mimeType === 'application/pdf') {
-            const content = await extractPdfSafe(buffer);
+            const content = await extractTextFromPdf(buffer);
             return content ? { content } : null;
         }
 
         if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-            const content = await extractDocxSafe(buffer);
+            const content = await extractTextFromDocx(buffer);
             return content ? { content } : null;
         }
 
@@ -41,7 +41,7 @@ export async function extractTextFromFile(buffer: Buffer, mimeType: string, file
     }
 }
 
-async function extractPdfSafe(buffer: Buffer): Promise<string | null> {
+export async function extractTextFromPdf(buffer: Buffer): Promise<string | null> {
     try {
         const parser = pdfParse.default || pdfParse;
         const data = await parser(buffer);
@@ -52,7 +52,7 @@ async function extractPdfSafe(buffer: Buffer): Promise<string | null> {
     }
 }
 
-async function extractDocxSafe(buffer: Buffer): Promise<string | null> {
+export async function extractTextFromDocx(buffer: Buffer): Promise<string | null> {
     try {
         const result = await mammoth.extractRawText({ buffer });
         return result.value ? result.value.trim() : null;

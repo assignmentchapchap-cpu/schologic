@@ -1,7 +1,9 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { SupabaseClient } from '@supabase/supabase-js'
+import { Database } from './types'
 
-export const createSessionClient = (cookieStore: any) => {
-    return createServerClient(
+export const createSessionClient = (cookieStore: any): SupabaseClient<Database> => {
+    return createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
