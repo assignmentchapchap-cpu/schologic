@@ -30,7 +30,7 @@ export default function StudentLoginPage() {
 
             if (authData.user) {
                 // 2. Upsert Profile
-                const { error: profErr } = await supabase.from('profiles').upsert({
+                const { error: profErr } = await (supabase.from('profiles') as any).upsert({
                     id: authData.user.id,
                     role: 'student',
                     full_name: studentName,

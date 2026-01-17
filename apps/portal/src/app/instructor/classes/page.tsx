@@ -43,7 +43,7 @@ function ClassesContent() {
                 .from('classes')
                 .select('*, enrollments(count)')
                 .eq('instructor_id', user.id)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false }) as any;
 
             if (data) setClasses(data as unknown as ClassItem[]);
             setLoading(false);
@@ -86,8 +86,8 @@ function ClassesContent() {
 
             const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-            const { data, error } = await supabase
-                .from('classes')
+            const { data, error } = await (supabase
+                .from('classes') as any)
                 .insert([
                     {
                         name: newClassName,

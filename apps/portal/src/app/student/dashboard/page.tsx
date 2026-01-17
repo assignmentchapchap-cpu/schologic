@@ -121,13 +121,13 @@ function DashboardContent() {
                 .from('classes')
                 .select('id, is_locked')
                 .eq('invite_code', joinCode.trim().toUpperCase())
-                .single();
+                .single() as any;
 
             if (clsErr || !cls) throw new Error("Invalid code");
             if (cls.is_locked) throw new Error("Class is locked");
 
             // 2. Ensure Profile Exists (Fix for FK Violation)
-            const { error: profErr } = await supabase.from('profiles').upsert({
+            const { error: profErr } = await (supabase.from('profiles') as any).upsert({
                 id: user.id,
                 email: user.email,
                 role: 'student',

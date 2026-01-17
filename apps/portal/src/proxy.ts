@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { Database } from '@schologic/database'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
@@ -8,7 +9,7 @@ export async function proxy(request: NextRequest) {
         },
     })
 
-    const supabase = createServerClient(
+    const supabase = createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {

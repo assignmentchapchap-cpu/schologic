@@ -41,7 +41,7 @@ export default function Sidebar({ role }: SidebarProps) {
     const links = role === 'instructor' ? [
         { href: '/instructor/dashboard', label: 'Dashboard', icon: Home },
         { href: '/instructor/classes', label: 'Classes', icon: GraduationCap },
-        { href: '/instructor/library', label: 'Library', icon: BookOpen },
+
         { href: '/instructor/calendar', label: 'Calendar', icon: Calendar },
         { href: '/instructor/lab', label: 'AI Lab', icon: Terminal },
         { href: '/instructor/settings', label: 'Settings', icon: Settings },

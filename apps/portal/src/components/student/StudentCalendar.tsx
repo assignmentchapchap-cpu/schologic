@@ -22,8 +22,8 @@ export default function StudentCalendar() {
             if (!user) return;
 
             // 1. Get Enrolled Classes
-            const { data: enrollments } = await supabase
-                .from('enrollments')
+            const { data: enrollments } = await (supabase
+                .from('enrollments') as any)
                 .select('class_id')
                 .eq('student_id', user.id);
 
@@ -32,14 +32,14 @@ export default function StudentCalendar() {
                 return;
             }
 
-            const classIds = enrollments.map(e => e.class_id);
+            const classIds = enrollments.map((e: any) => e.class_id);
 
             // 2. Get Assignments for the current month
             const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString();
             const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString();
 
-            const { data: assign, error } = await supabase
-                .from('assignments')
+            const { data: assign, error } = await (supabase
+                .from('assignments') as any)
                 .select(`id, title, due_date, class_id`)
                 .in('class_id', classIds)
                 .gte('due_date', startOfMonth)

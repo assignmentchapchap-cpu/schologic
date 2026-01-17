@@ -71,7 +71,7 @@ export default function NotificationBell() {
         setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
         setUnreadCount(prev => Math.max(0, prev - 1));
 
-        await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+        await (supabase.from('notifications') as any).update({ is_read: true }).eq('id', id);
     };
 
     return (

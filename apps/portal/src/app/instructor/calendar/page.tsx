@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -25,14 +26,14 @@ export default function CalendarPage() {
             const { data: classes } = await supabase
                 .from('classes')
                 .select('id')
-                .eq('instructor_id', user.id);
+                .eq('instructor_id', user.id) as any;
 
             if (!classes || classes.length === 0) {
                 setLoading(false);
                 return;
             }
 
-            const classIds = classes.map(c => c.id);
+            const classIds = classes.map((c: any) => c.id);
 
             // 2. Get Assignments for the current month window (plus/minus a few days to be safe, or just all future?)
             // For simplicity in this view, let's fetch all relevant open assignments or just specific month.
@@ -51,7 +52,7 @@ export default function CalendarPage() {
                 .in('class_id', classIds)
                 .gte('due_date', startOfMonth)
                 .lte('due_date', endOfMonth)
-                .order('due_date', { ascending: true });
+                .order('due_date', { ascending: true }) as any;
 
             if (error) throw error;
             setAssignments(assign || []);

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, use } from 'react';
@@ -257,8 +258,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
         e.preventDefault();
         setSavingClass(true);
         try {
-            const { error, data } = await supabase
-                .from('classes')
+            const { error, data } = await (supabase
+                .from('classes') as any)
                 .update({
                     name: editClassForm.name,
                     class_code: editClassForm.class_code,
@@ -288,12 +289,12 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             if (!user) return;
 
             const [clsRes, assignRes, enrollRes, resRes, profileRes, subRes] = await Promise.all([
-                supabase.from('classes').select('*').eq('id', classId).single(),
-                supabase.from('assignments').select('*, short_code').eq('class_id', classId).order('due_date', { ascending: true }),
-                supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId),
-                supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false }),
-                supabase.from('profiles').select('settings').eq('id', user.id).single(),
-                supabase.from('submissions').select('*').eq('class_id', classId) // Fetch all class submissions
+                supabase.from('classes').select('*').eq('id', classId).single() as any,
+                supabase.from('assignments').select('*, short_code').eq('class_id', classId).order('due_date', { ascending: true }) as any,
+                supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId) as any,
+                supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false }) as any,
+                supabase.from('profiles').select('settings').eq('id', user.id).single() as any,
+                supabase.from('submissions').select('*').eq('class_id', classId) as any // Fetch all class submissions
             ]);
 
             if (clsRes.error) throw clsRes.error;
@@ -395,8 +396,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
             if (newAssignment.id) {
                 // Update existing
-                const { data: updated, error } = await supabase
-                    .from('assignments')
+                const { data: updated, error } = await (supabase
+                    .from('assignments') as any)
                     .update(assignmentData)
                     .eq('id', newAssignment.id)
                     .select()
@@ -407,8 +408,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 showToast("Assignment Updated!", 'success');
             } else {
                 // Create new
-                const { data: created, error } = await supabase
-                    .from('assignments')
+                const { data: created, error } = await (supabase
+                    .from('assignments') as any)
                     .insert([assignmentData])
                     .select()
                     .single();
@@ -445,8 +446,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
                     const data = await res.json();
                     if (data.rubric) {
-                        await supabase
-                            .from('assignments')
+                        await (supabase
+                            .from('assignments') as any)
                             .update({ rubric: data.rubric })
                             .eq('id', insertedId);
 
@@ -481,7 +482,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { data, error } = await supabase.from('class_resources').insert([{
+            const { data, error } = await (supabase.from('class_resources') as any).insert([{
                 class_id: classId,
                 title: newResource.title,
                 content: newResource.content,
@@ -504,7 +505,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     const toggleLock = async () => {
         if (!classData) return;
         const newVal = !classData.is_locked;
-        const { error } = await supabase.from('classes').update({ is_locked: newVal }).eq('id', classId);
+        const { error } = await (supabase.from('classes') as any).update({ is_locked: newVal }).eq('id', classId);
         if (!error) {
             setClassData({ ...classData, is_locked: newVal });
         }
@@ -515,8 +516,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
         try {
             const updatePayload = isOverriding ? settingsForm : null;
 
-            const { error } = await supabase
-                .from('classes')
+            const { error } = await (supabase
+                .from('classes') as any)
                 .update({ settings: updatePayload })
                 .eq('id', classId);
 

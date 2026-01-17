@@ -139,8 +139,8 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                 });
 
                 // 2. Fetch Enrollment Count (Total Students)
-                const { count } = await supabase
-                    .from('enrollments')
+                const { count } = await (supabase
+                    .from('enrollments') as any)
                     .select('*', { count: 'exact', head: true })
                     .eq('class_id', assignRes.data.class_id);
 
@@ -172,19 +172,19 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                 const submissionId = selectedSub.id;
                 // 1. Update Submission
                 // @ts-ignore
-                const { error } = await supabase
-                    .from('submissions')
+                const { error } = await (supabase
+                    .from('submissions') as any)
                     .update({
                         grade: Number(grade),
                         feedback: feedback
-                    } as any)
+                    })
                     .eq('id', submissionId);
 
                 if (error) throw error;
             }
 
             // 2. Create Notification
-            await supabase.from('notifications').insert([{
+            await (supabase.from('notifications') as any).insert([{
                 user_id: selectedSub.student_id,
                 type: 'grade_posted',
                 message: `Your assignment "${assignment?.title}" has been graded: ${grade}/${assignment?.max_points}`,
@@ -207,8 +207,8 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
         e.preventDefault();
         setSaving(true);
         try {
-            const { data, error } = await supabase
-                .from('assignments')
+            const { data, error } = await (supabase
+                .from('assignments') as any)
                 .update({
                     title: editForm.title,
                     description: editForm.description,
@@ -221,7 +221,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
 
             if (error) throw error;
 
-            setAssignment({ ...assignment!, ...data });
+            setAssignment({ ...assignment!, ...(data as any) });
             setIsEditing(false); // Close Modal on success
             showToast('Assignment Updated!', 'success');
         } catch (error: any) {

@@ -54,16 +54,16 @@ function StudentClassPage({ classId }: { classId: string }) {
             const { data: { user } } = await supabase.auth.getUser();
 
             const promises: any[] = [
-                supabase.from('classes').select('*, profiles:instructor_id(full_name, title)').eq('id', classId).single(),
-                supabase.from('assignments').select('*').eq('class_id', classId).order('due_date', { ascending: true }),
-                supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false }),
-                supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId)
+                supabase.from('classes').select('*, profiles:instructor_id(full_name, title)').eq('id', classId).single() as any,
+                supabase.from('assignments').select('*').eq('class_id', classId).order('due_date', { ascending: true }) as any,
+                supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false }) as any,
+                supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId) as any
             ];
 
             // If user exists, fetch their submissions for this class
             if (user) {
                 promises.push(
-                    supabase.from('submissions')
+                    (supabase.from('submissions') as any)
                         .select('assignment_id, grade')
                         .eq('class_id', classId)
                         .eq('student_id', user.id)

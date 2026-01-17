@@ -153,7 +153,7 @@ function DashboardContent() {
                     .from('profiles')
                     .select('first_name, last_name, full_name')
                     .eq('id', user.id)
-                    .maybeSingle();
+                    .maybeSingle() as any;
 
                 if (profile) {
                     let fName = profile.first_name;
@@ -171,18 +171,18 @@ function DashboardContent() {
                 const { data: classesData } = await supabase
                     .from('classes')
                     .select('*')
-                    .eq('instructor_id', user.id);
+                    .eq('instructor_id', user.id) as any;
 
                 if (classesData && classesData.length > 0) {
                     setClasses(classesData);
-                    const classIds = classesData.map(c => c.id);
+                    const classIds = classesData.map((c: any) => c.id);
 
                     // Fetch All Submissions & Assignments for these classes
                     const [submissionsRes, assignmentsRes, enrollmentsRes, eventsRes] = await Promise.all([
-                        supabase.from('submissions').select('*').in('class_id', classIds),
-                        supabase.from('assignments').select('*').in('class_id', classIds),
-                        supabase.from('enrollments').select('*, profiles:student_id(*)').in('class_id', classIds),
-                        supabase.from('instructor_events').select('*').eq('user_id', user.id)
+                        supabase.from('submissions').select('*').in('class_id', classIds) as any,
+                        supabase.from('assignments').select('*').in('class_id', classIds) as any,
+                        supabase.from('enrollments').select('*, profiles:student_id(*)').in('class_id', classIds) as any,
+                        supabase.from('instructor_events').select('*').eq('user_id', user.id) as any
                     ]);
 
                     if (submissionsRes.data) {

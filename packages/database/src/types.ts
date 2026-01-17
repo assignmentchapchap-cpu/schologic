@@ -13,10 +13,6 @@ export interface Database {
                 Row: {
                     id: string
                     role: 'instructor' | 'student'
-                    title: string | null
-                    first_name: string | null
-                    last_name: string | null
-                    honorific: string | null
                     full_name: string | null
                     email: string | null
                     institution_id: string | null
@@ -24,15 +20,15 @@ export interface Database {
                     avatar_url: string | null
                     preferences: Json | null
                     registration_number: string | null
+                    title: string | null
+                    first_name: string | null
+                    last_name: string | null
+                    honorific: string | null
                     settings: Json | null
                 }
                 Insert: {
                     id: string
                     role?: 'instructor' | 'student'
-                    title?: string | null
-                    first_name?: string | null
-                    last_name?: string | null
-                    honorific?: string | null
                     full_name?: string | null
                     email?: string | null
                     institution_id?: string | null
@@ -40,15 +36,15 @@ export interface Database {
                     avatar_url?: string | null
                     preferences?: Json | null
                     registration_number?: string | null
+                    title?: string | null
+                    first_name?: string | null
+                    last_name?: string | null
+                    honorific?: string | null
                     settings?: Json | null
                 }
                 Update: {
                     id?: string
                     role?: 'instructor' | 'student'
-                    title?: string | null
-                    first_name?: string | null
-                    last_name?: string | null
-                    honorific?: string | null
                     full_name?: string | null
                     email?: string | null
                     institution_id?: string | null
@@ -56,9 +52,12 @@ export interface Database {
                     avatar_url?: string | null
                     preferences?: Json | null
                     registration_number?: string | null
+                    title?: string | null
+                    first_name?: string | null
+                    last_name?: string | null
+                    honorific?: string | null
                     settings?: Json | null
                 }
-                Relationships: []
             }
             classes: {
                 Row: {
@@ -97,15 +96,6 @@ export interface Database {
                     end_date?: string | null
                     class_code?: string | null
                 }
-                Relationships: [
-                    {
-                        foreignKeyName: "classes_instructor_id_fkey"
-                        columns: ["instructor_id"]
-                        isOneToOne: false
-                        referencedRelation: "profiles"
-                        referencedColumns: ["id"]
-                    }
-                ]
             }
             enrollments: {
                 Row: {
@@ -126,22 +116,6 @@ export interface Database {
                     class_id?: string
                     joined_at?: string
                 }
-                Relationships: [
-                    {
-                        foreignKeyName: "enrollments_student_id_fkey"
-                        columns: ["student_id"]
-                        isOneToOne: false
-                        referencedRelation: "profiles"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "enrollments_class_id_fkey"
-                        columns: ["class_id"]
-                        isOneToOne: false
-                        referencedRelation: "classes"
-                        referencedColumns: ["id"]
-                    }
-                ]
             }
             assignments: {
                 Row: {
@@ -155,7 +129,6 @@ export interface Database {
                     short_code: string | null
                     word_count: number | null
                     reference_style: string | null
-                    rubric: Json | null
                 }
                 Insert: {
                     id?: string
@@ -168,7 +141,6 @@ export interface Database {
                     short_code?: string | null
                     word_count?: number | null
                     reference_style?: string | null
-                    rubric?: Json | null
                 }
                 Update: {
                     id?: string
@@ -181,17 +153,42 @@ export interface Database {
                     short_code?: string | null
                     word_count?: number | null
                     reference_style?: string | null
-                    rubric?: Json | null
                 }
-                Relationships: [
-                    {
-                        foreignKeyName: "assignments_class_id_fkey"
-                        columns: ["class_id"]
-                        isOneToOne: false
-                        referencedRelation: "classes"
-                        referencedColumns: ["id"]
-                    }
-                ]
+            }
+            assets: {
+                Row: {
+                    id: string
+                    instructor_id: string
+                    title: string
+                    content: Json | null
+                    asset_type: string
+                    source: string
+                    file_url: string | null
+                    mime_type: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    instructor_id: string
+                    title: string
+                    content?: Json | null
+                    asset_type: string
+                    source: string
+                    file_url?: string | null
+                    mime_type?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    instructor_id?: string
+                    title?: string
+                    content?: Json | null
+                    asset_type?: string
+                    source?: string
+                    file_url?: string | null
+                    mime_type?: string | null
+                    created_at?: string
+                }
             }
             class_resources: {
                 Row: {
@@ -221,7 +218,6 @@ export interface Database {
                     created_by?: string
                     created_at?: string
                 }
-                Relationships: []
             }
             notifications: {
                 Row: {
@@ -251,7 +247,32 @@ export interface Database {
                     is_read?: boolean
                     created_at?: string
                 }
-                Relationships: []
+            }
+            instructor_events: {
+                Row: {
+                    id: string
+                    user_id: string
+                    title: string
+                    description: string | null
+                    event_date: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    title: string
+                    description?: string | null
+                    event_date: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    title?: string
+                    description?: string | null
+                    event_date?: string
+                    created_at?: string
+                }
             }
             submissions: {
                 Row: {
@@ -293,100 +314,6 @@ export interface Database {
                     grade?: number | null
                     feedback?: string | null
                 }
-                Relationships: []
-            }
-            instructor_events: {
-                Row: {
-                    id: string
-                    user_id: string
-                    title: string
-                    description: string | null
-                    event_date: string
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    user_id: string
-                    title: string
-                    description?: string | null
-                    event_date: string
-                    created_at?: string
-                }
-                Update: {
-                    id?: string
-                    user_id?: string
-                    title?: string
-                    description?: string | null
-                    event_date?: string
-                    created_at?: string
-                }
-                Relationships: []
-            }
-            instructor_todos: {
-                Row: {
-                    id: string
-                    user_id: string
-                    text: string
-                    completed: boolean
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    user_id: string
-                    text: string
-                    completed?: boolean
-                    created_at?: string
-                }
-                Update: {
-                    id?: string
-                    user_id?: string
-                    text?: string
-                    completed?: boolean
-                    created_at?: string
-                }
-                Relationships: []
-            }
-            assets: {
-                Row: {
-                    id: string
-                    instructor_id: string
-                    collection_id: string | null
-                    title: string
-                    content: string | null
-                    file_url: string | null
-                    asset_type: 'file' | 'cartridge_root' | 'document' | 'url'
-                    mime_type: string | null
-                    source: string | null
-                    created_at: string
-                    parent_asset_id: string | null
-                }
-                Insert: {
-                    id?: string
-                    instructor_id: string
-                    collection_id?: string | null
-                    title: string
-                    content?: string | null
-                    file_url?: string | null
-                    asset_type: 'file' | 'cartridge_root' | 'document' | 'url' | string
-                    mime_type?: string | null
-                    source?: string | null
-                    created_at?: string
-                    parent_asset_id?: string | null
-                }
-                Update: {
-                    id?: string
-                    instructor_id?: string
-                    collection_id?: string | null
-                    title?: string
-                    content?: string | null
-                    file_url?: string | null
-                    asset_type?: 'file' | 'cartridge_root' | 'document' | 'url' | string
-                    mime_type?: string | null
-                    source?: string | null
-                    created_at?: string
-                    parent_asset_id?: string | null
-                }
-                Relationships: []
             }
         }
         Views: {
