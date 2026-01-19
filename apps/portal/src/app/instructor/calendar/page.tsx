@@ -7,9 +7,16 @@ import { createClient } from "@schologic/database";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
+interface CalendarAssignment {
+    id: string;
+    title: string;
+    due_date: string;
+    classes: { name: string } | null;
+}
+
 export default function CalendarPage() {
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [assignments, setAssignments] = useState<any[]>([]);
+    const [assignments, setAssignments] = useState<CalendarAssignment[]>([]);
     const [loading, setLoading] = useState(true);
     const supabase = createClient();
 
@@ -22,18 +29,17 @@ export default function CalendarPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            // 1. Get Instructor's Classes
             const { data: classes } = await supabase
                 .from('classes')
                 .select('id')
-                .eq('instructor_id', user.id) as any;
+                .eq('instructor_id', user.id);
 
             if (!classes || classes.length === 0) {
                 setLoading(false);
                 return;
             }
 
-            const classIds = classes.map((c: any) => c.id);
+            const classIds = classes.map(c => c.id);
 
             // 2. Get Assignments for the current month window (plus/minus a few days to be safe, or just all future?)
             // For simplicity in this view, let's fetch all relevant open assignments or just specific month.
@@ -52,10 +58,10 @@ export default function CalendarPage() {
                 .in('class_id', classIds)
                 .gte('due_date', startOfMonth)
                 .lte('due_date', endOfMonth)
-                .order('due_date', { ascending: true }) as any;
+                .order('due_date', { ascending: true });
 
             if (error) throw error;
-            setAssignments(assign || []);
+            setAssignments((assign as CalendarAssignment[]) || []);
 
         } catch (error) {
             console.error("Error fetching calendar data", error);
