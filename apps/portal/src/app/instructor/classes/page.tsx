@@ -67,6 +67,13 @@ function ClassesContent() {
         const newErrors: { startDate?: string, endDate?: string } = {};
 
         // Validation
+        if (!classCode) {
+            setCodeError("Class Code is required");
+            return;
+        }
+        if (!startDate) newErrors.startDate = "Start Date is required.";
+        if (!endDate) newErrors.endDate = "End Date is required.";
+
         if (startDate && !isDateFuture(startDate)) {
             newErrors.startDate = "Start Date cannot be in the past.";
         }
@@ -256,13 +263,14 @@ function ClassesContent() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Class Code (Optional)</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Class Code</label>
                                     <div className="relative">
                                         <GraduationCap className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
                                         <input
                                             className={`w-full pl-10 p-3 border rounded-xl focus:ring-2 outline-none font-medium font-mono ${codeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
                                             placeholder="e.g. BIO101"
                                             value={classCode}
+                                            required
                                             onChange={e => {
                                                 const val = e.target.value.toUpperCase();
                                                 if (val.length <= 8) {
@@ -295,6 +303,7 @@ function ClassesContent() {
                                                 setStartDate(e.target.value);
                                                 if (errors.startDate) setErrors({ ...errors, startDate: undefined });
                                             }}
+                                            required
                                         />
                                         {errors.startDate && (
                                             <div className="flex items-start gap-1 mt-1 text-red-500">
@@ -314,6 +323,7 @@ function ClassesContent() {
                                                 setEndDate(e.target.value);
                                                 if (errors.endDate) setErrors({ ...errors, endDate: undefined });
                                             }}
+                                            required
                                         />
                                         {errors.endDate && (
                                             <div className="flex items-start gap-1 mt-1 text-red-500">

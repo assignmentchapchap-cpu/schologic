@@ -51,10 +51,11 @@ export default function DashboardTodo() {
                         .select();
 
                     if (newTasks) {
-                        setTodos(newTasks);
+                        const safeTasks = newTasks.map(t => ({ ...t, completed: t.completed ?? false }));
+                        setTodos(safeTasks);
                     }
                 } else {
-                    setTodos(data);
+                    setTodos(data.map(t => ({ ...t, completed: t.completed ?? false })));
                 }
             }
         } catch (error) {
@@ -88,7 +89,7 @@ export default function DashboardTodo() {
 
             if (data) {
                 // Replace optimistic todo with real one
-                setTodos(prev => prev.map(t => t.id === tempId ? data : t));
+                setTodos(prev => prev.map(t => t.id === tempId ? { ...data, completed: data.completed ?? false } : t));
             } else {
                 // Revert on failure
                 fetchTodos();

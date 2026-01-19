@@ -25,7 +25,7 @@ type AssignmentDetails = Database['public']['Tables']['assignments']['Row'] & {
     classes: {
         name: string;
     } | null;
-    rubric: any; // specific type if possible, or jsonb
+    rubric: Database['public']['Tables']['assignments']['Row']['rubric'];
 };
 
 export default function GradingPageParams({ params }: { params: Promise<{ assignmentId: string }> }) {
@@ -80,6 +80,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
             if (filterStatus === 'ungraded') return s.grade === null;
             if (filterStatus === 'late') {
                 const dueDate = assignment?.due_date ? new Date(assignment.due_date).getTime() : 0;
+                if (!s.created_at) return false;
                 return new Date(s.created_at).getTime() > dueDate;
             }
             return true;
@@ -87,7 +88,9 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
 
         return [...filtered].sort((a, b) => {
             if (sortBy === 'recent') {
-                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                return timeB - timeA;
             }
             if (sortBy === 'ai_score') {
                 return (b.ai_score || 0) - (a.ai_score || 0);
@@ -121,42 +124,56 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
 
     const fetchData = async () => {
         try {
-            // 1. Fetch Assignment & Submissions
-            // 1. Fetch Assignment & Submissions
-            const assignRes = await supabase.from('assignments').select('*, classes(name)').eq('id', assignmentId).single() as any;
-            const subRes = await supabase.from('submissions')
+            // 1. Fetch Assignment
+            const assignRes = await supabase
+                .from('assignments')
+                .select('*, classes(name)')
+                .eq('id', assignmentId)
+                .single();
+
+            if (assignRes.error) throw assignRes.error;
+
+            // Cast strictly
+            const assignData = assignRes.data as unknown as AssignmentDetails;
+            setAssignment(assignData);
+
+            setEditForm({
+                title: assignData.title,
+                description: assignData.description || '',
+                due_date: assignData.due_date ? new Date(assignData.due_date).toISOString().slice(0, 16) : '',
+                max_points: assignData.max_points ?? 100
+            });
+
+            if (assignData.class_id) {
+                // 2. Fetch Enrollment Count
+                const { count } = await supabase
+                    .from('enrollments')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('class_id', assignData.class_id);
+                setTotalStudents(count || 0);
+            }
+
+            // 3. Fetch Submissions
+            const subRes = await supabase
+                .from('submissions')
                 .select('*, profiles(full_name, email, avatar_url, registration_number)')
                 .eq('assignment_id', assignmentId)
-                .order('created_at', { ascending: false }) as any;
+                .order('created_at', { ascending: false });
 
-            if (assignRes.data) {
-                setAssignment(assignRes.data);
-                setEditForm({
-                    title: assignRes.data.title,
-                    description: assignRes.data.description || '',
-                    due_date: assignRes.data.due_date ? new Date(assignRes.data.due_date).toISOString().slice(0, 16) : '',
-                    max_points: assignRes.data.max_points
-                });
-
-                // 2. Fetch Enrollment Count (Total Students)
-                const { count } = await (supabase
-                    .from('enrollments') as any)
-                    .select('*', { count: 'exact', head: true })
-                    .eq('class_id', assignRes.data.class_id);
-
-                setTotalStudents(count || 0);
-
-                // 3. Fetch Current Instructor Name
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single() as any;
-                    if (profile?.full_name) setInstructorName(profile.full_name);
-                }
+            if (subRes.data) {
+                setSubmissions(subRes.data as unknown as SubmissionWithProfile[]);
             }
-            if (subRes.data) setSubmissions(subRes.data as unknown as SubmissionWithProfile[]);
+
+            // 4. Fetch Instructor Name
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+                if (profile?.full_name) setInstructorName(profile.full_name);
+            }
 
         } catch (error) {
-            console.error(error);
+            console.error("Fetch Error:", error);
+            showToast("Failed to load assignment details", 'error');
         } finally {
             setLoading(false);
         }
@@ -171,9 +188,8 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
             if (selectedSub?.id) {
                 const submissionId = selectedSub.id;
                 // 1. Update Submission
-                // @ts-ignore
-                const { error } = await (supabase
-                    .from('submissions') as any)
+                const { error } = await supabase
+                    .from('submissions')
                     .update({
                         grade: Number(grade),
                         feedback: feedback
@@ -184,7 +200,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
             }
 
             // 2. Create Notification
-            await (supabase.from('notifications') as any).insert([{
+            await supabase.from('notifications').insert([{
                 user_id: selectedSub.student_id,
                 type: 'grade_posted',
                 message: `Your assignment "${assignment?.title}" has been graded: ${grade}/${assignment?.max_points}`,
@@ -196,8 +212,8 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
             setSelectedSub(null);
             showToast('Grade Saved!', 'success');
 
-        } catch (err: any) {
-            showToast("Error saving grade: " + err.message, 'error');
+        } catch (err: unknown) {
+            showToast("Error saving grade: " + (err instanceof Error ? err.message : 'Unknown error'), 'error');
         } finally {
             setSaving(false);
         }
@@ -207,12 +223,12 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
         e.preventDefault();
         setSaving(true);
         try {
-            const { data, error } = await (supabase
-                .from('assignments') as any)
+            const { data, error } = await supabase
+                .from('assignments')
                 .update({
                     title: editForm.title,
                     description: editForm.description,
-                    due_date: editForm.due_date ? new Date(editForm.due_date).toISOString() : null,
+                    due_date: new Date(editForm.due_date).toISOString(),
                     max_points: editForm.max_points
                 })
                 .eq('id', assignmentId)
@@ -221,11 +237,11 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
 
             if (error) throw error;
 
-            setAssignment({ ...assignment!, ...(data as any) });
+            setAssignment({ ...assignment!, ...data });
             setIsEditing(false); // Close Modal on success
             showToast('Assignment Updated!', 'success');
-        } catch (error: any) {
-            showToast("Error updating assignment: " + error.message, 'error');
+        } catch (error: unknown) {
+            showToast("Error updating assignment: " + (error instanceof Error ? error.message : 'Unknown error'), 'error');
         } finally {
             setSaving(false);
         }
@@ -277,7 +293,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                             ].map(tab => (
                                 <button
                                     key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
+                                    onClick={() => setActiveTab(tab.id as 'overview' | 'rubric' | 'submissions')}
                                     className={`pb-3 md:pb-4 border-b-2 font-bold text-xs md:text-sm flex items-center gap-2 transition-colors whitespace-nowrap ${activeTab === tab.id
                                         ? 'border-indigo-600 text-indigo-600'
                                         : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -335,10 +351,10 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                             <div className="p-8 animate-fade-in">
                                 <div className="max-w-4xl mx-auto">
                                     <RubricComponent
-                                        rubric={assignment?.rubric}
+                                        rubric={assignment?.rubric as any}
                                         isEditable={true}
                                         assignmentId={assignmentId}
-                                        maxPoints={assignment?.max_points}
+                                        maxPoints={assignment?.max_points ?? 0}
                                         onUpdate={() => fetchData()}
                                         title={assignment?.title}
                                         description={assignment?.description || ''}
@@ -358,7 +374,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                                         <div className="relative">
                                             <select
                                                 value={filterStatus}
-                                                onChange={(e) => setFilterStatus(e.target.value as any)}
+                                                onChange={(e) => setFilterStatus(e.target.value as 'all' | 'graded' | 'ungraded' | 'late')}
                                                 className="appearance-none bg-slate-100 text-slate-700 text-xs font-bold py-2 pl-3 pr-8 rounded-xl border border-transparent hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                                             >
                                                 <option value="all">All</option>
@@ -388,7 +404,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                                         </div>
                                     </div>
                                     {sortedSubmissions.map((sub, index) => {
-                                        const isLate = assignment?.due_date && new Date(sub.created_at) > new Date(assignment.due_date);
+                                        const isLate = assignment?.due_date && sub.created_at && new Date(sub.created_at) > new Date(assignment.due_date);
                                         return (
                                             <button
                                                 key={sub.id}
@@ -436,7 +452,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                                                         <span className="text-[10px] md:text-sm text-slate-500 flex items-center gap-1 font-medium">
                                                             <Clock className="w-3 h-3 md:w-4 md:h-4" />
-                                                            {new Date(sub.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                            {sub.created_at ? new Date(sub.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                                                         </span>
 
                                                         {isLate && (
@@ -809,7 +825,7 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                         instructions={assignment.description || 'No instructions provided.'}
                         submissionText={selectedSub.content || ''}
                         aiScore={selectedSub.ai_score || 0}
-                        maxPoints={assignment.max_points}
+                        maxPoints={assignment.max_points ?? 0}
                         studentName={selectedSub.profiles?.registration_number || selectedSub.profiles?.full_name || 'Student'}
                         instructorName={instructorName || 'Your Instructor'}
                         rubric={assignment.rubric}

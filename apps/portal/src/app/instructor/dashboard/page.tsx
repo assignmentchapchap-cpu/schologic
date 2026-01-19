@@ -2,6 +2,7 @@
 'use client';
 
 import { createClient, Database } from "@schologic/database";
+import { User } from '@supabase/supabase-js';
 import { Home, Clock, ChevronRight, X, FileText, Search, Plus, Calendar as CalendarIcon, ArrowUpRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NotificationBell from '@/components/NotificationBell';
@@ -18,27 +19,32 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
 type Class = Database['public']['Tables']['classes']['Row'];
 type Assignment = Database['public']['Tables']['assignments']['Row'];
 type Submission = Database['public']['Tables']['submissions']['Row'];
-type Enrollment = Database['public']['Tables']['enrollments']['Row'] & { profiles: Profile };
+type Enrollment = Database['public']['Tables']['enrollments']['Row'] & { profiles: Profile | null };
 type InstructorEvent = Database['public']['Tables']['instructor_events']['Row'];
+type SearchResult =
+    | { type: 'class'; id: string; title: string; subtitle: string; url: string }
+    | { type: 'assignment'; id: string; title: string; subtitle: string; url: string }
+    | { type: 'event'; id: string; title: string; subtitle: string; url: string }
+    | { type: 'student'; id: string; classId: string; title: string; subtitle: string; image: string | null; url: string };
 
 function DashboardContent() {
     const supabase = createClient();
     const router = useRouter();
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [classes, setClasses] = useState<Class[]>([]);
     const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
     const [allAssignments, setAllAssignments] = useState<Assignment[]>([]);
     const [allEvents, setAllEvents] = useState<InstructorEvent[]>([]);
     const [stats, setStats] = useState({ ungraded: 0, new: 0 });
     const [allEnrollments, setAllEnrollments] = useState<Enrollment[]>([]);
-    const [aiStats, setAiStats] = useState({ averageScore: 0, studentCount: 0, trendData: [] as any[], trend: 0 });
+    const [aiStats, setAiStats] = useState({ averageScore: 0, studentCount: 0, trendData: [] as { label: string; score: number; fullTitle: string; hasData: boolean }[], trend: 0 });
     const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
     const [showAssignmentsModal, setShowAssignmentsModal] = useState(false);
     const [showAIInsights, setShowAIInsights] = useState(false);
     const [loading, setLoading] = useState(true);
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [showMobileSearch, setShowMobileSearch] = useState(false);
 
     const { showToast } = useToast();
@@ -66,7 +72,7 @@ function DashboardContent() {
             return;
         }
 
-        const results: any[] = [];
+        const results: SearchResult[] = [];
 
         // 1. Classes
         classes.forEach(c => {
@@ -124,8 +130,8 @@ function DashboardContent() {
                 const cls = classes.find(c => c.id === e.class_id);
                 results.push({
                     type: 'student',
-                    id: e.student_id,
-                    classId: e.class_id,
+                    id: e.student_id ?? '',
+                    classId: e.class_id ?? '',
                     title: student.full_name || 'Unknown Student',
                     subtitle: `${student.registration_number || 'No Reg ID'} • ${cls?.name}`,
                     image: student.avatar_url,
@@ -153,7 +159,7 @@ function DashboardContent() {
                     .from('profiles')
                     .select('first_name, last_name, full_name')
                     .eq('id', user.id)
-                    .maybeSingle() as any;
+                    .maybeSingle();
 
                 if (profile) {
                     let fName = profile.first_name;
@@ -168,21 +174,26 @@ function DashboardContent() {
                 }
 
                 // Fetch Classes
-                const { data: classesData } = await supabase
+                const { data: classesData, error: classesError } = await supabase
                     .from('classes')
                     .select('*')
-                    .eq('instructor_id', user.id) as any;
+                    .eq('instructor_id', user.id);
 
                 if (classesData && classesData.length > 0) {
                     setClasses(classesData);
-                    const classIds = classesData.map((c: any) => c.id);
+                    const classIds = classesData.map((c) => c.id);
 
                     // Fetch All Submissions & Assignments for these classes
+                    const subQuery = supabase.from('submissions').select('*').in('class_id', classIds);
+                    const assignQuery = supabase.from('assignments').select('*').in('class_id', classIds);
+                    const enrollQuery = supabase.from('enrollments').select('*, profiles:student_id(*)').in('class_id', classIds);
+                    const eventsQuery = supabase.from('instructor_events').select('*').eq('user_id', user.id);
+
                     const [submissionsRes, assignmentsRes, enrollmentsRes, eventsRes] = await Promise.all([
-                        supabase.from('submissions').select('*').in('class_id', classIds) as any,
-                        supabase.from('assignments').select('*').in('class_id', classIds) as any,
-                        supabase.from('enrollments').select('*, profiles:student_id(*)').in('class_id', classIds) as any,
-                        supabase.from('instructor_events').select('*').eq('user_id', user.id) as any
+                        subQuery,
+                        assignQuery,
+                        enrollQuery,
+                        eventsQuery
                     ]);
 
                     if (submissionsRes.data) {
@@ -193,7 +204,7 @@ function DashboardContent() {
                         setAllAssignments(assignmentsRes.data);
                     }
                     if (enrollmentsRes.data) {
-                        setAllEnrollments(enrollmentsRes.data);
+                        setAllEnrollments(enrollmentsRes.data as unknown as Enrollment[]);
                     }
                     if (eventsRes.data) {
                         setAllEvents(eventsRes.data);
@@ -215,7 +226,7 @@ function DashboardContent() {
         return () => window.removeEventListener('focus', onFocus);
     }, []);
 
-    const calculateStats = (classesList: any[], submissionsList: any[]) => {
+    const calculateStats = (classesList: Class[], submissionsList: Submission[]) => {
         let totalUngraded = 0;
         let totalNew = 0;
 
@@ -237,11 +248,11 @@ function DashboardContent() {
         setStats({ ungraded: totalUngraded, new: totalNew });
     };
 
-    const calculateAIStats = (classesList: any[], submissionsList: any[], enrollmentsList: any[]) => {
+    const calculateAIStats = (classesList: Class[], submissionsList: Submission[], enrollmentsList: Enrollment[]) => {
         // 1. Global AI Average
         const gradedSubs = submissionsList.filter(s => s.ai_score !== null);
         const globalAvg = gradedSubs.length > 0
-            ? Math.round(gradedSubs.reduce((acc: number, curr: any) => acc + (curr.ai_score || 0), 0) / gradedSubs.length)
+            ? Math.round(gradedSubs.reduce((acc, curr) => acc + (curr.ai_score || 0), 0) / gradedSubs.length)
             : 0;
 
         // Convert to Authenticity Score (100 - AI Score)
@@ -263,11 +274,11 @@ function DashboardContent() {
         });
 
         const currentAvgAI = currentWeekSubs.length > 0
-            ? currentWeekSubs.reduce((acc: number, curr: any) => acc + (curr.ai_score || 0), 0) / currentWeekSubs.length
+            ? currentWeekSubs.reduce((acc, curr) => acc + (curr.ai_score || 0), 0) / currentWeekSubs.length
             : 0;
 
         const previousAvgAI = previousWeekSubs.length > 0
-            ? previousWeekSubs.reduce((acc: number, curr: any) => acc + (curr.ai_score || 0), 0) / previousWeekSubs.length
+            ? previousWeekSubs.reduce((acc, curr) => acc + (curr.ai_score || 0), 0) / previousWeekSubs.length
             : 0;
 
         // Authenticity Trend = (100 - CurrentAI) - (100 - PrevAI)
@@ -279,7 +290,7 @@ function DashboardContent() {
         const trendData = classesList.map(cls => {
             const classSubs = submissionsList.filter(s => s.class_id === cls.id && s.ai_score !== null);
             const classAvg = classSubs.length > 0
-                ? Math.round(classSubs.reduce((acc: number, curr: any) => acc + (curr.ai_score || 0), 0) / classSubs.length)
+                ? Math.round(classSubs.reduce((acc, curr) => acc + (curr.ai_score || 0), 0) / classSubs.length)
                 : -1; // -1 indicates no data
 
             return {

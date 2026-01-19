@@ -17,6 +17,7 @@ export default function InstructorProfilePage() {
         title: '',
         first_name: '',
         last_name: '',
+        honorific: '',
         bio: '',
         avatar_url: ''
     });
@@ -66,6 +67,7 @@ export default function InstructorProfilePage() {
                     title: data.title || '',
                     first_name: fName,
                     last_name: lName,
+                    honorific: data.honorific || '',
                     bio: data.bio || '',
                     avatar_url: data.avatar_url || ''
                 });
@@ -103,6 +105,7 @@ export default function InstructorProfilePage() {
                     title: meta.title || '',
                     first_name: fName,
                     last_name: lName,
+                    honorific: '',
                     bio: '',
                     avatar_url: meta.avatar_url || ''
                 });

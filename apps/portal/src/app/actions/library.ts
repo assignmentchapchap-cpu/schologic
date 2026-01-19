@@ -15,7 +15,7 @@ export async function getAssets(collectionId?: string | null) {
         if (!user) return [];
 
         let query = supabase
-            .from('assets' as any) // Type cast for loose typing
+            .from('assets')
             .select('*')
             .eq('instructor_id', user.id)
             .is('parent_asset_id', null);
@@ -31,7 +31,22 @@ export async function getAssets(collectionId?: string | null) {
             console.error("DB Error:", error);
             return [];
         }
-        return data as Asset[];
+
+        // Safe mapping to Asset interface
+        return (data || []).map(row => ({
+            id: row.id,
+            title: row.title,
+            content: row.content,
+            file_url: row.file_url,
+            asset_type: row.asset_type as AssetType,
+            mime_type: row.mime_type,
+            source: row.source as any, // Type narrowing if 'manual' | 'upload' etc match
+            parent_asset_id: row.parent_asset_id,
+            collection_id: row.collection_id,
+            instructor_id: row.instructor_id,
+            created_at: row.created_at || new Date().toISOString(),
+            updated_at: row.updated_at
+        }));
     } catch (e) {
         console.error("Server Action Error:", e);
         return [];

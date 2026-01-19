@@ -9,10 +9,11 @@ import Link from 'next/link';
 type Notification = {
     id: string;
     message: string;
-    is_read: boolean;
-    created_at: string;
+    is_read: boolean | null;
+    created_at: string | null;
     link: string | null;
-    type: string;
+    type: string | null;
+    user_id: string | null;
 };
 
 export default function NotificationBell() {
@@ -118,7 +119,7 @@ export default function NotificationBell() {
                                                 <p className="text-sm text-slate-700 leading-snug mb-1">{notif.message}</p>
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase">
-                                                        {new Date(notif.created_at).toLocaleDateString()}
+                                                        {notif.created_at ? new Date(notif.created_at).toLocaleDateString() : ''}
                                                     </span>
                                                     {notif.link && (
                                                         <Link href={notif.link} className="text-xs font-bold text-indigo-600 hover:underline">

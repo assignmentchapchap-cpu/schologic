@@ -63,7 +63,7 @@ export default function AssetCard({ asset, onDelete, isSelected, onToggleSelect 
                 </div>
             </div>
 
-            <h3 className="font-bold text-slate-800 text-sm mb-1 line-clamp-2 min-h-[40px]" title={asset.title}>
+            <h3 className="font-bold text-slate-800 text-sm mb-1 line-clamp-2 min-h-[40px]" title={asset.title || ''}>
                 {asset.title}
             </h3>
 

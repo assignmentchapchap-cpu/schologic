@@ -5,18 +5,18 @@ export type AssetFunction = 'reading' | 'assignment' | 'interactive' | 'multimed
 
 export interface Asset {
     id: string;
-    title: string;
+    title: string | null;
     content: any; // JSONB
-    file_url?: string;
+    file_url: string | null;
     asset_type: AssetType;
-    mime_type?: string;
+    mime_type: string | null;
     source: AssetSource;
-    function?: AssetFunction;
-    parent_asset_id?: string;
-    collection_id?: string;
-    instructor_id: string;
+    // function property removed as it does not exist in DB
+    parent_asset_id: string | null;
+    collection_id: string | null;
+    instructor_id: string | null;
     created_at: string;
-    updated_at?: string;
+    updated_at: string | null;
 }
 
 export interface Collection {

@@ -31,7 +31,7 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
 
     // Filter Logic
     const filteredAssets = assets.filter(a => {
-        const matchesSearch = a.title.toLowerCase().includes(search.toLowerCase());
+        const matchesSearch = (a.title || '').toLowerCase().includes(search.toLowerCase());
         const matchesType = filterType === 'all'
             ? true
             : filterType === 'cartridge'

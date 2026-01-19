@@ -3,7 +3,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
-import { BookOpen, Calendar, Clock, ArrowRight, Plus, Search, User, X } from 'lucide-react';
+import { BookOpen, Calendar, Clock, ArrowRight, Plus, Search, User as UserIcon, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Database } from "@schologic/database";

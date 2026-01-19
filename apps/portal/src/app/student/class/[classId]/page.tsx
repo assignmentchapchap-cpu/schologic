@@ -53,31 +53,21 @@ function StudentClassPage({ classId }: { classId: string }) {
             setLoading(true);
             const { data: { user } } = await supabase.auth.getUser();
 
-            const promises: any[] = [
-                supabase.from('classes').select('*, profiles:instructor_id(full_name, title)').eq('id', classId).single() as any,
-                supabase.from('assignments').select('*').eq('class_id', classId).order('due_date', { ascending: true }) as any,
-                supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false }) as any,
-                supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId) as any
-            ];
+            const clsQuery = supabase.from('classes').select('*, profiles:instructor_id(full_name, title)').eq('id', classId).single();
+            const assignQuery = supabase.from('assignments').select('*').eq('class_id', classId).order('due_date', { ascending: true });
+            const resQuery = supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false });
+            const enrollQuery = supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId);
+            const subQuery = user
+                ? supabase.from('submissions').select('assignment_id, grade').eq('class_id', classId).eq('student_id', user.id)
+                : Promise.resolve({ data: [] });
 
-            // If user exists, fetch their submissions for this class
-            if (user) {
-                promises.push(
-                    (supabase.from('submissions') as any)
-                        .select('assignment_id, grade')
-                        .eq('class_id', classId)
-                        .eq('student_id', user.id)
-                );
-            }
-
-            const results = await Promise.all(promises);
-            const clsRes = results[0];
-            const assignRes = results[1];
-            const resRes = results[2];
-            const enrollRes = results[3];
-
-            // Submissions result is index 4 if user exists
-            const subRes = user ? results[4] : { data: [] };
+            const [clsRes, assignRes, resRes, enrollRes, subRes] = await Promise.all([
+                clsQuery,
+                assignQuery,
+                resQuery,
+                enrollQuery,
+                subQuery
+            ]);
 
             if (clsRes.data) {
                 setClassData({
@@ -91,8 +81,10 @@ function StudentClassPage({ classId }: { classId: string }) {
 
             if (subRes.data) {
                 const map: Record<string, { grade: number | null }> = {};
-                (subRes.data as any[]).forEach((s: any) => {
-                    map[s.assignment_id] = { grade: s.grade };
+                subRes.data.forEach((s) => {
+                    if (s.assignment_id) {
+                        map[s.assignment_id] = { grade: s.grade };
+                    }
                 });
                 setSubmissionsMap(map);
             }

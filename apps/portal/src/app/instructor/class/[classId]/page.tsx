@@ -20,8 +20,29 @@ import jsPDF from 'jspdf';
 import AIStatsCard from '@/components/AIStatsCard';
 import AIInsightsModal from '@/components/AIInsightsModal';
 
-type ClassData = Database['public']['Tables']['classes']['Row'];
+// Manual type definitions (until we have better generic support or Json handling)
+interface ClassSettings {
+    model: string;
+    granularity: string;
+    scoring_method: string;
+    late_policy: string;
+    allowed_file_types: string[];
+}
+
+type ClassData = Database['public']['Tables']['classes']['Row'] & { settings?: ClassSettings | null };
 type Assignment = Database['public']['Tables']['assignments']['Row'];
+type Resource = Database['public']['Tables']['class_resources']['Row'];
+type Submission = Database['public']['Tables']['submissions']['Row'];
+
+type SubmissionWithProfile = Submission & {
+    profiles: {
+        full_name: string | null;
+        email: string | null;
+        avatar_url: string | null;
+        registration_number: string | null;
+    } | null;
+};
+
 type EnrollmentProfile = {
     id: string;
     student_id: string;
@@ -54,8 +75,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     const [classData, setClassData] = useState<ClassData | null>(null);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [enrollments, setEnrollments] = useState<EnrollmentProfile[]>([]);
-    const [resources, setResources] = useState<any[]>([]);
-    const [submissions, setSubmissions] = useState<any[]>([]);
+    const [resources, setResources] = useState<Resource[]>([]);
+    const [submissions, setSubmissions] = useState<SubmissionWithProfile[]>([]);
 
     // UI States
     const [loading, setLoading] = useState(true);
@@ -114,11 +135,11 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             updateLastViewed();
         }
     }, [activeTab]);
-    const newSubmissionsCount = submissions.filter(s => new Date(s.created_at) > lastViewedAt).length;
+    const newSubmissionsCount = submissions.filter(s => new Date(s.created_at ?? new Date()).getTime() > lastViewedAt.getTime()).length;
     const ungradedSubmissionsCount = submissions.filter(s => s.grade === null).length;
 
     // Settings State
-    const [globalSettings, setGlobalSettings] = useState<any>(null);
+    const [globalSettings, setGlobalSettings] = useState<ClassSettings | null>(null);
     const [settingsForm, setSettingsForm] = useState({
         model: MODELS.ROBERTA_LARGE,
         granularity: Granularity.PARAGRAPH,
@@ -196,9 +217,14 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 { event: '*', schema: 'public', table: 'submissions', filter: `class_id=eq.${classId}` },
                 (payload) => {
                     if (payload.eventType === 'INSERT') {
-                        setSubmissions((prev) => [...prev, payload.new]);
+                        const newRecord = payload.new as Submission;
+                        const withProfile: SubmissionWithProfile = { ...newRecord, profiles: null };
+                        setSubmissions((prev) => [withProfile, ...prev]);
                     } else if (payload.eventType === 'UPDATE') {
-                        setSubmissions((prev) => prev.map((s) => (s.id === payload.new.id ? payload.new : s)));
+                        const newRecord = payload.new as Submission;
+                        setSubmissions((prev) => prev.map((s) =>
+                            s.id === newRecord.id ? { ...newRecord, profiles: s.profiles } : s
+                        ));
                     } else if (payload.eventType === 'DELETE') {
                         setSubmissions((prev) => prev.filter((s) => s.id !== payload.old.id));
                     }
@@ -215,26 +241,26 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     useEffect(() => {
         if (showSettingsModal && classData) {
             // ... (existing settings logic) ...
-            const s = classData.settings as any;
+            const s = classData.settings;
             const hasSettings = s && typeof s === 'object' && Object.keys(s).some(k => ['model', 'late_policy', 'allowed_file_types', 'granularity', 'scoring_method'].includes(k));
-            const global = globalSettings || {};
+            const global = globalSettings || ({} as ClassSettings);
 
             if (hasSettings) {
-                const s = classData.settings as any;
+                const settingsObj = s as unknown as ClassSettings;
                 setIsOverriding(true);
                 setSettingsForm({
-                    model: s.model || global.model || MODELS.AI_DETECTOR_PIRATE,
-                    granularity: s.granularity || global.granularity || Granularity.PARAGRAPH,
-                    scoring_method: s.scoring_method || global.scoring_method || ScoringMethod.WEIGHTED,
-                    late_policy: s.late_policy || global.late_policy || 'strict',
-                    allowed_file_types: s.allowed_file_types || global.allowed_file_types || ['txt', 'docx']
+                    model: settingsObj.model || global.model || MODELS.AI_DETECTOR_PIRATE,
+                    granularity: (settingsObj.granularity || global.granularity || Granularity.PARAGRAPH) as Granularity,
+                    scoring_method: (settingsObj.scoring_method || global.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
+                    late_policy: settingsObj.late_policy || global.late_policy || 'strict',
+                    allowed_file_types: settingsObj.allowed_file_types || global.allowed_file_types || ['txt', 'docx']
                 });
             } else {
                 setIsOverriding(false);
                 setSettingsForm({
                     model: global.model || MODELS.AI_DETECTOR_PIRATE,
-                    granularity: global.granularity || Granularity.PARAGRAPH,
-                    scoring_method: global.scoring_method || ScoringMethod.WEIGHTED,
+                    granularity: (global.granularity || Granularity.PARAGRAPH) as Granularity,
+                    scoring_method: (global.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                     late_policy: global.late_policy || 'strict',
                     allowed_file_types: global.allowed_file_types || ['txt', 'docx']
                 });
@@ -258,8 +284,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
         e.preventDefault();
         setSavingClass(true);
         try {
-            const { error, data } = await (supabase
-                .from('classes') as any)
+            const { error, data } = await supabase
+                .from('classes')
                 .update({
                     name: editClassForm.name,
                     class_code: editClassForm.class_code,
@@ -272,11 +298,11 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
             if (error) throw error;
 
-            setClassData(data);
+            setClassData(data as unknown as ClassData);
             setShowEditClassModal(false);
             showToast("Class Details Updated!", 'success');
-        } catch (err: any) {
-            showToast("Error updating class: " + err.message, 'error');
+        } catch (err: unknown) {
+            showToast("Error updating class: " + (err instanceof Error ? err.message : 'Unknown error'), 'error');
         } finally {
             setSavingClass(false);
         }
@@ -288,27 +314,36 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
+            // Fetch in parallel but keep them typed
+            const clsQuery = supabase.from('classes').select('*').eq('id', classId).single();
+            const assignQuery = supabase.from('assignments').select('*, short_code').eq('class_id', classId).order('due_date', { ascending: true });
+            const enrollQuery = supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId);
+            const resQuery = supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false });
+            const profileQuery = supabase.from('profiles').select('settings').eq('id', user.id).single();
+            const subQuery = supabase.from('submissions').select('*').eq('class_id', classId);
+
             const [clsRes, assignRes, enrollRes, resRes, profileRes, subRes] = await Promise.all([
-                supabase.from('classes').select('*').eq('id', classId).single() as any,
-                supabase.from('assignments').select('*, short_code').eq('class_id', classId).order('due_date', { ascending: true }) as any,
-                supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId) as any,
-                supabase.from('class_resources').select('*').eq('class_id', classId).order('created_at', { ascending: false }) as any,
-                supabase.from('profiles').select('settings').eq('id', user.id).single() as any,
-                supabase.from('submissions').select('*').eq('class_id', classId) as any // Fetch all class submissions
+                clsQuery,
+                assignQuery,
+                enrollQuery,
+                resQuery,
+                profileQuery,
+                subQuery
             ]);
 
             if (clsRes.error) throw clsRes.error;
             if (assignRes.error) console.error("Assignments Fetch Error:", assignRes.error);
             if (subRes.error) console.error("Submissions Fetch Error:", subRes.error);
 
-            setClassData(clsRes.data);
+            // Safe Casts for JSON fields or Joins
+            setClassData(clsRes.data as unknown as ClassData);
 
             // Handle Settings
-            const global = profileRes.data?.settings as any || {};
+            const global = (profileRes.data?.settings as unknown as ClassSettings) || ({} as ClassSettings);
             setGlobalSettings(global);
 
             if (clsRes.data.settings && typeof clsRes.data.settings === 'object') {
-                const s = clsRes.data.settings as any;
+                const s = clsRes.data.settings as unknown as ClassSettings;
                 const hasKeys = Object.keys(s).some(k => ['model', 'late_policy', 'allowed_file_types', 'granularity', 'scoring_method'].includes(k));
 
                 // Only consider it an override if it has keys AND is different from global (optional, but safer is just checking keys)
@@ -318,8 +353,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                     setIsOverriding(true);
                     setSettingsForm({
                         model: s.model || global.model || MODELS.AI_DETECTOR_PIRATE,
-                        granularity: s.granularity || global.granularity || Granularity.PARAGRAPH,
-                        scoring_method: s.scoring_method || global.scoring_method || ScoringMethod.WEIGHTED,
+                        granularity: (s.granularity || global.granularity || Granularity.PARAGRAPH) as Granularity,
+                        scoring_method: (s.scoring_method || global.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                         late_policy: s.late_policy || global.late_policy || 'strict',
                         allowed_file_types: s.allowed_file_types || global.allowed_file_types || ['txt', 'docx']
                     });
@@ -327,8 +362,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                     setIsOverriding(false);
                     setSettingsForm({
                         model: global.model || MODELS.AI_DETECTOR_PIRATE,
-                        granularity: global.granularity || Granularity.PARAGRAPH,
-                        scoring_method: global.scoring_method || ScoringMethod.WEIGHTED,
+                        granularity: (global.granularity || Granularity.PARAGRAPH) as Granularity,
+                        scoring_method: (global.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                         late_policy: global.late_policy || 'strict',
                         allowed_file_types: global.allowed_file_types || ['txt', 'docx']
                     });
@@ -338,8 +373,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 setIsOverriding(false);
                 setSettingsForm({
                     model: global.model || MODELS.AI_DETECTOR_PIRATE,
-                    granularity: global.granularity || Granularity.PARAGRAPH,
-                    scoring_method: global.scoring_method || ScoringMethod.WEIGHTED,
+                    granularity: (global.granularity || Granularity.PARAGRAPH) as Granularity,
+                    scoring_method: (global.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                     late_policy: global.late_policy || 'strict',
                     allowed_file_types: global.allowed_file_types || ['txt', 'docx']
                 });
@@ -348,7 +383,10 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             if (assignRes.data) setAssignments(assignRes.data);
             if (resRes.data) setResources(resRes.data);
             if (enrollRes.data) setEnrollments(enrollRes.data as unknown as EnrollmentProfile[]);
-            if (subRes.data) setSubmissions(subRes.data);
+            if (subRes.data) {
+                const submissionsWithProfiles = subRes.data.map((s) => ({ ...s, profiles: null } as SubmissionWithProfile));
+                setSubmissions(submissionsWithProfiles);
+            }
 
 
         } catch (error) {
@@ -369,11 +407,16 @@ function ClassDetailsContent({ classId }: { classId: string }) {
         }
 
         try {
+            if (!newAssignment.title || !newAssignment.description || !newAssignment.short_code || !newAssignment.due_date) {
+                alert("Please fill in all mandatory fields (Title, Code, Description, Due Date).");
+                return;
+            }
+
             const assignmentData = {
                 class_id: classId,
                 title: newAssignment.title,
                 description: newAssignment.description,
-                due_date: newAssignment.due_date ? new Date(newAssignment.due_date).toISOString() : null,
+                due_date: new Date(newAssignment.due_date).toISOString(),
                 max_points: newAssignment.max_points,
                 short_code: newAssignment.short_code,
                 word_count: newAssignment.word_count || 500,
@@ -396,8 +439,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
             if (newAssignment.id) {
                 // Update existing
-                const { data: updated, error } = await (supabase
-                    .from('assignments') as any)
+                const { data: updated, error } = await supabase
+                    .from('assignments')
                     .update(assignmentData)
                     .eq('id', newAssignment.id)
                     .select()
@@ -408,8 +451,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 showToast("Assignment Updated!", 'success');
             } else {
                 // Create new
-                const { data: created, error } = await (supabase
-                    .from('assignments') as any)
+                const { data: created, error } = await supabase
+                    .from('assignments')
                     .insert([assignmentData])
                     .select()
                     .single();
@@ -446,8 +489,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
                     const data = await res.json();
                     if (data.rubric) {
-                        await (supabase
-                            .from('assignments') as any)
+                        await supabase
+                            .from('assignments')
                             .update({ rubric: data.rubric })
                             .eq('id', insertedId);
 
@@ -457,9 +500,9 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                         router.push(`/instructor/assignment/${insertedId}?tab=rubric`);
                         return; // Exit here, don't just close modal, we are navigating away
                     }
-                } catch (err: any) {
+                } catch (err: unknown) {
                     console.error("Rubric Gen Failed:", err);
-                    showToast("Assignment created, but Rubric generation failed: " + err.message, 'error');
+                    showToast("Assignment created, but Rubric generation failed: " + (err instanceof Error ? err.message : 'Unknown error'), 'error');
                     setIsGeneratingRubric(false);
                     // We still close the modal below because the assignment was created
                 }
@@ -471,8 +514,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             setIsGeneratingRubric(false);
             setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
             setAutoGenerateRubric(false);
-        } catch (err: any) {
-            showToast("Error saving assignment: " + err.message, 'error');
+        } catch (err: unknown) {
+            showToast("Error saving assignment: " + (err instanceof Error ? err.message : 'Unknown error'), 'error');
         }
     };
 
@@ -482,7 +525,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { data, error } = await (supabase.from('class_resources') as any).insert([{
+            const { data, error } = await supabase.from('class_resources').insert([{
                 class_id: classId,
                 title: newResource.title,
                 content: newResource.content,
@@ -496,8 +539,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             setIsCreatingResource(false);
             setNewResource({ title: '', content: '', file_url: '' });
             showToast("Resource Added!", 'success');
-        } catch (err: any) {
-            showToast("Error adding resource: " + err.message, 'error');
+        } catch (err: unknown) {
+            showToast("Error adding resource: " + (err instanceof Error ? err.message : 'Unknown error'), 'error');
         }
     };
 
@@ -505,7 +548,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     const toggleLock = async () => {
         if (!classData) return;
         const newVal = !classData.is_locked;
-        const { error } = await (supabase.from('classes') as any).update({ is_locked: newVal }).eq('id', classId);
+        const { error } = await supabase.from('classes').update({ is_locked: newVal }).eq('id', classId);
         if (!error) {
             setClassData({ ...classData, is_locked: newVal });
         }
@@ -515,10 +558,10 @@ function ClassDetailsContent({ classId }: { classId: string }) {
         setSavingSettings(true);
         try {
             const updatePayload = isOverriding ? settingsForm : null;
-
-            const { error } = await (supabase
-                .from('classes') as any)
-                .update({ settings: updatePayload })
+            // Type-safe update: casting payload to unknown -> Json since ClassSettings is just an object
+            const { error } = await supabase
+                .from('classes')
+                .update({ settings: updatePayload as unknown as any }) // Use 'any' sparingly here if strict Json type is tricky, effectively generic object
                 .eq('id', classId);
 
             if (error) throw error;
@@ -542,8 +585,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             if (!isOverriding && globalSettings) {
                 setSettingsForm({
                     model: globalSettings.model || MODELS.AI_DETECTOR_PIRATE,
-                    granularity: globalSettings.granularity || Granularity.PARAGRAPH,
-                    scoring_method: globalSettings.scoring_method || ScoringMethod.WEIGHTED,
+                    granularity: (globalSettings.granularity || Granularity.PARAGRAPH) as Granularity,
+                    scoring_method: (globalSettings.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                     late_policy: globalSettings.late_policy || 'strict',
                     allowed_file_types: globalSettings.allowed_file_types || ['txt', 'docx']
                 });
@@ -1068,6 +1111,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                         placeholder="500"
                                                         value={newAssignment.word_count || ''}
                                                         onChange={e => setNewAssignment({ ...newAssignment, word_count: parseInt(e.target.value) || 0 })}
+                                                        required
                                                     />
                                                 </div>
                                                 <div>
@@ -1115,6 +1159,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                         e.currentTarget.style.height = 'auto';
                                                         e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
                                                     }}
+                                                    required
                                                 />
                                                 <div className="text-right text-[10px] md:text-xs text-slate-400 mt-1 font-mono">
                                                     {(newAssignment.description || '').length}/1000
@@ -1133,6 +1178,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                             setNewAssignment({ ...newAssignment, due_date: e.target.value });
                                                             if (dueDateError) setDueDateError(null);
                                                         }}
+                                                        required
                                                     />
                                                 </div>
                                                 <div>
@@ -1148,6 +1194,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                                 setNewAssignment({ ...newAssignment, max_points: isNaN(val) ? 0 : val });
                                                             }}
                                                             required
+                                                            min="1"
                                                         />
                                                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs pointer-events-none">/ 100</span>
                                                     </div>
@@ -1366,7 +1413,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                 </div>
                                                 <div>
                                                     <h3 className="font-bold text-slate-800">{res.title}</h3>
-                                                    <p className="text-xs text-slate-500 mt-0.5">Added {new Date(res.created_at).toLocaleDateString()}</p>
+                                                    <p className="text-xs text-slate-500 mt-0.5">Added {new Date(res.created_at ?? '').toLocaleDateString()}</p>
                                                 </div>
                                             </div>
                                             <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
@@ -1413,7 +1460,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                             <select
                                                 className="appearance-none bg-slate-50 border border-slate-200 pl-3 pr-8 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
                                                 value={gradesFilter}
-                                                onChange={(e) => setGradesFilter(e.target.value as any)}
+                                                onChange={(e) => setGradesFilter(e.target.value as 'all' | 'passing' | 'failing' | 'missing_submissions' | 'needs_grading')}
                                             >
                                                 <option value="all">All Students</option>
                                                 <option value="passing">Passing</option>
@@ -1433,7 +1480,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                             <select
                                                 className="appearance-none bg-slate-50 border border-slate-200 pl-3 pr-8 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
                                                 value={gradesSort}
-                                                onChange={(e) => setGradesSort(e.target.value as any)}
+                                                onChange={(e) => setGradesSort(e.target.value as 'name' | 'score_high' | 'score_low' | 'ai_high' | 'ai_low')}
                                             >
                                                 <option value="name">Name (A-Z)</option>
                                                 <option value="score_high">Score (High-Low)</option>
@@ -1490,7 +1537,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                             <select
                                                 className="p-2 md:p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-slate-600 min-w-fit"
                                                 value={gradesFilter}
-                                                onChange={(e) => setGradesFilter(e.target.value as any)}
+                                                onChange={(e) => setGradesFilter(e.target.value as 'all' | 'passing' | 'failing' | 'missing_submissions' | 'needs_grading')}
                                             >
                                                 <option value="all">All</option>
                                                 <option value="passing">Passing</option>
@@ -1502,7 +1549,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                             <select
                                                 className="p-2 md:p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-slate-600 min-w-fit"
                                                 value={gradesSort}
-                                                onChange={(e) => setGradesSort(e.target.value as any)}
+                                                onChange={(e) => setGradesSort(e.target.value as 'name' | 'score_high' | 'score_low' | 'ai_high' | 'ai_low')}
                                             >
                                                 <option value="name">Name</option>
                                                 <option value="score_high">Score (High-Low)</option>
