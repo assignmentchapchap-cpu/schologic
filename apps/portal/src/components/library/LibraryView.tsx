@@ -100,7 +100,7 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
                     </div>
                     <select
                         value={filterType}
-                        onChange={e => setFilterType(e.target.value as any)}
+                        onChange={e => setFilterType(e.target.value as 'all' | 'document' | 'cartridge')}
                         className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                         <option value="all">All Types</option>

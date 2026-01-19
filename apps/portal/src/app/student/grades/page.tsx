@@ -212,7 +212,7 @@ export default function StudentGradesPage() {
                                     <select
                                         className="appearance-none bg-slate-50 border border-slate-200 pl-3 pr-8 py-2 rounded-xl text-xs md:text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[120px]"
                                         value={gradesFilter}
-                                        onChange={(e) => setGradesFilter(e.target.value as any)}
+                                        onChange={(e) => setGradesFilter(e.target.value as 'all' | 'passing' | 'failing')}
                                     >
                                         <option value="all">All Classes</option>
                                         <option value="passing">Passing</option>
@@ -230,7 +230,7 @@ export default function StudentGradesPage() {
                                     <select
                                         className="appearance-none bg-slate-50 border border-slate-200 pl-3 pr-8 py-2 rounded-xl text-xs md:text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
                                         value={gradesSort}
-                                        onChange={(e) => setGradesSort(e.target.value as any)}
+                                        onChange={(e) => setGradesSort(e.target.value as 'name' | 'score_high' | 'score_low' | 'ai_high' | 'ai_low')}
                                     >
                                         <option value="name">Name (A-Z)</option>
                                         <option value="score_high">Score (High-Low)</option>
