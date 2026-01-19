@@ -3,10 +3,12 @@ export type AssetType = 'document' | 'file' | 'url' | 'cartridge_root' | 'cartri
 export type AssetSource = 'libretexts' | 'ai' | 'upload' | 'manual';
 export type AssetFunction = 'reading' | 'assignment' | 'interactive' | 'multimedia';
 
+import { AssetContent } from './json-schemas';
+
 export interface Asset {
     id: string;
     title: string | null;
-    content: any; // JSONB
+    content: unknown; // JSONB - use type guards when consuming
     file_url: string | null;
     asset_type: AssetType;
     mime_type: string | null;

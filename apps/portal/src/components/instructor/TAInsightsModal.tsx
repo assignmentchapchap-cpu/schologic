@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Sparkles, AlertTriangle, CheckCircle, RefreshCw, ChevronRight, Copy, Info, HelpCircle } from 'lucide-react';
+import { RubricItem } from '@/types/json-schemas';
 
 interface TAInsightsModalProps {
     isOpen: boolean;
@@ -8,7 +9,7 @@ interface TAInsightsModalProps {
     // Context Props
     submissionText: string;
     instructions: string;
-    rubric?: any;
+    rubric?: RubricItem[] | unknown;
     assignmentTitle: string;
     studentName: string;
     instructorName: string;

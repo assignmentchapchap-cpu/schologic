@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, use } from 'react';
@@ -10,21 +9,22 @@ import Link from 'next/link';
 import { Database } from "@schologic/database";
 import ReportView from '@/components/ReportView';
 import RubricComponent from '@/components/RubricComponent';
+import { ClassSettings, RubricItem } from '@/types/json-schemas';
 
 type AssignmentDetails = Database['public']['Tables']['assignments']['Row'] & {
     classes: {
         name: string;
-        settings: any;
+        settings: unknown;
         end_date: string | null;
         profiles: {
-            settings: any;
+            settings: unknown;
         } | null;
     } | null;
 } & {
     word_count: number | null;
     reference_style: string | null;
     short_code: string | null;
-    rubric: any;
+    rubric: unknown;
 };
 
 type SubmissionDetails = Database['public']['Tables']['submissions']['Row'];
@@ -108,20 +108,21 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
             const globalSettings = assignment.classes?.profiles?.settings || {};
             const classSettings = assignment.classes?.settings || {};
 
-            // Helper to get effective value
-            const getSetting = (key: string, defaultVal: any) => {
+            // Helper to get effective value - use type guards when consuming results
+            const getSetting = (key: string, defaultVal: unknown): unknown => {
                 // If class has the key, it overrides. Otherwise use global, then default.
-                // We check if the key exists in classSettings object logic (handled by backend usually, but here we do simple merge)
-                if (classSettings && Object.keys(classSettings).includes(key)) return classSettings[key];
-                return globalSettings[key] !== undefined ? globalSettings[key] : defaultVal;
+                const cs = classSettings as Record<string, unknown>;
+                const gs = globalSettings as Record<string, unknown>;
+                if (cs && Object.keys(cs).includes(key)) return cs[key];
+                return gs[key] !== undefined ? gs[key] : defaultVal;
             };
 
             const effectiveSettings = {
-                model: getSetting('model', undefined),
-                granularity: getSetting('granularity', undefined),
-                scoring_method: getSetting('scoring_method', undefined),
-                late_policy: getSetting('late_policy', 'strict'),
-                allowed_file_types: getSetting('allowed_file_types', ['txt', 'docx'])
+                model: getSetting('model', undefined) as string | undefined,
+                granularity: getSetting('granularity', undefined) as string | undefined,
+                scoring_method: getSetting('scoring_method', undefined) as string | undefined,
+                late_policy: getSetting('late_policy', 'strict') as string,
+                allowed_file_types: getSetting('allowed_file_types', ['txt', 'docx']) as string[]
             };
 
             // 1. Check Late Policy
@@ -200,9 +201,11 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
             const classSettings = assignment.classes?.settings || {};
 
             // Simple merge logic repeated (refactor if repeated often)
-            const allowedTypes: string[] = (classSettings && classSettings.allowed_file_types)
-                ? classSettings.allowed_file_types
-                : (globalSettings.allowed_file_types || ['txt', 'docx']);
+            const cs = (classSettings && typeof classSettings === 'object') ? classSettings as Record<string, unknown> : {};
+            const gs = (globalSettings && typeof globalSettings === 'object') ? globalSettings as Record<string, unknown> : {};
+            const allowedTypes: string[] = (cs.allowed_file_types as string[] | undefined)
+                ?? (gs.allowed_file_types as string[] | undefined)
+                ?? ['txt', 'docx'];
 
             const ext = file.name.split('.').pop()?.toLowerCase();
             // Map docx to docx, etc. 
