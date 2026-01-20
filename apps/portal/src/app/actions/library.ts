@@ -5,7 +5,7 @@ import { put } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 import { Asset, AssetType, AssetSource } from '@/types/library';
 import { AssetContent } from '@/types/json-schemas';
-import { extractTextFromFile } from '@schologic/doc-engine';
+import { extractTextFromFile, ParseResult } from '@schologic/doc-engine';
 import { cookies } from 'next/headers';
 
 export async function getAssets(collectionId?: string | null) {
@@ -74,7 +74,7 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
 
     try {
         const buffer = Buffer.from(await file.arrayBuffer());
-        const result = await extractTextFromFile(buffer, file.type, file.name);
+        const result: ParseResult | null = await extractTextFromFile(buffer, file.type, file.name);
 
         if (result) {
             extractedContent = result.content;
@@ -154,6 +154,22 @@ export async function deleteAsset(id: string) {
     const { error } = await supabase
         .from('assets')
         .delete()
+        .eq('id', id)
+        .eq('instructor_id', user.id); // Security check
+
+    if (error) throw error;
+    revalidatePath('/instructor/library');
+}
+
+export async function renameAsset(id: string, newTitle: string) {
+    const cookieStore = await cookies();
+    const supabase = createSessionClient(cookieStore);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Unauthorized');
+
+    const { error } = await supabase
+        .from('assets')
+        .update({ title: newTitle, updated_at: new Date().toISOString() })
         .eq('id', id)
         .eq('instructor_id', user.id); // Security check
 

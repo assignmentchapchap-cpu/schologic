@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { Asset } from '@/types/library';
 import AssetCard from './AssetCard';
 import AssetUploader from './AssetUploader';
+import { useReader } from '@/context/UniversalReaderContext';
 import AssetEditor from './AssetEditor';
 import ConfirmDialog from '../ConfirmDialog';
 import { Plus, Upload, FileText, Search, Grid, List, Trash2 } from 'lucide-react';
-import { deleteAsset, deleteAssets } from '@/app/actions/library'; // We will create this
+import { deleteAsset, deleteAssets, renameAsset } from '@/app/actions/library'; // We will create this
 import { useToast } from '@/context/ToastContext';
 
 interface LibraryViewProps {
@@ -28,6 +29,13 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
     const { showToast } = useToast();
 
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+    // Rename State
+    const [assetToRename, setAssetToRename] = useState<{ id: string, title: string } | null>(null);
+    const [newTitle, setNewTitle] = useState('');
+
+    // Global Reader
+    const { openReader } = useReader();
 
     // Filter Logic
     const filteredAssets = assets.filter(a => {
@@ -61,6 +69,27 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
     };
 
     // Better: separate state or just use assetToDelete='bulk' 
+
+    const startRename = (id: string) => {
+        const asset = assets.find(a => a.id === id);
+        if (asset) {
+            const safeTitle = asset.title || '';
+            setAssetToRename({ id, title: safeTitle });
+            setNewTitle(safeTitle);
+        }
+    };
+
+    const executeRename = async () => {
+        if (!assetToRename || !newTitle.trim()) return;
+        try {
+            await renameAsset(assetToRename.id, newTitle);
+            setAssets(prev => prev.map(a => a.id === assetToRename.id ? { ...a, title: newTitle } : a));
+            showToast('Asset renamed', 'success');
+            setAssetToRename(null);
+        } catch (e) {
+            showToast('Failed to rename asset', 'error');
+        }
+    };
 
     const executeDelete = async () => {
         try {
@@ -158,7 +187,10 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
                             asset={asset}
                             onDelete={requestDelete}
                             isSelected={selectedIds.has(asset.id)}
+                            isSelectionMode={selectedIds.size > 0}
                             onToggleSelect={toggleSelect}
+                            onRename={startRename}
+                            onRead={openReader}
                         />
                     ))}
                 </div>
@@ -172,6 +204,38 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
                 </div>
             )}
 
+            {/* Rename Modal */}
+            {assetToRename && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6">
+                        <h3 className="text-lg font-bold text-slate-900 mb-4">Rename Asset</h3>
+                        <input
+                            value={newTitle}
+                            onChange={e => setNewTitle(e.target.value)}
+                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold text-slate-700 mb-4"
+                            placeholder="Enter new title"
+                            autoFocus
+                            onKeyDown={e => e.key === 'Enter' && executeRename()}
+                        />
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setAssetToRename(null)}
+                                className="px-4 py-2 text-slate-500 font-bold text-sm hover:bg-slate-50 rounded-xl"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={executeRename}
+                                disabled={!newTitle.trim() || newTitle === assetToRename.title}
+                                className="px-4 py-2 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Rename
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modals - Simplified overlays for now */}
             {(showUpload || showEditor) && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
@@ -181,6 +245,8 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
                     </div>
                 </div>
             )}
+
+
 
             <ConfirmDialog
                 isOpen={!!assetToDelete}

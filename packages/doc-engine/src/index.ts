@@ -3,7 +3,7 @@ import mammoth from 'mammoth';
 import JSZip from 'jszip';
 import xml2js from 'xml2js';
 
-// Use require for pdf-parse to avoid TS import issues with its default export
+// @ts-ignore
 const pdfParse = require('pdf-parse');
 
 export interface ParseResult {
@@ -43,8 +43,7 @@ export async function extractTextFromFile(buffer: Buffer, mimeType: string, file
 
 export async function extractTextFromPdf(buffer: Buffer): Promise<string | null> {
     try {
-        const parser = pdfParse.default || pdfParse;
-        const data = await parser(buffer);
+        const data = await (pdfParse as any)(buffer);
         return data.text ? data.text.trim() : null;
     } catch (e) {
         console.error("PDF Parsing Failed:", e);
@@ -58,6 +57,19 @@ export async function extractTextFromDocx(buffer: Buffer): Promise<string | null
         return result.value ? result.value.trim() : null;
     } catch (e) {
         console.error("DOCX Parsing Failed:", e);
+        return null;
+    }
+}
+
+export async function convertToHtml(buffer: Buffer, mimeType: string): Promise<string | null> {
+    try {
+        if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            const result = await mammoth.convertToHtml({ buffer });
+            return result.value || null;
+        }
+        return null;
+    } catch (e) {
+        console.error("HTML Conversion Failed:", e);
         return null;
     }
 }

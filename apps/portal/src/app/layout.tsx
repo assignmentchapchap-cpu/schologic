@@ -10,6 +10,7 @@ import { ToastProvider } from "@/context/ToastContext";
 import DemoBanner from '@/components/DemoBanner';
 import { DemoTourProvider } from '@/context/DemoTourContext';
 import DemoTour from '@/components/DemoTour';
+import { UniversalReaderProvider } from '@/components/providers/UniversalReaderProvider';
 
 export default function RootLayout({
   children,
@@ -24,9 +25,11 @@ export default function RootLayout({
       >
         <ToastProvider>
           <DemoTourProvider>
-            <DemoBanner />
-            <DemoTour />
-            {children}
+            <UniversalReaderProvider>
+              <DemoBanner />
+              <DemoTour />
+              {children}
+            </UniversalReaderProvider>
           </DemoTourProvider>
         </ToastProvider>
       </body>
