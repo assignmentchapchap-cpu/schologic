@@ -21,13 +21,19 @@ export default function DocxViewer({ fileUrl }: DocxViewerProps) {
     const updateScale = useCallback(() => {
         if (!scrollContainerRef.current) return;
         const containerWidth = scrollContainerRef.current.clientWidth - 32; // Minus padding
-        const docWidth = 816; // Standard US Letter width in pixels
+        const sourceDocWidth = 816; // The actual rendered width by docx-preview (Standard US Letter)
+        const targetMaxWidth = 612; // The desired maximum visual width (matching PDF viewer)
 
-        if (containerWidth < docWidth) {
-            setScale(containerWidth / docWidth);
-        } else {
-            setScale(1);
-        }
+        // Calculate scale to shrink 816px -> 612px (approx 0.75)
+        const maxScale = targetMaxWidth / sourceDocWidth;
+
+        // Calculate scale to fit container (for mobile)
+        const fitScale = containerWidth / sourceDocWidth;
+
+        // Use the smaller scale:
+        // - On desktop: uses maxScale to cap visual width at 612px
+        // - On mobile: uses fitScale to fit screen width
+        setScale(Math.min(fitScale, maxScale));
     }, []);
 
     // Handle resize
@@ -43,10 +49,28 @@ export default function DocxViewer({ fileUrl }: DocxViewerProps) {
 
         const measureAndCount = () => {
             if (!containerRef.current) return;
-            const pages = containerRef.current.querySelectorAll('section.docx');
 
-            if (pages.length > 0) {
-                setPageInfo(prev => ({ ...prev, total: pages.length }));
+            // Try different selectors - docx-preview output can vary
+            let pages = containerRef.current.querySelectorAll('section.docx');
+            if (pages.length === 0) {
+                pages = containerRef.current.querySelectorAll('.docx-wrapper > section');
+            }
+            if (pages.length === 0) {
+                pages = containerRef.current.querySelectorAll('article');
+            }
+
+            // As fallback, count wrapper divs that look like pages
+            if (pages.length === 0) {
+                const wrapper = containerRef.current.querySelector('.docx-wrapper');
+                if (wrapper) {
+                    // Count direct children that could be pages
+                    pages = wrapper.querySelectorAll(':scope > *');
+                }
+            }
+
+            const pageCount = pages.length;
+            if (pageCount > 0) {
+                setPageInfo(prev => ({ ...prev, total: pageCount }));
 
                 // Get the container's natural height and apply scale
                 const naturalHeight = containerRef.current.offsetHeight;
@@ -55,7 +79,7 @@ export default function DocxViewer({ fileUrl }: DocxViewerProps) {
         };
 
         const observer = new MutationObserver(() => {
-            setTimeout(measureAndCount, 150);
+            setTimeout(measureAndCount, 200);
         });
 
         observer.observe(containerRef.current, {
@@ -63,7 +87,9 @@ export default function DocxViewer({ fileUrl }: DocxViewerProps) {
             subtree: true
         });
 
-        measureAndCount();
+        // Initial measurement after a delay to ensure content is rendered
+        setTimeout(measureAndCount, 300);
+
         return () => observer.disconnect();
     }, [scale]);
 
@@ -77,27 +103,36 @@ export default function DocxViewer({ fileUrl }: DocxViewerProps) {
     }, [scale]);
 
     // Handle scroll to update current page
-    const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-        if (!containerRef.current) return;
-        const pages = containerRef.current.querySelectorAll('section.docx');
+    const handleScroll = useCallback(() => {
+        if (!containerRef.current || !scrollContainerRef.current) return;
+
+        // Use same selector logic as measureAndCount
+        let pages = containerRef.current.querySelectorAll('section.docx');
+        if (pages.length === 0) {
+            pages = containerRef.current.querySelectorAll('.docx-wrapper > section');
+        }
+        if (pages.length === 0) {
+            pages = containerRef.current.querySelectorAll('article');
+        }
         if (pages.length === 0) return;
 
-        const scrollTop = e.currentTarget.scrollTop;
-        const containerHeight = e.currentTarget.clientHeight;
-        // Adjust for scale
-        const adjustedScrollTop = scrollTop / scale;
-        const centerLine = adjustedScrollTop + (containerHeight / scale) / 3;
+        // Get the scroll container's viewport rect
+        const containerRect = scrollContainerRef.current.getBoundingClientRect();
+        const viewportTop = containerRect.top + containerRect.height / 3; // 1/3 from top
 
         let newCurrent = 1;
         pages.forEach((page, index) => {
             const el = page as HTMLElement;
-            if (el.offsetTop <= centerLine) {
+            // getBoundingClientRect gives us the actual visual position accounting for transforms
+            const pageRect = el.getBoundingClientRect();
+            // If the page's top is above our viewport's 1/3 line, we're on this page
+            if (pageRect.top <= viewportTop) {
                 newCurrent = index + 1;
             }
         });
 
         setPageInfo(prev => prev.current !== newCurrent ? { ...prev, current: newCurrent } : prev);
-    }, [scale]);
+    }, []);
 
     // Load document
     useEffect(() => {
@@ -207,20 +242,21 @@ export default function DocxViewer({ fileUrl }: DocxViewerProps) {
                 </div>
             </div>
 
-            {/* Page Counter */}
+            {/* Page Counter - Bottom left to avoid overlap with AI button */}
             {pageInfo.total > 0 && (
-                <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm pointer-events-none z-20 shadow-lg">
+                <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm pointer-events-none z-20 shadow-lg">
                     Page {pageInfo.current} of {pageInfo.total}
                 </div>
             )}
 
             {/* Styles for docx-preview generated content */}
             <style jsx global>{`
-                .docx-preview-content .docx-wrapper {
-                    background: transparent !important;
-                    padding: 0 !important;
+                /* Override docx-preview dark background with light gray */
+                .docx-preview-content-wrapper,
+                .docx-preview-content > div:first-child {
+                    background-color: #f3f4f6 !important;
                 }
-                .docx-preview-content section.docx {
+                .docx-preview-content section.docx-preview-content {
                     background: white !important;
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                     margin: 0 auto 24px auto !important;
