@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, FileText, Maximize2, Minimize2, Sparkles, List, ZoomIn, ZoomOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, FileText, Maximize2, Minimize2, Sparkles, List, ZoomIn, ZoomOut, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { useReaderSearch } from '@/hooks/useReaderSearch';
 import DocxViewer from './DocxViewer';
 import PdfViewer from './PdfViewer';
 import { Asset } from '@/types/library';
@@ -12,11 +13,42 @@ interface UniversalReaderProps {
     isOpen?: boolean;
 }
 
+
+
 export default function UniversalReader({ asset, onClose, isOpen = true }: UniversalReaderProps) {
     const [isMaximized, setIsMaximized] = useState(false);
     const [isOutlineOpen, setIsOutlineOpen] = useState(false);
     const [isAISidebarOpen, setIsAISidebarOpen] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(1);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const viewerRef = React.useRef<HTMLDivElement>(null);
+    const { search, clear, currentMatchIndex, totalMatches, nextMatch, prevMatch } = useReaderSearch(viewerRef);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Live search with debounce
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchQuery) {
+                search(searchQuery);
+            } else {
+                clear();
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery, search, clear]);
+
+    // Handle Enter to go to next match
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        nextMatch();
+    };
+
+    const closeSearch = () => {
+        setIsSearchOpen(false);
+        clear();
+        setSearchQuery('');
+    };
 
     // Zoom handlers
     const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.1, 2));
@@ -70,7 +102,43 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
                     </div>
 
                     <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                        {/* Zoom Controls removed from here */}
+                        {/* Search Toggle */}
+                        <button
+                            onClick={() => setIsSearchOpen(!isSearchOpen)}
+                            className={`p-2 rounded-lg transition-colors hidden sm:block ${isSearchOpen ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-100 text-gray-500'}`}
+                            title="Search"
+                        >
+                            <Search className="w-5 h-5" />
+                        </button>
+
+                        {/* Search Bar (Floating or Expanded) */}
+                        {isSearchOpen && (
+                            <div className="absolute top-16 right-4 sm:top-2 sm:right-auto sm:relative z-50 bg-white p-1 rounded-lg shadow-lg border border-gray-200 flex items-center gap-1 animate-in fade-in slide-in-from-top-2">
+                                <form onSubmit={handleSearchSubmit} className="flex items-center gap-1">
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Find in document..."
+                                        className="w-40 sm:w-64 px-2 py-1.5 text-sm border-none focus:outline-none focus:ring-0 bg-transparent"
+                                        autoFocus
+                                    />
+                                    <span className="text-xs text-gray-400 whitespace-nowrap min-w-[3rem] text-center">
+                                        {totalMatches > 0 ? `${currentMatchIndex + 1}/${totalMatches}` : totalMatches === 0 && searchQuery ? '0/0' : ''}
+                                    </span>
+                                </form>
+                                <div className="h-4 w-px bg-gray-200 mx-1" />
+                                <button type="button" onClick={prevMatch} className="p-1 hover:bg-gray-100 rounded text-gray-500" disabled={totalMatches === 0}>
+                                    <ChevronUp className="w-4 h-4" />
+                                </button>
+                                <button type="button" onClick={nextMatch} className="p-1 hover:bg-gray-100 rounded text-gray-500" disabled={totalMatches === 0}>
+                                    <ChevronDown className="w-4 h-4" />
+                                </button>
+                                <button type="button" onClick={closeSearch} className="p-1 hover:bg-gray-100 rounded text-gray-500 ml-1">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
 
                         {/* Maximize (hidden on mobile) */}
                         <button
@@ -127,7 +195,7 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
                     </div>
 
                     {/* Main Viewer */}
-                    <div className="flex-1 overflow-hidden bg-gray-50 transition-all duration-300 relative group">
+                    <div ref={viewerRef} className="flex-1 overflow-hidden bg-gray-50 transition-all duration-300 relative group">
                         {/* Floating Zoom Controls */}
                         <div className="absolute top-6 right-6 z-20 flex flex-col bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden">
                             <button
