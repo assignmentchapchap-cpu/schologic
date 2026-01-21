@@ -1,18 +1,22 @@
 
-export async function summarizeText(text: string, apiKey: string): Promise<string[]> {
+export async function summarizeText(text: string, apiKey: string, context?: string): Promise<string[]> {
     if (!text) throw new Error("No text provided for summarization");
     if (!apiKey) throw new Error("Missing AI API Key");
 
+    const contextInstruction = context
+        ? `\n\nUSER FOCUS: ${context}\nPrioritize information related to the user's focus area.`
+        : '';
+
     const systemPrompt = `
     You are an expert educational content summarizer.
-    TASK: Summarize the provided text into 3-5 concise bullet points.
+    TASK: Summarize the provided text into 3-5 concise bullet points.${contextInstruction}
     
     OUTPUT FORMAT:
     Return a single JSON object with a "points" array of strings.
     Example: { "points": ["Point 1", "Point 2", "Point 3"] }
     `;
 
-    console.log("Sending summarization request to PublicAI (Text length: " + text.length + ")");
+    console.log("Sending summarization request to PublicAI (Text length: " + text.length + ")" + (context ? " with context" : ""));
 
     const response = await fetch('https://api.publicai.co/v1/chat/completions', {
         method: 'POST',

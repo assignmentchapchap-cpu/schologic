@@ -8,6 +8,7 @@ import DocxViewer from './DocxViewer';
 const PdfViewer = dynamic(() => import('./PdfViewer'), { ssr: false });
 import { Asset } from '@/types/library';
 import { generateSummary } from '@/app/actions/summarize';
+import SummarizeDialog, { SummarizeOptions } from './SummarizeDialog';
 
 interface UniversalReaderProps {
     asset: Asset;
@@ -31,6 +32,7 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
     const [summary, setSummary] = useState<string[] | null>(null);
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
+    const [isSummarizeDialogOpen, setIsSummarizeDialogOpen] = useState(false);
 
     // Live search with debounce
     useEffect(() => {
@@ -78,13 +80,18 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
         setIsAISidebarOpen(!isAISidebarOpen);
     };
 
-    const handleSummarize = async () => {
+    const handleSummarize = async (options?: SummarizeOptions) => {
         if (isSummarizing) return;
 
+        setIsSummarizeDialogOpen(false);
         setIsSummarizing(true);
         setAiError(null);
 
-        const result = await generateSummary(asset.file_url || '', asset.mime_type || '');
+        const result = await generateSummary(
+            asset.file_url || '',
+            asset.mime_type || '',
+            options ? { context: options.context, pages: options.pages } : undefined
+        );
 
         if (result.error) {
             setAiError(result.error);
@@ -337,7 +344,7 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
                                             )}
 
                                             <button
-                                                onClick={handleSummarize}
+                                                onClick={() => setIsSummarizeDialogOpen(true)}
                                                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors flex items-center gap-2"
                                             >
                                                 Summarize Document
@@ -369,6 +376,14 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
                     )}
                 </div>
             </div>
+
+            {/* Summarize Dialog */}
+            <SummarizeDialog
+                isOpen={isSummarizeDialogOpen}
+                onClose={() => setIsSummarizeDialogOpen(false)}
+                onSubmit={handleSummarize}
+                documentTitle={asset.title || undefined}
+            />
         </div>
     );
 }
