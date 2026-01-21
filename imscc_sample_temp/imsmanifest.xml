@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/imsccv1p1/imscp_v1p1" xmlns:lom="http://ltsc.ieee.org/xsd/imsccv1p1/LOM/resource" xmlns:lomimscc="http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="cctd0015" xsi:schemaLocation="http://www.imsglobal.org/xsd/imslticc_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticc_v1p0.xsd http://www.imsglobal.org/xsd/imslticp_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticp_v1p0.xsd http://www.imsglobal.org/xsd/imslticm_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticm_v1p0.xsd http://www.imsglobal.org/xsd/imsbasiclti_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imsbasiclti_v1p0p1.xsd">
+    <metadata>
+        <schema>IMS Common Cartridge</schema>
+        <schemaversion>1.1.0</schemaversion>
+    <lomimscc:lom>
+      <lomimscc:general>
+        <lomimscc:title>
+          <lomimscc:string language="en-US">Giving Voice to Victimology in North Dakota</lomimscc:string>
+        </lomimscc:title>
+      </lomimscc:general>
+    </lomimscc:lom>
+    </metadata>
+    <organizations>
+        <organization identifier="T_1000" structure="rooted-hierarchy">
+        <item identifier="T_00000">
+            <item identifier="T_000001">
+                <title>1: Chapter 1-Introduction</title>
+                <item identifier="T_000002" identifierref="T_000002_R">
+                    <title>1.1: Explanation – What is Curriculum Infusion?</title>
+                </item>
+                <item identifier="T_000003" identifierref="T_000003_R">
+                    <title>1.2: History</title>
+                </item>
+                <item identifier="T_000004" identifierref="T_000004_R">
+                    <title>1.3: Layout</title>
+                </item>
+                <item identifier="T_000005" identifierref="T_000005_R">
+                    <title>1.4: Encounters</title>
+                </item>
+            </item>
+            <item identifier="T_000006">
+                <title>2: Chapter 2 - Domestic Violence</title>
+                <item identifier="T_000007" identifierref="T_000007_R">
+                    <title>2.1: A. Types and Definitions</title>
+                </item>
+                <item identifier="T_000008" identifierref="T_000008_R">
+                    <title>2.2: B. Myths and Realities</title>
+                </item>
+                <item identifier="T_000009" identifierref="T_000009_R">
+                    <title>2.3: C. Fast Facts</title>
+                </item>
+                <item identifier="T_000010" identifierref="T_000010_R">
+                    <title>2.4: D. Impacts</title>
+                </item>
+                <item identifier="T_000011" identifierref="T_000011_R">
+                    <title>2.5: E. Hints for Assisting</title>
+                </item>
+                <item identifier="T_000012" identifierref="T_000012_R">
+                    <title>2.6: F. Risk-Reduction Suggestions</title>
+                </item>
+                <item identifier="T_000013" identifierref="T_000013_R">
+                    <title>2.7: G. Resources and Legal Issues</title>
+                </item>
+                <item identifier="T_000014" identifierref="T_000014_R">
+                    <title>2.8: H. Activist Suggestions and Examples</title>
+                </item>
+                <item identifier="T_000015" identifierref="T_000015_R">
+                    <title>2.9: I. North Dakota/Rural-Specific Information and Issues</title>
+                </item>
+                <item identifier="T_000016" identifierref="T_000016_R">
+                    <title>2.10: J. Cyberlinks</title>
+                </item>
+                <item identifier="T_000017" identifierref="T_000017_R">
+                    <title>2.11: K. Possible Textbook/Article/Reader Suggestions</title>
+                </item>
+                <item identifier="T_000018" identifierref="T_000018_R">
+                    <title>2.12: L. Other Recommended Readings and Resources</title>
+                </item>
+            </item>
+            <item identifier="T_000019">
+                <title>3: Chapter 3 - Sexual Assault</title>
+                <item identifier="T_000020" identifierref="T_000020_R">
+                    <title>3.1: A. Types and Definitions</title>
+                </item>
+                <item identifier="T_000021" identifierref="T_000021_R">
+                    <title>3.2: B. Myths and Realities</title>
+                </item>
+                <item identifier="T_000022" identifierref="T_000022_R">
+                    <title>3.3: C. Fast Facts</title>
+                </item>
+                <item identifier="T_000023" identifierref="T_000023_R">
+                    <title>3.4: D. Impacts</title>
+                </item>
+                <item identifier="T_000024" identifierref="T_000024_R">
+                    <title>3.5: E. Hints for Assisting</title>
+                </item>
+                <item identifier="T_000025" identifierref="T_000025_R">
+                    <title>3.6: F. Risk-Reduction Suggestions</title>
+                </item>
+                <item identifier="T_000026" identifierref="T_000026_R">
+                    <title>3.7: G. Resources and Legal Issues</title>
+                </item>
+                <item identifier="T_000027" identifierref="T_000027_R">
+                    <title>3.8: H. Activist Suggestions and Examples</title>
+                </item>
+                <item identifier="T_000028" identifierref="T_000028_R">
+                    <title>3.9: I. North Dakota/Rural-Specific Information and Issues</title>
+                </item>
+                <item identifier="T_000029" identifierref="T_000029_R">
+                    <title>3.10: J. Cyberlinks</title>
+                </item>
+                <item identifier="T_000030" identifierref="T_000030_R">
+                    <title>3.11: K. Possible Textbook/Article/Reader Suggestions</title>
+                </item>
+                <item identifier="T_000031" identifierref="T_000031_R">
+                    <title>3.12: L. Other Recommendations and Resources</title>
+                </item>
+            </item>
+            <item identifier="T_000032">
+                <title>4: Chapter 4 - Stalking</title>
+                <item identifier="T_000033" identifierref="T_000033_R">
+                    <title>4.1: A. Types and Definitions</title>
+                </item>
+                <item identifier="T_000034" identifierref="T_000034_R">
+                    <title>4.2: B. Myths and Realities</title>
+                </item>
+                <item identifier="T_000035" identifierref="T_000035_R">
+                    <title>4.3: C. Fast Facts</title>
+                </item>
+                <item identifier="T_000036" identifierref="T_000036_R">
+                    <title>4.4: D. Impacts</title>
+                </item>
+                <item identifier="T_000037" identifierref="T_000037_R">
+                    <title>4.5: E. Hints for Assisting</title>
+                </item>
+                <item identifier="T_000038" identifierref="T_000038_R">
+                    <title>4.6: F. Risk-Reduction Suggestions</title>
+                </item>
+                <item identifier="T_000039" identifierref="T_000039_R">
+                    <title>4.7: G. Resources and Legal Issues</title>
+                </item>
+                <item identifier="T_000040" identifierref="T_000040_R">
+                    <title>4.8: H. Activist Suggestions and Examples</title>
+                </item>
+                <item identifier="T_000041" identifierref="T_000041_R">
+                    <title>4.9: I. North Dakota/Rural-Specific Information and Issues</title>
+                </item>
+                <item identifier="T_000042" identifierref="T_000042_R">
+                    <title>4.10: J. Cyberlinks</title>
+                </item>
+                <item identifier="T_000043" identifierref="T_000043_R">
+                    <title>4.11: K. Possible Textbook/Article/Reader Suggestions</title>
+                </item>
+                <item identifier="T_000044" identifierref="T_000044_R">
+                    <title>4.12: L. Other Recommendations and Resources</title>
+                </item>
+            </item>
+        </item>
+        </organization>
+    </organizations>
+    <resources>
+        <resource identifier="T_000002_R" type="imswl_xmlv1p1">
+            <file href="T_000002_F.xml"/>
+        </resource>
+        <resource identifier="T_000003_R" type="imswl_xmlv1p1">
+            <file href="T_000003_F.xml"/>
+        </resource>
+        <resource identifier="T_000004_R" type="imswl_xmlv1p1">
+            <file href="T_000004_F.xml"/>
+        </resource>
+        <resource identifier="T_000005_R" type="imswl_xmlv1p1">
+            <file href="T_000005_F.xml"/>
+        </resource>
+        <resource identifier="T_000007_R" type="imswl_xmlv1p1">
+            <file href="T_000007_F.xml"/>
+        </resource>
+        <resource identifier="T_000008_R" type="imswl_xmlv1p1">
+            <file href="T_000008_F.xml"/>
+        </resource>
+        <resource identifier="T_000009_R" type="imswl_xmlv1p1">
+            <file href="T_000009_F.xml"/>
+        </resource>
+        <resource identifier="T_000010_R" type="imswl_xmlv1p1">
+            <file href="T_000010_F.xml"/>
+        </resource>
+        <resource identifier="T_000011_R" type="imswl_xmlv1p1">
+            <file href="T_000011_F.xml"/>
+        </resource>
+        <resource identifier="T_000012_R" type="imswl_xmlv1p1">
+            <file href="T_000012_F.xml"/>
+        </resource>
+        <resource identifier="T_000013_R" type="imswl_xmlv1p1">
+            <file href="T_000013_F.xml"/>
+        </resource>
+        <resource identifier="T_000014_R" type="imswl_xmlv1p1">
+            <file href="T_000014_F.xml"/>
+        </resource>
+        <resource identifier="T_000015_R" type="imswl_xmlv1p1">
+            <file href="T_000015_F.xml"/>
+        </resource>
+        <resource identifier="T_000016_R" type="imswl_xmlv1p1">
+            <file href="T_000016_F.xml"/>
+        </resource>
+        <resource identifier="T_000017_R" type="imswl_xmlv1p1">
+            <file href="T_000017_F.xml"/>
+        </resource>
+        <resource identifier="T_000018_R" type="imswl_xmlv1p1">
+            <file href="T_000018_F.xml"/>
+        </resource>
+        <resource identifier="T_000020_R" type="imswl_xmlv1p1">
+            <file href="T_000020_F.xml"/>
+        </resource>
+        <resource identifier="T_000021_R" type="imswl_xmlv1p1">
+            <file href="T_000021_F.xml"/>
+        </resource>
+        <resource identifier="T_000022_R" type="imswl_xmlv1p1">
+            <file href="T_000022_F.xml"/>
+        </resource>
+        <resource identifier="T_000023_R" type="imswl_xmlv1p1">
+            <file href="T_000023_F.xml"/>
+        </resource>
+        <resource identifier="T_000024_R" type="imswl_xmlv1p1">
+            <file href="T_000024_F.xml"/>
+        </resource>
+        <resource identifier="T_000025_R" type="imswl_xmlv1p1">
+            <file href="T_000025_F.xml"/>
+        </resource>
+        <resource identifier="T_000026_R" type="imswl_xmlv1p1">
+            <file href="T_000026_F.xml"/>
+        </resource>
+        <resource identifier="T_000027_R" type="imswl_xmlv1p1">
+            <file href="T_000027_F.xml"/>
+        </resource>
+        <resource identifier="T_000028_R" type="imswl_xmlv1p1">
+            <file href="T_000028_F.xml"/>
+        </resource>
+        <resource identifier="T_000029_R" type="imswl_xmlv1p1">
+            <file href="T_000029_F.xml"/>
+        </resource>
+        <resource identifier="T_000030_R" type="imswl_xmlv1p1">
+            <file href="T_000030_F.xml"/>
+        </resource>
+        <resource identifier="T_000031_R" type="imswl_xmlv1p1">
+            <file href="T_000031_F.xml"/>
+        </resource>
+        <resource identifier="T_000033_R" type="imswl_xmlv1p1">
+            <file href="T_000033_F.xml"/>
+        </resource>
+        <resource identifier="T_000034_R" type="imswl_xmlv1p1">
+            <file href="T_000034_F.xml"/>
+        </resource>
+        <resource identifier="T_000035_R" type="imswl_xmlv1p1">
+            <file href="T_000035_F.xml"/>
+        </resource>
+        <resource identifier="T_000036_R" type="imswl_xmlv1p1">
+            <file href="T_000036_F.xml"/>
+        </resource>
+        <resource identifier="T_000037_R" type="imswl_xmlv1p1">
+            <file href="T_000037_F.xml"/>
+        </resource>
+        <resource identifier="T_000038_R" type="imswl_xmlv1p1">
+            <file href="T_000038_F.xml"/>
+        </resource>
+        <resource identifier="T_000039_R" type="imswl_xmlv1p1">
+            <file href="T_000039_F.xml"/>
+        </resource>
+        <resource identifier="T_000040_R" type="imswl_xmlv1p1">
+            <file href="T_000040_F.xml"/>
+        </resource>
+        <resource identifier="T_000041_R" type="imswl_xmlv1p1">
+            <file href="T_000041_F.xml"/>
+        </resource>
+        <resource identifier="T_000042_R" type="imswl_xmlv1p1">
+            <file href="T_000042_F.xml"/>
+        </resource>
+        <resource identifier="T_000043_R" type="imswl_xmlv1p1">
+            <file href="T_000043_F.xml"/>
+        </resource>
+        <resource identifier="T_000044_R" type="imswl_xmlv1p1">
+            <file href="T_000044_F.xml"/>
+        </resource>
+    </resources>
+</manifest>

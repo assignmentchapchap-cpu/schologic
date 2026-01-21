@@ -34,7 +34,7 @@ export default function AssetCard({ asset, onDelete, isSelected, isSelectionMode
         setShowMenu(false);
         switch (action) {
             case 'view':
-                if (onRead && (asset.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || asset.mime_type === 'application/pdf')) {
+                if (onRead && (asset.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || asset.mime_type === 'application/pdf' || asset.asset_type === 'cartridge_root')) {
                     onRead(asset);
                 } else if (asset.file_url) {
                     window.open(asset.file_url, '_blank');
@@ -129,7 +129,7 @@ export default function AssetCard({ asset, onDelete, isSelected, isSelectionMode
             {/* Content */}
             <div
                 onClick={() => {
-                    if (onRead && (asset.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || asset.mime_type === 'application/pdf')) {
+                    if (onRead && (asset.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || asset.mime_type === 'application/pdf' || asset.asset_type === 'cartridge_root')) {
                         onRead(asset);
                     } else if (asset.file_url) {
                         window.open(asset.file_url, '_blank');

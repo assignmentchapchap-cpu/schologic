@@ -9,6 +9,8 @@ const PdfViewer = dynamic(() => import('./PdfViewer'), { ssr: false });
 import { Asset } from '@/types/library';
 import { generateSummary } from '@/app/actions/summarize';
 import SummarizeDialog, { SummarizeOptions } from './SummarizeDialog';
+import ImsccViewer from './ImsccViewer';
+import ImsccToc, { ImsccContent, ImsccTocItem } from './ImsccToc';
 
 interface UniversalReaderProps {
     asset: Asset;
@@ -33,6 +35,46 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
     const [isSummarizeDialogOpen, setIsSummarizeDialogOpen] = useState(false);
+
+    // IMSCC State
+    const [imsccUrl, setImsccUrl] = useState<string | null>(null);
+    const [imsccSelectedId, setImsccSelectedId] = useState<string | null>(null);
+    const isImscc = asset.asset_type === 'cartridge_root' && asset.content;
+    const imsccContent = isImscc ? (asset.content as ImsccContent) : null;
+
+    // Auto-select first IMSCC page on load
+    useEffect(() => {
+        if (imsccContent && !imsccSelectedId) {
+            // Find first item with a URL
+            const findFirst = (items: ImsccTocItem[]): { id: string; url: string } | null => {
+                for (const item of items) {
+                    if (item.resourceRef) {
+                        const resource = imsccContent.resources[item.resourceRef];
+                        if (resource?.url) {
+                            return { id: item.id, url: resource.url };
+                        }
+                    }
+                    if (item.children.length > 0) {
+                        const found = findFirst(item.children);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            };
+
+            const first = findFirst(imsccContent.toc);
+            if (first) {
+                setImsccSelectedId(first.id);
+                setImsccUrl(first.url);
+
+                // Sneak peek: briefly show sidebar to hint it exists
+                setTimeout(() => {
+                    setIsOutlineOpen(true);
+                    setTimeout(() => setIsOutlineOpen(false), 5000); // Close after 5s
+                }, 3000); // Delay 3s before peek
+            }
+        }
+    }, [imsccContent, imsccSelectedId]);
 
     // Live search with debounce
     useEffect(() => {
@@ -90,7 +132,11 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
         const result = await generateSummary(
             asset.file_url || '',
             asset.mime_type || '',
-            options ? { context: options.context, pages: options.pages } : undefined
+            options ? {
+                context: options.context,
+                pages: options.pages,
+                selectedSections: options.selectedSections
+            } : undefined
         );
 
         if (result.error) {
@@ -133,14 +179,16 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
                     </div>
 
                     <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                        {/* Search Toggle */}
-                        <button
-                            onClick={() => setIsSearchOpen(!isSearchOpen)}
-                            className={`p-2 rounded-lg transition-colors hidden sm:block ${isSearchOpen ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-100 text-gray-500'}`}
-                            title="Search"
-                        >
-                            <Search className="w-5 h-5" />
-                        </button>
+                        {/* Search Toggle - hidden for IMSCC since iframe content is cross-origin */}
+                        {asset.asset_type !== 'cartridge_root' && (
+                            <button
+                                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                                className={`p-2 rounded-lg transition-colors hidden sm:block ${isSearchOpen ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-100 text-gray-500'}`}
+                                title="Search"
+                            >
+                                <Search className="w-5 h-5" />
+                            </button>
+                        )}
 
                         {/* Search Bar (Floating or Expanded) */}
                         {isSearchOpen && (
@@ -217,43 +265,58 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
 
                         {/* Outline Content */}
                         <div className="flex-1 overflow-y-auto p-3">
-                            <div className="text-center text-gray-400 py-8">
-                                <List className="w-6 h-6 mx-auto mb-2 opacity-50" />
-                                <p className="text-sm">No outline available</p>
-                                <p className="text-xs mt-1">Headings appear here</p>
-                            </div>
+                            {imsccContent ? (
+                                <ImsccToc
+                                    content={imsccContent}
+                                    selectedId={imsccSelectedId}
+                                    onSelect={(item, url) => {
+                                        setImsccSelectedId(item.id);
+                                        setImsccUrl(url);
+                                    }}
+                                />
+                            ) : (
+                                <div className="text-center text-gray-400 py-8">
+                                    <List className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm">No outline available</p>
+                                    <p className="text-xs mt-1">Headings appear here</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {/* Main Viewer */}
                     <div ref={viewerRef} className="flex-1 overflow-hidden bg-gray-50 transition-all duration-300 relative group">
-                        {/* Floating Zoom Controls */}
-                        <div className="absolute top-6 right-6 z-20 flex flex-col bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden">
-                            <button
-                                onClick={handleZoomIn}
-                                disabled={zoomLevel >= 2}
-                                className="p-2 hover:bg-gray-50 text-gray-600 border-b border-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Zoom In"
-                            >
-                                <ZoomIn className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={handleZoomReset}
-                                className="p-2 hover:bg-gray-50 text-[10px] font-bold text-gray-500 border-b border-gray-100 transition-colors"
-                                title="Reset Zoom"
-                            >
-                                {Math.round(zoomLevel * 100)}%
-                            </button>
-                            <button
-                                onClick={handleZoomOut}
-                                disabled={zoomLevel <= 0.5}
-                                className="p-2 hover:bg-gray-50 text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Zoom Out"
-                            >
-                                <ZoomOut className="w-5 h-5" />
-                            </button>
-                        </div>
-                        {asset.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? (
+                        {/* Floating Zoom Controls - hidden for IMSCC */}
+                        {asset.asset_type !== 'cartridge_root' && (
+                            <div className="absolute top-6 right-6 z-20 flex flex-col bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden">
+                                <button
+                                    onClick={handleZoomIn}
+                                    disabled={zoomLevel >= 2}
+                                    className="p-2 hover:bg-gray-50 text-gray-600 border-b border-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Zoom In"
+                                >
+                                    <ZoomIn className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={handleZoomReset}
+                                    className="p-2 hover:bg-gray-50 text-[10px] font-bold text-gray-500 border-b border-gray-100 transition-colors"
+                                    title="Reset Zoom"
+                                >
+                                    {Math.round(zoomLevel * 100)}%
+                                </button>
+                                <button
+                                    onClick={handleZoomOut}
+                                    disabled={zoomLevel <= 0.5}
+                                    className="p-2 hover:bg-gray-50 text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Zoom Out"
+                                >
+                                    <ZoomOut className="w-5 h-5" />
+                                </button>
+                            </div>
+                        )}
+                        {asset.asset_type === 'cartridge_root' && asset.content ? (
+                            <ImsccViewer url={imsccUrl} />
+                        ) : asset.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? (
                             <DocxViewer fileUrl={asset.file_url || ''} zoomLevel={zoomLevel} />
                         ) : asset.mime_type === 'application/pdf' ? (
                             <PdfViewer fileUrl={asset.file_url || ''} zoomLevel={zoomLevel} />
@@ -383,6 +446,7 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
                 onClose={() => setIsSummarizeDialogOpen(false)}
                 onSubmit={handleSummarize}
                 documentTitle={asset.title || undefined}
+                imsccContent={asset.asset_type === 'cartridge_root' ? (asset.content as any) : null}
             />
         </div>
     );
