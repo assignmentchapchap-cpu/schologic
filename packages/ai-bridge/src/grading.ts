@@ -190,23 +190,30 @@ export async function generateRubric(request: any): Promise<any[]> {
     - Instructions/Description: "${description}"
     - Max Points: ${max_points}
 
-    RULES:
-    1. Total points across all criteria MUST sum to EXACTLY ${max_points}.
-    2. Criteria must be derived STRICTLY from the provided Instructions.
-    3. Optimization: Best suited for essays/assignments < 2000 words.
-    4. Output strictly valid JSON only. NO markdown blocks.
-
-    JSON STRUCTURE:
+    OUTPUT FORMAT:
+    Return a STRICT JSON array of criteria objects.
+    
+    STRUCTURE:
     [
         {
-            "criterion": "Name of criterion",
-            "points": 20,
-            "levels": [
-                { "score": 20, "description": "Excellent performance..." },
-                { "score": 10, "description": "Needs improvement..." }
-            ]
+            "criterion": "Name (e.g., Thesis Statement)",
+            "importance": 1-5 (Integer), 
+            "description": "Brief description of what is evaluated"
         }
     ]
+
+    SCORING SCALE (Importance Level):
+    5 - Extremely Important: Core learning objective (e.g., Thesis, Evidence)
+    4 - Very Important: Key requirement (e.g., Structure, Analysis)
+    3 - Fairly Important: Significant but secondary (e.g., Style, Tone)
+    2 - Important: Supporting element (e.g., Grammar, Formatting)
+    1 - Slightly Important: Minor detail (e.g., Word count adherence)
+
+    RULES:
+    1. Select 3-5 distinct criteria covering the assignment instructions.
+    2. Assign an importance level (1-5) based on the scale above.
+    3. Do NOT calculate points yourself. The system will handle math.
+    4. Provide clear, actionable descriptions.
     `;
 
     console.log("Generating rubric via AI Bridge for:", title);
@@ -222,7 +229,7 @@ export async function generateRubric(request: any): Promise<any[]> {
             model: 'swiss-ai/apertus-70b-instruct',
             messages: [
                 { role: 'system', content: systemPrompt },
-                { role: 'user', content: 'Generate the rubric JSON.' }
+                { role: 'user', content: 'Generate the rubric structure.' }
             ],
             temperature: 0.1,
             max_tokens: 2500
@@ -246,13 +253,69 @@ export async function generateRubric(request: any): Promise<any[]> {
         throw new Error("AI did not return a valid JSON array");
     }
 
-    const rubric = JSON.parse(content);
+    const rawCriteria = JSON.parse(content);
 
-    // Basic Validation
-    const total = rubric.reduce((sum: number, item: any) => sum + (item.points || 0), 0);
-    if (total !== max_points) {
-        console.warn(`Generated rubric sum (${total}) does not match max_points (${max_points})`);
+    // =========================================================
+    // DETERMINISTIC SCORING ALGORITHM (5-POINT SCALE)
+    // =========================================================
+
+    // 1. Calculate Total Importance Weight
+    let totalWeight = 0;
+
+    const criteriaWithWeights = rawCriteria.map((c: any) => {
+        // Enforce 1-5 range, default to 3 (Fairly Important) if missing/invalid
+        let w = typeof c.importance === 'number' ? Math.round(c.importance) : 3;
+        if (w < 1) w = 1;
+        if (w > 5) w = 5;
+
+        totalWeight += w;
+        return { ...c, raw_weight: w };
+    });
+
+    // 2. Distribute Points PROPORTIONALLY
+    let distributedTotal = 0;
+    const normalizedCriteria = criteriaWithWeights.map((c: any) => {
+        // (ItemWeight / TotalWeight) * MaxPoints
+        const points = Math.round((c.raw_weight / totalWeight) * max_points);
+        distributedTotal += points;
+        return { ...c, points };
+    });
+
+    // 3. Checksum: Fix Rounding Errors (Adjust largest criterion)
+    const diff = max_points - distributedTotal;
+    if (diff !== 0) {
+        // Find criterion with highest points to absorb the diff (minimizes relative impact)
+        const targetIndex = normalizedCriteria.reduce((maxIdx: number, item: any, idx: number, arr: any[]) =>
+            item.points > arr[maxIdx].points ? idx : maxIdx
+            , 0);
+
+        normalizedCriteria[targetIndex].points += diff;
+
+        // Safety check to ensure no negative points (rare edge case)
+        if (normalizedCriteria[targetIndex].points < 0) {
+            normalizedCriteria[targetIndex].points = 0;
+        }
     }
 
-    return rubric;
+    // 4. Generate Deterministic Standard Levels
+    // Multipliers scaled to the rubric standard
+    const MULTIPLIERS = [
+        { label: "Exceptional", factor: 1.0, desc: "Exceeds expectations; comprehensive and nuanced." },
+        { label: "Very Good", factor: 0.8, desc: "Strong performance; meets all major requirements." },
+        { label: "Good", factor: 0.6, desc: "Satisfactory; acceptable understanding with minor gaps." },
+        { label: "Average", factor: 0.4, desc: "Basic; meets minimum standards but lacks depth." },
+        { label: "Poor", factor: 0.2, desc: "Insufficient; fails to meet core requirements." }
+    ];
+
+    const finalRubric = normalizedCriteria.map((c: any) => ({
+        criterion: c.criterion,
+        points: c.points,
+        description: c.description,
+        levels: MULTIPLIERS.map(m => ({
+            score: Math.round(c.points * m.factor),
+            description: m.desc
+        }))
+    }));
+
+    return finalRubric;
 }

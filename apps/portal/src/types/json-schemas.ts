@@ -5,7 +5,7 @@
  * Use these types instead of `any` when working with settings, rubric, report_data, or content.
  */
 
-import { ScoringMethod, Granularity, AnalysisSegment } from '@/lib/ai-config';
+import { ScoringMethod, Granularity, AnalysisSegment } from '@schologic/ai-bridge';
 
 // ============================================================================
 // CLASS SETTINGS (profiles.settings, classes.settings)

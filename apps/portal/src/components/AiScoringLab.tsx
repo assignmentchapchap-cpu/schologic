@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Settings, X, Terminal, Cpu, Layers, Activity, Sparkles } from "lucide-react";
-import { MODELS, MODEL_LABELS, ScoringMethod, Granularity, AnalysisReport, AnalysisSegment } from "@/lib/ai-config";
+import { MODELS, MODEL_LABELS, ScoringMethod, Granularity, AnalysisReport, AnalysisSegment } from "@schologic/ai-bridge";
 import dynamic from 'next/dynamic';
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 import ScoreChart from "@/components/ScoreChart";

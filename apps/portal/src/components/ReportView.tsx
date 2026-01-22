@@ -3,7 +3,7 @@
 import { Download, Activity, Layers, FileText, FileCheck, AlertTriangle } from "lucide-react";
 
 import dynamic from "next/dynamic";
-import { AnalysisSegment } from "@/lib/ai-config";
+import { AnalysisSegment } from "@schologic/ai-bridge";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -45,7 +45,8 @@ export default function ReportView({ score, reportData, readOnly = false }: Repo
             text: s.paragraph || s.sentence || "",
             prob: s.score || (s.isSuspected ? 1 : 0),
             words: (s.paragraph || s.sentence || "").split(/\s+/).length,
-            isFlagged: s.isFlagged || s.isSuspected,
+            isFlagged: !!(s.isFlagged || s.isSuspected),
+            contribution: 0,
             reason: s.isSuspected ? "Result from analysis." : "Human Pattern"
         }));
 

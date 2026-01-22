@@ -1,20 +1,54 @@
 
+// AI Detection Models
 export const MODELS = {
+    ROBERTA_LARGE: "Hello-SimpleAI/chatgpt-detector-roberta",
     AI_DETECTOR_PIRATE: "PirateXX/AI-Content-Detector",
-    AI_DETECTOR_ROBERTA: "roberta-base-openai-detector", // Example alternative
-    AI_DETECTOR_DISTILBERT: "distilbert-base-uncased-finetuned-sst-2-english" // Example
+    OPENAI_DETECTOR: "fakespot-ai/roberta-base-ai-text-detection-v1"
 };
 
-export type AIGranularity = 'sentence' | 'paragraph' | 'document';
+// Human-readable model labels for UI
+export const MODEL_LABELS: Record<string, string> = {
+    [MODELS.ROBERTA_LARGE]: "RoBERTa Large (Baseline)",
+    [MODELS.AI_DETECTOR_PIRATE]: "PirateXX Detector",
+    [MODELS.OPENAI_DETECTOR]: "OpenAI RoBERTa Base"
+};
 
+// Scoring & Granularity
+export type AIGranularity = 'sentence' | 'paragraph' | 'document';
 export type AIScoringMethod = 'strict' | 'weighted' | 'binary';
 
-export interface AnalysisConfig {
-    model: string;
-    granularity: AIGranularity;
-    method: AIScoringMethod;
+// Backward-compatible enums (match portal's ai-config.ts)
+export enum ScoringMethod {
+    BINARY = 'binary',
+    WEIGHTED = 'weighted',
+    STRICT = 'strict'
 }
 
+export enum Granularity {
+    PARAGRAPH = 'paragraph',
+    SENTENCE = 'sentence'
+}
+
+export interface AnalysisConfig {
+    model?: string;
+    granularity?: AIGranularity;
+    method?: AIScoringMethod;
+}
+
+// Primary type for segment analysis
+export interface SegmentAnalysis {
+    text: string;
+    prob: number; // 0-1
+    words: number;
+    isFlagged: boolean;
+    contribution: number;
+    reason?: string; // Optional, used by some UI
+}
+
+// Backward-compatible alias
+export type AnalysisSegment = SegmentAnalysis;
+
+// Primary type for analysis result
 export interface AnalysisResult {
     globalScore: number;
     segments: SegmentAnalysis[];
@@ -22,12 +56,18 @@ export interface AnalysisResult {
     overallReason: string;
 }
 
-export interface SegmentAnalysis {
-    text: string;
-    prob: number; // 0-1
-    words: number;
-    isFlagged: boolean;
-    contribution: number;
+// Backward-compatible alias (portal uses 'score' not 'globalScore')
+export interface AnalysisReport {
+    score: number;
+    segments: SegmentAnalysis[];
+    totalWords: number;
+    overallReason?: string;
+}
+
+// HuggingFace detection response
+export interface DetectionResponse {
+    score: number;
+    label: string;
 }
 
 export interface GradingRequest {

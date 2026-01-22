@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
 import { Settings, Save, Brain, CheckCircle, Clock, Loader2 } from 'lucide-react';
-import { MODELS, MODEL_LABELS, ScoringMethod, Granularity } from '@/lib/ai-config';
+import { MODELS, MODEL_LABELS, ScoringMethod, Granularity } from '@schologic/ai-bridge';
 import { ClassSettings, isClassSettings } from '@/types/json-schemas';
 
 export default function InstructorSettingsPage() {
