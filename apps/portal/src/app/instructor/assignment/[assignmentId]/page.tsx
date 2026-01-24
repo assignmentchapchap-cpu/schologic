@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, use, useMemo } from 'react';
@@ -11,6 +10,8 @@ import Link from 'next/link';
 import { Database } from "@schologic/database";
 import TAInsightsModal from '@/components/instructor/TAInsightsModal';
 import RubricComponent from '@/components/RubricComponent';
+import QuizResults from '@/components/instructor/QuizResults';
+import { QuizData, QuizSubmission, isQuizData } from '@/types/json-schemas';
 
 type SubmissionWithProfile = Database['public']['Tables']['submissions']['Row'] & {
     profiles: {
@@ -26,6 +27,7 @@ type AssignmentDetails = Database['public']['Tables']['assignments']['Row'] & {
         name: string;
     } | null;
     rubric: Database['public']['Tables']['assignments']['Row']['rubric'];
+    assignment_type: string | null;
 };
 
 export default function GradingPageParams({ params }: { params: Promise<{ assignmentId: string }> }) {
@@ -245,6 +247,20 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
         } finally {
             setSaving(false);
         }
+    };
+
+    // Quiz detection helpers
+    const isQuiz = assignment?.assignment_type === 'quiz' && isQuizData(assignment?.rubric);
+    const quizData = isQuiz ? (assignment?.rubric as unknown as QuizData) : null;
+
+    // Get quiz submission data if this is a quiz
+    const getQuizSubmission = (submission: SubmissionWithProfile): QuizSubmission | null => {
+        if (!isQuiz || !submission.report_data) return null;
+        const reportData = submission.report_data as unknown as QuizSubmission;
+        if (reportData.quiz_responses && typeof reportData.auto_score === 'number') {
+            return reportData;
+        }
+        return null;
     };
 
     if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8 text-slate-500 font-bold">Loading Submissions...</div>;
@@ -604,53 +620,65 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
                                                             </div>
                                                         </div>
 
-                                                        {/* Form Container */}
-                                                        <div className={`${isGradingFormVisible ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'} transition-all duration-300 md:max-h-none md:opacity-100`}>
-                                                            <form onSubmit={handleSaveGrade} className="bg-white p-3 md:p-6 rounded-b-xl md:rounded-2xl border border-indigo-100 shadow-lg ring-2 md:ring-4 ring-indigo-50/50">
-
-                                                                {/* Form Header */}
-                                                                <div className="hidden md:flex justify-between items-center mb-4">
-                                                                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                                                                        <CheckCircle className="w-5 h-5 text-indigo-600" /> Grade & Feedback
-                                                                    </h3>
+                                                        {/* Form Container - Standard Assignment OR Quiz Results */}
+                                                        <div className={`${isGradingFormVisible ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'} transition-all duration-300 md:max-h-none md:opacity-100`}>
+                                                            {/* Quiz Results View */}
+                                                            {isQuiz && quizData && selectedSub && getQuizSubmission(selectedSub) ? (
+                                                                <div className="bg-white p-3 md:p-6 rounded-b-xl md:rounded-2xl border border-purple-100 shadow-lg ring-2 md:ring-4 ring-purple-50/50">
+                                                                    <QuizResults
+                                                                        quizData={quizData}
+                                                                        submission={getQuizSubmission(selectedSub)!}
+                                                                        maxPoints={assignment?.max_points || 0}
+                                                                    />
                                                                 </div>
+                                                            ) : (
+                                                                /* Standard Grading Form */
+                                                                <form onSubmit={handleSaveGrade} className="bg-white p-3 md:p-6 rounded-b-xl md:rounded-2xl border border-indigo-100 shadow-lg ring-2 md:ring-4 ring-indigo-50/50">
 
-                                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-4">
-                                                                    <div className="col-span-1">
-                                                                        <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-0.5 md:mb-1">Score</label>
-                                                                        <input
-                                                                            type="number"
-                                                                            max={assignment?.max_points || 100}
-                                                                            value={grade}
-                                                                            onChange={e => setGrade(Number(e.target.value))}
-                                                                            className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono font-bold text-base md:text-lg text-center"
-                                                                        />
+                                                                    {/* Form Header */}
+                                                                    <div className="hidden md:flex justify-between items-center mb-4">
+                                                                        <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                                                            <CheckCircle className="w-5 h-5 text-indigo-600" /> Grade & Feedback
+                                                                        </h3>
                                                                     </div>
-                                                                    <div className="col-span-3">
-                                                                        <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-0.5 md:mb-1">Feedback</label>
-                                                                        <textarea
-                                                                            value={feedback}
-                                                                            maxLength={500}
-                                                                            onChange={e => setFeedback(e.target.value)}
-                                                                            onInput={(e) => {
-                                                                                e.currentTarget.style.height = 'auto';
-                                                                                e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
-                                                                            }}
-                                                                            placeholder="Great work..."
-                                                                            rows={1}
-                                                                            className="w-full p-2 md:p-3 text-sm md:text-base border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none overflow-hidden min-h-[42px] max-h-[150px]"
-                                                                        />
-                                                                        <div className="text-right text-[10px] md:text-xs text-slate-400 mt-1 font-mono">
-                                                                            {feedback.length}/500
+
+                                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-4">
+                                                                        <div className="col-span-1">
+                                                                            <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-0.5 md:mb-1">Score</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                max={assignment?.max_points || 100}
+                                                                                value={grade}
+                                                                                onChange={e => setGrade(Number(e.target.value))}
+                                                                                className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono font-bold text-base md:text-lg text-center"
+                                                                            />
+                                                                        </div>
+                                                                        <div className="col-span-3">
+                                                                            <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-0.5 md:mb-1">Feedback</label>
+                                                                            <textarea
+                                                                                value={feedback}
+                                                                                maxLength={500}
+                                                                                onChange={e => setFeedback(e.target.value)}
+                                                                                onInput={(e) => {
+                                                                                    e.currentTarget.style.height = 'auto';
+                                                                                    e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+                                                                                }}
+                                                                                placeholder="Great work..."
+                                                                                rows={1}
+                                                                                className="w-full p-2 md:p-3 text-sm md:text-base border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none overflow-hidden min-h-[42px] max-h-[150px]"
+                                                                            />
+                                                                            <div className="text-right text-[10px] md:text-xs text-slate-400 mt-1 font-mono">
+                                                                                {feedback.length}/500
+                                                                            </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                                <div className="flex justify-end gap-3">
-                                                                    <button disabled={saving} className="bg-indigo-600 text-white px-4 py-2.5 md:px-8 md:py-2 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-70 w-full md:w-auto text-xs md:text-base">
-                                                                        {saving ? 'Saving...' : 'Save Grade'}
-                                                                    </button>
-                                                                </div>
-                                                            </form>
+                                                                    <div className="flex justify-end gap-3">
+                                                                        <button disabled={saving} className="bg-indigo-600 text-white px-4 py-2.5 md:px-8 md:py-2 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-70 w-full md:w-auto text-xs md:text-base">
+                                                                            {saving ? 'Saving...' : 'Save Grade'}
+                                                                        </button>
+                                                                    </div>
+                                                                </form>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

@@ -45,6 +45,39 @@ export interface RubricItem {
 
 export type Rubric = RubricItem[];
 
+// ============================================================================
+// QUIZ DATA (assignments.rubric when assignment_type = 'quiz')
+// ============================================================================
+
+export interface QuizQuestion {
+    id: string;
+    question: string;
+    choices: string[];
+    correct_index: number;
+    points: number;
+}
+
+export interface QuizData {
+    type: 'quiz';
+    questions: QuizQuestion[];
+    time_limit_minutes?: number;
+    shuffle_questions?: boolean;
+    shuffle_choices?: boolean;
+}
+
+// Student responses stored in submissions.report_data for quizzes
+export interface QuizSubmission {
+    quiz_responses: Record<string, number>; // question_id -> selected_index
+    auto_score: number;
+    time_taken_seconds?: number;
+}
+
+export function isQuizData(data: unknown): data is QuizData {
+    if (!data || typeof data !== 'object') return false;
+    const obj = data as Record<string, unknown>;
+    return obj.type === 'quiz' && Array.isArray(obj.questions);
+}
+
 /**
  * Safely normalize any rubric data into a typed RubricItem array.
  * Handles legacy formats where rubric might be { criteria: [...] } or just [...].

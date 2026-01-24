@@ -18,7 +18,8 @@ import { MODELS, MODEL_LABELS, ScoringMethod, Granularity } from '@schologic/ai-
 import { isDateBetween, isDateAfter } from '@/lib/date-utils';
 import jsPDF from 'jspdf';
 import AIStatsCard from '@/components/AIStatsCard';
-import { ClassSettings, DEFAULT_CLASS_SETTINGS } from '@/types/json-schemas';
+import { ClassSettings, DEFAULT_CLASS_SETTINGS, QuizQuestion, QuizData, isQuizData } from '@/types/json-schemas';
+import QuizBuilder from '@/components/instructor/QuizBuilder';
 import AssetPickerModal from '@/components/library/AssetPickerModal';
 import AssetUploader from '@/components/library/AssetUploader';
 import AIInsightsModal from '@/components/AIInsightsModal';
@@ -26,7 +27,7 @@ import { useReader } from '@/context/UniversalReaderContext';
 import { Asset } from '@/types/library';
 
 type ClassData = Database['public']['Tables']['classes']['Row'] & { settings?: ClassSettings | null };
-type Assignment = Database['public']['Tables']['assignments']['Row'];
+type Assignment = Database['public']['Tables']['assignments']['Row'] & Partial<{ assignment_type: string | null }>;
 type Resource = Database['public']['Tables']['class_assets']['Row'] & {
     assets: Database['public']['Tables']['assets']['Row'] | null
 };
@@ -91,6 +92,11 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     const [isGeneratingRubric, setIsGeneratingRubric] = useState(false);
     const [isCreatingResource, setIsCreatingResource] = useState(false);
     const [newResource, setNewResource] = useState({ title: '', content: '', file_url: '' });
+
+    // Quiz Creation States
+    const [assignmentType, setAssignmentType] = useState<'standard' | 'quiz'>('standard');
+    const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+    const [showCreateMenu, setShowCreateMenu] = useState(false);
 
     // Asset Integrations
     const [showAssetPicker, setShowAssetPicker] = useState(false);
@@ -402,11 +408,23 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             return;
         }
 
+        // Validation for quizzes
+        if (assignmentType === 'quiz' && quizQuestions.length === 0) {
+            alert("Please add at least one question to your quiz.");
+            return;
+        }
+
         try {
             if (!newAssignment.title || !newAssignment.description || !newAssignment.short_code || !newAssignment.due_date) {
                 alert("Please fill in all mandatory fields (Title, Code, Description, Due Date).");
                 return;
             }
+
+            // Build quiz data if this is a quiz
+            const quizData: QuizData | null = assignmentType === 'quiz' ? {
+                type: 'quiz',
+                questions: quizQuestions,
+            } : null;
 
             const assignmentData = {
                 class_id: classId,
@@ -415,8 +433,12 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 due_date: new Date(newAssignment.due_date).toISOString(),
                 max_points: newAssignment.max_points,
                 short_code: newAssignment.short_code,
-                word_count: newAssignment.word_count || 500,
-                reference_style: newAssignment.reference_style || 'APA'
+                assignment_type: assignmentType,
+                // For quizzes: store quiz data in rubric, nullify word_count/reference_style
+                // For standard: keep existing fields
+                word_count: assignmentType === 'standard' ? (newAssignment.word_count || 500) : null,
+                reference_style: assignmentType === 'standard' ? (newAssignment.reference_style || 'APA') : null,
+                rubric: quizData as unknown as Database['public']['Tables']['assignments']['Row']['rubric'],
             };
 
             // Validation vs Class Dates
@@ -1100,21 +1122,64 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                         <div className="animate-fade-in space-y-6">
                             <div className="flex justify-between items-center">
                                 <h2 className="text-base md:text-xl font-bold text-slate-800">Manage Assignments</h2>
-                                <button
-                                    onClick={() => {
-                                        setIsCreatingAssignment(true);
-                                        setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
-                                    }}
-                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold transition-all shadow-md active:scale-95"
-                                >
-                                    <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Create Assignment
-                                </button>
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowCreateMenu(!showCreateMenu)}
+                                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold transition-all shadow-md active:scale-95"
+                                    >
+                                        <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Create New
+                                        <ChevronDown className={`w-3 h-3 md:w-4 md:h-4 transition-transform ${showCreateMenu ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {/* Dropdown Menu */}
+                                    {showCreateMenu && (
+                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                                            <button
+                                                onClick={() => {
+                                                    setAssignmentType('standard');
+                                                    setIsCreatingAssignment(true);
+                                                    setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
+                                                    setQuizQuestions([]);
+                                                    setShowCreateMenu(false);
+                                                }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors group"
+                                            >
+                                                <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                                    <FileText className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-slate-800 text-sm">Assignment</p>
+                                                    <p className="text-[10px] text-slate-400">Essay, file upload</p>
+                                                </div>
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setAssignmentType('quiz');
+                                                    setIsCreatingAssignment(true);
+                                                    setNewAssignment({ title: '', description: '', due_date: '', max_points: 0, short_code: '', word_count: 0, reference_style: '' });
+                                                    setQuizQuestions([]);
+                                                    setShowCreateMenu(false);
+                                                }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors border-t border-slate-100 group"
+                                            >
+                                                <div className="p-1.5 bg-purple-100 text-purple-600 rounded-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                                                    <Sparkles className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-slate-800 text-sm">Quiz</p>
+                                                    <p className="text-[10px] text-slate-400">Multiple choice</p>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {isCreatingAssignment && (
-                                <div className="bg-white p-4 rounded-2xl shadow-sm border border-indigo-100 ring-4 ring-indigo-50/50 mb-6">
-                                    <h3 className="font-bold text-indigo-900 mb-3 flex items-center gap-2">
-                                        <Plus className="w-4 h-4" /> {newAssignment.id ? 'Edit Assignment' : 'New Assignment'}
+                                <div className={`bg-white p-4 rounded-2xl shadow-sm border ring-4 mb-6 ${assignmentType === 'quiz' ? 'border-purple-100 ring-purple-50/50' : 'border-indigo-100 ring-indigo-50/50'}`}>
+                                    <h3 className={`font-bold mb-3 flex items-center gap-2 ${assignmentType === 'quiz' ? 'text-purple-900' : 'text-indigo-900'}`}>
+                                        {assignmentType === 'quiz' ? <Sparkles className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                        {newAssignment.id ? (assignmentType === 'quiz' ? 'Edit Quiz' : 'Edit Assignment') : (assignmentType === 'quiz' ? 'New Quiz' : 'New Assignment')}
                                     </h3>
                                     <form onSubmit={handleCreateAssignment} className="space-y-3">
                                         <div className="grid md:grid-cols-2 gap-3">
@@ -1128,12 +1193,76 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                     required
                                                 />
                                             </div>
-                                            <div className="col-span-2 grid grid-cols-3 gap-3 md:gap-6">
-                                                <div>
+                                            {/* Standard Assignment Fields - Hidden for Quizzes */}
+                                            {assignmentType === 'standard' && (
+                                                <div className="col-span-2 grid grid-cols-3 gap-3 md:gap-6">
+                                                    <div>
+                                                        <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Short Code</label>
+                                                        <input
+                                                            className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold font-mono text-sm md:text-base ${shortCodeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
+                                                            placeholder="CAT 1"
+                                                            value={newAssignment.short_code || ''}
+                                                            required
+                                                            onChange={e => {
+                                                                const val = e.target.value.toUpperCase();
+                                                                if (val.length <= 8) {
+                                                                    if (/^[A-Z0-9\-#/]*$/.test(val)) {
+                                                                        setNewAssignment({ ...newAssignment, short_code: val });
+                                                                        setShortCodeError(null);
+                                                                    } else {
+                                                                        setShortCodeError('Invalid char');
+                                                                    }
+                                                                }
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Word Count</label>
+                                                        <input
+                                                            type="number"
+                                                            className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-sm md:text-base"
+                                                            placeholder="500"
+                                                            value={newAssignment.word_count || ''}
+                                                            onChange={e => setNewAssignment({ ...newAssignment, word_count: parseInt(e.target.value) || 0 })}
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Style</label>
+                                                        <select
+                                                            className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold bg-white text-sm md:text-base"
+                                                            value={newAssignment.reference_style}
+                                                            onChange={e => setNewAssignment({ ...newAssignment, reference_style: e.target.value })}
+                                                        >
+                                                            <option value="APA">APA</option>
+                                                            <option value="MLA">MLA</option>
+                                                            <option value="Harvard">Harvard</option>
+                                                            <option value="Chicago">Chicago</option>
+                                                            <option value="IEEE">IEEE</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div className="col-span-2 flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                                        <div className="flex items-center gap-2">
+                                                            <Sparkles className="w-4 h-4 text-indigo-600" />
+                                                            <span className="text-xs font-bold text-slate-700 uppercase">Auto-generate Rubric with AI</span>
+                                                        </div>
+                                                        <div className="relative inline-flex items-center cursor-pointer" onClick={() => setAutoGenerateRubric(!autoGenerateRubric)}>
+                                                            <div className={`w-11 h-6 rounded-full transition-colors ${autoGenerateRubric ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                                                                <div className={`absolute top-1 left-1 bg-white border border-slate-300 rounded-full h-4 w-4 transition-transform ${autoGenerateRubric ? 'translate-x-5 border-transparent' : ''}`}></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Quiz Short Code */}
+                                            {assignmentType === 'quiz' && (
+                                                <div className="col-span-2 md:col-span-1">
                                                     <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Short Code</label>
                                                     <input
-                                                        className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold font-mono text-sm md:text-base ${shortCodeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
-                                                        placeholder="CAT 1"
+                                                        className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold font-mono text-sm md:text-base ${shortCodeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-purple-500'}`}
+                                                        placeholder="QUIZ 1"
                                                         value={newAssignment.short_code || ''}
                                                         required
                                                         onChange={e => {
@@ -1149,44 +1278,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                         }}
                                                     />
                                                 </div>
-                                                <div>
-                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Word Count</label>
-                                                    <input
-                                                        type="number"
-                                                        className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-sm md:text-base"
-                                                        placeholder="500"
-                                                        value={newAssignment.word_count || ''}
-                                                        onChange={e => setNewAssignment({ ...newAssignment, word_count: parseInt(e.target.value) || 0 })}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Style</label>
-                                                    <select
-                                                        className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold bg-white text-sm md:text-base"
-                                                        value={newAssignment.reference_style}
-                                                        onChange={e => setNewAssignment({ ...newAssignment, reference_style: e.target.value })}
-                                                    >
-                                                        <option value="APA">APA</option>
-                                                        <option value="MLA">MLA</option>
-                                                        <option value="Harvard">Harvard</option>
-                                                        <option value="Chicago">Chicago</option>
-                                                        <option value="IEEE">IEEE</option>
-                                                    </select>
-                                                </div>
-
-                                                <div className="col-span-2 flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                                    <div className="flex items-center gap-2">
-                                                        <Sparkles className="w-4 h-4 text-indigo-600" />
-                                                        <span className="text-xs font-bold text-slate-700 uppercase">Auto-generate Rubric with AI</span>
-                                                    </div>
-                                                    <div className="relative inline-flex items-center cursor-pointer" onClick={() => setAutoGenerateRubric(!autoGenerateRubric)}>
-                                                        <div className={`w-11 h-6 rounded-full transition-colors ${autoGenerateRubric ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                                                            <div className={`absolute top-1 left-1 bg-white border border-slate-300 rounded-full h-4 w-4 transition-transform ${autoGenerateRubric ? 'translate-x-5 border-transparent' : ''}`}></div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            )}
                                             {shortCodeError && (
                                                 <div className="col-span-2 flex items-start gap-1 -mt-1 text-red-500 animate-fade-in">
                                                     <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
@@ -1212,6 +1304,21 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                 </div>
                                             </div>
 
+                                            {/* Quiz Builder - Only for Quizzes */}
+                                            {assignmentType === 'quiz' && (
+                                                <div className="col-span-2">
+                                                    <QuizBuilder
+                                                        questions={quizQuestions}
+                                                        onChange={(questions) => {
+                                                            setQuizQuestions(questions);
+                                                            // Auto-calculate points from questions
+                                                            const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
+                                                            setNewAssignment({ ...newAssignment, max_points: totalPoints });
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+
                                             {/* Due Date & Points Row */}
                                             <div className="col-span-2 grid grid-cols-2 gap-3 md:gap-6">
                                                 <div>
@@ -1228,21 +1335,33 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Points</label>
+                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">
+                                                        {assignmentType === 'quiz' ? 'Total Points' : 'Points'}
+                                                    </label>
                                                     <div className="relative">
                                                         <input
                                                             type="number"
-                                                            className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold pr-12 text-sm md:text-base"
+                                                            className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold pr-12 text-sm md:text-base ${assignmentType === 'quiz'
+                                                                ? 'border-purple-200 bg-purple-50 text-purple-700 cursor-not-allowed focus:ring-purple-500'
+                                                                : 'border-slate-200 focus:ring-indigo-500'
+                                                                }`}
                                                             placeholder="100"
                                                             value={newAssignment.max_points}
                                                             onChange={e => {
-                                                                const val = parseInt(e.target.value);
-                                                                setNewAssignment({ ...newAssignment, max_points: isNaN(val) ? 0 : val });
+                                                                if (assignmentType === 'standard') {
+                                                                    const val = parseInt(e.target.value);
+                                                                    setNewAssignment({ ...newAssignment, max_points: isNaN(val) ? 0 : val });
+                                                                }
                                                             }}
+                                                            readOnly={assignmentType === 'quiz'}
                                                             required
                                                             min="1"
                                                         />
-                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs pointer-events-none">/ 100</span>
+                                                        {assignmentType === 'quiz' ? (
+                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 font-bold text-xs pointer-events-none">from quiz</span>
+                                                        ) : (
+                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs pointer-events-none">/ 100</span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1260,13 +1379,21 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                     setIsCreatingAssignment(false);
                                                     setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
                                                     setAutoGenerateRubric(false);
+                                                    setQuizQuestions([]);
+                                                    setAssignmentType('standard');
                                                 }}
                                                 className="px-3 py-2 md:px-6 md:py-2.5 text-slate-500 hover:text-slate-700 font-bold text-xs md:text-sm transition-colors"
                                             >
                                                 Cancel
                                             </button>
-                                            <button className="bg-indigo-600 text-white px-4 py-2 md:px-8 md:py-2.5 rounded-xl font-bold text-xs md:text-sm hover:bg-indigo-700 shadow-lg transition-transform active:scale-95">
-                                                {newAssignment.id ? 'Update' : 'Publish'} Assignment
+                                            <button
+                                                className={`text-white px-4 py-2 md:px-8 md:py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-lg transition-transform active:scale-95 ${assignmentType === 'quiz'
+                                                    ? 'bg-purple-600 hover:bg-purple-700'
+                                                    : 'bg-indigo-600 hover:bg-indigo-700'
+                                                    }`}
+                                                disabled={assignmentType === 'quiz' && quizQuestions.length === 0}
+                                            >
+                                                {newAssignment.id ? 'Update' : 'Publish'} {assignmentType === 'quiz' ? 'Quiz' : 'Assignment'}
                                             </button>
                                         </div>
                                     </form>
@@ -1313,7 +1440,18 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                         >
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <h3 className="font-bold text-slate-800 text-lg group-hover:text-indigo-700 transition-colors">{assign.title}</h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="font-bold text-slate-800 text-lg group-hover:text-indigo-700 transition-colors">{assign.title}</h3>
+                                                        {assign.assignment_type === 'quiz' ? (
+                                                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                                                <Sparkles className="w-3 h-3" /> Quiz
+                                                            </span>
+                                                        ) : (
+                                                            <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                                                                Essay
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-slate-500 text-sm mt-1 line-clamp-2">{assign.description}</p>
                                                 </div>
                                                 <div className="text-right">

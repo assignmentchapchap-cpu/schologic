@@ -5,7 +5,7 @@ import { createClient } from "@schologic/database";
 import {
     Clock, Calendar, CheckCircle, ArrowLeft, FileText, Download,
     Link as LinkIcon, Layers, ExternalLink, ChevronRight, AlertCircle, BookOpen, User, PlayCircle, Eye,
-    ChevronUp, ChevronDown, Users, X, ArrowUpRight
+    ChevronUp, ChevronDown, Users, X, ArrowUpRight, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import { Database } from "@schologic/database";
@@ -15,7 +15,7 @@ import { Asset } from '@/types/library';
 type ClassData = Database['public']['Tables']['classes']['Row'] & {
     instructor_profile?: { full_name: string | null, title?: string | null }
 };
-type Assignment = Database['public']['Tables']['assignments']['Row'];
+type Assignment = Database['public']['Tables']['assignments']['Row'] & Partial<{ assignment_type: string | null }>;
 type Resource = Database['public']['Tables']['class_assets']['Row'] & {
     assets: Database['public']['Tables']['assets']['Row'] | null
 };
@@ -236,6 +236,15 @@ function StudentClassPage({ classId }: { classId: string }) {
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
                                                 <h3 className="font-bold text-lg text-slate-800">{assign.title}</h3>
+                                                {assign.assignment_type === 'quiz' ? (
+                                                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                                        <Sparkles className="w-3 h-3" /> Quiz
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                                                        Essay
+                                                    </span>
+                                                )}
                                                 {isGraded ? (
                                                     <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
                                                         Graded: {submission.grade}/{assign.max_points}

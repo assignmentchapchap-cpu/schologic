@@ -9,7 +9,8 @@ import Link from 'next/link';
 import { Database } from "@schologic/database";
 import ReportView from '@/components/ReportView';
 import RubricComponent from '@/components/RubricComponent';
-import { ClassSettings, RubricItem } from '@/types/json-schemas';
+import { ClassSettings, RubricItem, QuizData, QuizSubmission, isQuizData } from '@/types/json-schemas';
+import QuizTaker from '@/components/student/QuizTaker';
 
 type AssignmentDetails = Database['public']['Tables']['assignments']['Row'] & {
     classes: {
@@ -20,12 +21,13 @@ type AssignmentDetails = Database['public']['Tables']['assignments']['Row'] & {
             settings: unknown;
         } | null;
     } | null;
-} & {
+} & Partial<{
     word_count: number | null;
     reference_style: string | null;
     short_code: string | null;
     rubric: unknown;
-};
+    assignment_type: string | null;
+}>;
 
 type SubmissionDetails = Database['public']['Tables']['submissions']['Row'];
 
@@ -236,6 +238,57 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
         }
     };
 
+    // Quiz Submission State
+    const [quizSubmitting, setQuizSubmitting] = useState(false);
+
+    // Quiz Submission Handler - Auto-grades and saves
+    const handleQuizSubmission = async (responses: Record<string, number>, score: number) => {
+        if (!assignment) return;
+
+        setQuizSubmitting(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Not authenticated");
+
+            // Build quiz submission data
+            const quizSubmissionData: QuizSubmission = {
+                quiz_responses: responses,
+                auto_score: score,
+                time_taken_seconds: Math.floor((Date.now() - Date.now()) / 1000) // Placeholder - would need actual start time
+            };
+
+            const { data: sub, error: subErr } = await supabase
+                .from('submissions')
+                .insert({
+                    student_id: user.id,
+                    class_id: assignment.class_id,
+                    assignment_id: assignment.id,
+                    content: null, // Quizzes don't have text content
+                    ai_score: null, // No AI analysis for quizzes
+                    grade: score, // Auto-graded score
+                    report_data: quizSubmissionData as unknown as Database['public']['Tables']['submissions']['Row']['report_data']
+                })
+                .select()
+                .single();
+
+            if (subErr) throw subErr;
+
+            // Update local state - submission is complete
+            setSubmission(sub);
+            setShowSubmission(false);
+
+        } catch (error: unknown) {
+            console.error("Quiz Submission Error", error);
+            alert("Submission failed: " + (error instanceof Error ? error.message : String(error)));
+        } finally {
+            setQuizSubmitting(false);
+        }
+    };
+
+    // Helper: Check if this is a quiz
+    const isQuiz = assignment?.assignment_type === 'quiz' && isQuizData(assignment?.rubric);
+    const quizData = isQuiz ? (assignment?.rubric as unknown as QuizData) : null;
+
     // Helper for AI Score Color
     const getAIScoreColor = (score: number) => {
         if (score < 15) return 'bg-emerald-50 text-emerald-600 border-emerald-100';
@@ -435,13 +488,25 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
 
             {/* Expanded Submission Area (Only if not submitted) */}
             {showSubmission && !submission && (
-                <div className="bg-white rounded-2xl shadow-xl border border-emerald-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300 ring-4 ring-emerald-50/50 w-full max-w-3xl mx-auto">
+                <div className={`bg-white rounded-2xl shadow-xl border overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300 ring-4 w-full max-w-3xl mx-auto ${isQuiz ? 'border-purple-100 ring-purple-50/50' : 'border-emerald-100 ring-emerald-50/50'
+                    }`}>
                     <div className="p-3 md:p-8">
-                        <h2 className="text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-6 flex items-center gap-2">
-                            <FileText className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" /> New Submission
+                        <h2 className={`text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-6 flex items-center gap-2`}>
+                            {isQuiz ? (
+                                <><Sparkles className="w-5 h-5 md:w-6 md:h-6 text-purple-600" /> Take Quiz</>
+                            ) : (
+                                <><FileText className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" /> New Submission</>
+                            )}
                         </h2>
 
-                        {analyzing || uploading ? (
+                        {/* Quiz Mode */}
+                        {isQuiz && quizData ? (
+                            <QuizTaker
+                                quizData={quizData}
+                                onSubmit={handleQuizSubmission}
+                                isSubmitting={quizSubmitting}
+                            />
+                        ) : analyzing || uploading ? (
                             <div className="text-center py-12 md:py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                                 <Loader2 className="w-10 h-10 md:w-12 md:h-12 mx-auto text-emerald-500 animate-spin mb-4" />
                                 <h3 className="text-base md:text-lg font-bold text-slate-800 mb-1">Analyzing Submission...</h3>
