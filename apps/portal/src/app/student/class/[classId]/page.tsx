@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Database } from "@schologic/database";
+import { useReader } from '@/context/UniversalReaderContext';
+import { Asset } from '@/types/library';
 
 type ClassData = Database['public']['Tables']['classes']['Row'] & {
     instructor_profile?: { full_name: string | null, title?: string | null }
@@ -37,6 +39,7 @@ export default function StudentClassPageParams({ params }: { params: Promise<{ c
 
 function StudentClassPage({ classId }: { classId: string }) {
     const supabase = createClient();
+    const { openReader } = useReader();
     const [classData, setClassData] = useState<ClassData | null>(null);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [resources, setResources] = useState<Resource[]>([]);
@@ -60,7 +63,7 @@ function StudentClassPage({ classId }: { classId: string }) {
 
             const clsQuery = supabase.from('classes').select('*, profiles:instructor_id(full_name, title)').eq('id', classId).single();
             const assignQuery = supabase.from('assignments').select('*').eq('class_id', classId).order('due_date', { ascending: true });
-            const resQuery = supabase.from('class_assets').select('*, assets(*)').eq('class_id', classId).order('created_at', { ascending: false });
+            const resQuery = supabase.from('class_assets').select('*, assets(*)').eq('class_id', classId).order('added_at', { ascending: false });
             const enrollQuery = supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId);
             const subQuery = user
                 ? supabase.from('submissions').select('assignment_id, grade').eq('class_id', classId).eq('student_id', user.id)
@@ -292,6 +295,8 @@ function StudentClassPage({ classId }: { classId: string }) {
                                 const type = res.asset_type || 'document';
                                 const isLink = type === 'url';
                                 const isCartridge = type === 'cartridge_root';
+                                const isDocument = type === 'document' || type === 'file';
+                                const source = res.source;
 
                                 let icon = <FileText className="w-6 h-6" />;
                                 let colorClass = "bg-amber-50 text-amber-600";
@@ -307,29 +312,46 @@ function StudentClassPage({ classId }: { classId: string }) {
                                 return (
                                     <div key={item.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative group overflow-hidden">
                                         <div className={`absolute top-0 left-0 w-1 h-full ${isLink ? 'bg-indigo-400' : isCartridge ? 'bg-orange-400' : 'bg-amber-400'}`} />
-                                        <div className="flex items-start gap-4">
-                                            <div className={`p-3 rounded-xl mt-1 ${colorClass}`}>
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-3 rounded-xl shrink-0 ${colorClass}`}>
                                                 {icon}
                                             </div>
-                                            <div className="flex-1">
-                                                <h3 className="font-bold text-lg text-slate-800 mb-1">{res.title}</h3>
-                                                <p className="text-slate-600 text-sm mb-4 whitespace-pre-wrap">{res.content}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-bold text-lg text-slate-800 mb-0.5 truncate pr-4">{res.title}</h3>
+                                                {/* Only show content for manual resources, not for uploaded docs */}
+                                                {typeof res.content === 'string' && source === 'manual' && (
+                                                    <p className="text-slate-600 text-sm line-clamp-2">{res.content}</p>
+                                                )}
+                                            </div>
 
-                                                {res.file_url ? (
+                                            {/* Actions - Right Aligned */}
+                                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                {/* Universal Reader Button (Docs & Cartridges) */}
+                                                {(isDocument || isCartridge) && (
+                                                    <button
+                                                        onClick={() => openReader(res as unknown as Asset)}
+                                                        className={`p-2.5 rounded-lg transition-all shadow-sm group/btn ${isCartridge
+                                                            ? 'bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white'
+                                                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white'
+                                                            }`}
+                                                        title={isCartridge ? "View Course Content" : "Read Online"}
+                                                    >
+                                                        <BookOpen className="w-5 h-5" />
+                                                    </button>
+                                                )}
+
+                                                {/* Download/Open Link Button */}
+                                                {res.file_url && (
                                                     <a
                                                         href={res.file_url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
+                                                        className="p-2.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 transition-all border border-slate-200 hover:border-slate-300"
+                                                        title={isLink ? 'Open Link' : 'Download File'}
                                                     >
-                                                        {isLink ? <ExternalLink className="w-4 h-4" /> : <Download className="w-4 h-4" />}
-                                                        {isLink ? 'Open Link' : 'Download Resource'}
+                                                        {isLink ? <ExternalLink className="w-5 h-5" /> : <Download className="w-5 h-5" />}
                                                     </a>
-                                                ) : isCartridge ? (
-                                                    <Link href={`/student/reader/${res.id}`} className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors">
-                                                        <BookOpen className="w-4 h-4" /> View Content
-                                                    </Link>
-                                                ) : null}
+                                                )}
                                             </div>
                                         </div>
                                     </div>

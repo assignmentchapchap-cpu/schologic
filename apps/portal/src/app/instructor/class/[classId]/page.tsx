@@ -9,7 +9,7 @@ import {
     Users, FileText, Calendar, Settings, Plus, MoreVertical, Trash2,
     ExternalLink, Search, Filter, ArrowLeft, Clock, CheckCircle, Download,
     X, Lock, Unlock, AlertCircle, ChevronRight, Loader2, BookOpen, Edit, Shield, PlayCircle, Copy, Check, ChevronUp, ChevronDown, ArrowUpRight,
-    Eye, EyeOff, Sparkles, FolderOpen, Upload
+    Eye, EyeOff, Sparkles, FolderOpen, Upload, Layers, Link as LinkIcon
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -22,6 +22,8 @@ import { ClassSettings, DEFAULT_CLASS_SETTINGS } from '@/types/json-schemas';
 import AssetPickerModal from '@/components/library/AssetPickerModal';
 import AssetUploader from '@/components/library/AssetUploader';
 import AIInsightsModal from '@/components/AIInsightsModal';
+import { useReader } from '@/context/UniversalReaderContext';
+import { Asset } from '@/types/library';
 
 type ClassData = Database['public']['Tables']['classes']['Row'] & { settings?: ClassSettings | null };
 type Assignment = Database['public']['Tables']['assignments']['Row'];
@@ -54,6 +56,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { showToast } = useToast();
+    const { openReader } = useReader();
     const initialTab = searchParams.get('tab') as 'overview' | 'assignments' | 'resources' || 'overview';
 
 
@@ -311,7 +314,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             const clsQuery = supabase.from('classes').select('*').eq('id', classId).single();
             const assignQuery = supabase.from('assignments').select('*, short_code').eq('class_id', classId).order('due_date', { ascending: true });
             const enrollQuery = supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId);
-            const resQuery = supabase.from('class_assets').select('*, assets(*)').eq('class_id', classId).order('created_at', { ascending: false });
+            const resQuery = supabase.from('class_assets').select('*, assets(*)').eq('class_id', classId).order('added_at', { ascending: false });
             const profileQuery = supabase.from('profiles').select('settings').eq('id', user.id).single();
             const subQuery = supabase.from('submissions').select('*').eq('class_id', classId);
 
@@ -1487,23 +1490,63 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                             ) : (
                                 <div className="grid gap-4">
                                     {resources.map((item) => {
-                                        const res = item.assets; // Access joined asset
+                                        const res = item.assets;
                                         if (!res) return null;
 
+                                        const type = res.asset_type || 'document';
+                                        const isLink = type === 'url';
+                                        const isCartridge = type === 'cartridge_root';
+                                        const isDocument = type === 'document' || type === 'file';
+
+                                        let icon = <FileText className="w-6 h-6" />;
+                                        let colorClass = "bg-amber-50 text-amber-600";
+
+                                        if (isLink) {
+                                            icon = <LinkIcon className="w-6 h-6" />;
+                                            colorClass = "bg-indigo-50 text-indigo-600";
+                                        } else if (isCartridge) {
+                                            icon = <Layers className="w-6 h-6" />;
+                                            colorClass = "bg-orange-50 text-orange-600";
+                                        }
+
                                         return (
-                                            <div key={item.id} className="bg-white p-5 rounded-xl border border-slate-200 flex justify-between items-center group hover:border-indigo-300 transition-colors">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="p-3 bg-amber-50 text-amber-600 rounded-lg">
-                                                        <FileText className="w-6 h-6" />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-slate-800">{res.title}</h3>
-                                                        <p className="text-xs text-slate-500 mt-0.5">Added {new Date(res.created_at ?? '').toLocaleDateString()}</p>
-                                                    </div>
+                                            <div key={item.id} className="bg-white p-5 rounded-xl border border-slate-200 flex items-center gap-4 group hover:border-indigo-300 transition-colors">
+                                                <div className={`p-3 rounded-xl shrink-0 ${colorClass}`}>
+                                                    {icon}
                                                 </div>
-                                                <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                                                    <Download className="w-5 h-5" />
-                                                </button>
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-bold text-slate-800 truncate">{res.title}</h3>
+                                                    <p className="text-xs text-slate-500 mt-0.5">Added {new Date(item.added_at ?? '').toLocaleDateString()}</p>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                    {/* Read Online Button */}
+                                                    {(isDocument || isCartridge) && (
+                                                        <button
+                                                            onClick={() => openReader(res as unknown as Asset)}
+                                                            className={`p-2 rounded-lg transition-all shadow-sm ${isCartridge
+                                                                ? 'bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white'
+                                                                : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white'
+                                                                }`}
+                                                            title={isCartridge ? "View Course Content" : "Read Online"}
+                                                        >
+                                                            <BookOpen className="w-5 h-5" />
+                                                        </button>
+                                                    )}
+
+                                                    {/* Download/Link Button */}
+                                                    {res.file_url && (
+                                                        <a
+                                                            href={res.file_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="p-2 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 transition-all border border-slate-200 hover:border-slate-300"
+                                                            title={isLink ? 'Open Link' : 'Download File'}
+                                                        >
+                                                            {isLink ? <ExternalLink className="w-5 h-5" /> : <Download className="w-5 h-5" />}
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
                                         )
                                     })}

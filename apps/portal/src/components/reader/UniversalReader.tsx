@@ -320,6 +320,17 @@ export default function UniversalReader({ asset, onClose, isOpen = true }: Unive
                             <DocxViewer fileUrl={asset.file_url || ''} zoomLevel={zoomLevel} />
                         ) : asset.mime_type === 'application/pdf' ? (
                             <PdfViewer fileUrl={asset.file_url || ''} zoomLevel={zoomLevel} />
+                        ) : (typeof asset.content === 'string' && asset.content.length > 0) ? (
+                            <div className="h-full overflow-auto bg-gray-50 flex justify-center p-4">
+                                <div
+                                    className="w-full max-w-4xl bg-white shadow-sm min-h-full p-8 sm:p-12 rounded-lg transition-transform duration-200 origin-top"
+                                    style={{ transform: `scale(${zoomLevel})` }}
+                                >
+                                    <div className="prose max-w-none text-slate-800 leading-relaxed whitespace-pre-wrap">
+                                        {asset.content}
+                                    </div>
+                                </div>
+                            </div>
                         ) : (
                             <div className="h-full overflow-auto p-8 flex justify-center">
                                 <div className="w-full max-w-3xl bg-white shadow-sm min-h-full p-12 rounded-lg">
