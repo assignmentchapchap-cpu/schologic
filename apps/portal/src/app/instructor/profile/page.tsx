@@ -88,7 +88,6 @@ export default function InstructorProfilePage() {
                     preferences: null,
                     registration_number: null,
                     settings: null,
-                    is_active: true,
 
                 });
 

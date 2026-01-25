@@ -3,11 +3,20 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { Home, Terminal, User, Upload, LogOut, GraduationCap, Calendar, Settings, FileText, Menu, X, Search, Plus, Bell, BookOpen, Users } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Home, Terminal, User, Upload, LogOut, GraduationCap, Calendar, Settings, FileText, Menu, X, Search, Plus, Bell, BookOpen } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NotificationBell from './NotificationBell';
 import { createClient } from "@schologic/database";
+import { useRouter } from 'next/navigation';
+
+
+// Simple utility if @/lib/utils doesn't exist yet, but previous files used it? 
+// Actually previous files used locally defined `cn` or imported. 
+// I'll assume standard imports or define local helper if needed. 
+// Checking imports... `ReportView.tsx` imported `clsx` and `tailwind-merge`.
+// I will just implement the component cleanly.
+
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -16,7 +25,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 interface SidebarProps {
-    role: 'instructor' | 'student' | 'institution_admin' | 'superadmin';
+    role: 'instructor' | 'student';
 }
 
 export default function Sidebar({ role }: SidebarProps) {
@@ -29,41 +38,20 @@ export default function Sidebar({ role }: SidebarProps) {
         router.push('/');
     };
 
-    let links = [];
-
-    if (role === 'institution_admin') {
-        links = [
-            { href: '/admin/dashboard', label: 'Dashboard', icon: Home },
-            { href: '/admin/classes', label: 'Classes', icon: GraduationCap },
-            { href: '/admin/instructors', label: 'Instructors', icon: Users },
-            { href: '/admin/settings', label: 'Settings', icon: Settings },
-            { href: '/admin/profile', label: 'Profile', icon: User },
-        ];
-    } else if (role === 'superadmin') {
-        links = [
-            { href: '/superadmin/dashboard', label: 'Overview', icon: Home },
-            { href: '/superadmin/institutions', label: 'Institutions', icon: GraduationCap },
-            { href: '/superadmin/instructors', label: 'Ind. Instructors', icon: Users },
-            { href: '/superadmin/settings', label: 'Global Settings', icon: Settings },
-        ];
-    } else if (role === 'instructor') {
-        links = [
-            { href: '/instructor/dashboard', label: 'Dashboard', icon: Home },
-            { href: '/instructor/classes', label: 'Classes', icon: GraduationCap },
-            { href: '/instructor/library', label: 'Library', icon: BookOpen },
-            { href: '/instructor/calendar', label: 'Calendar', icon: Calendar },
-            { href: '/instructor/lab', label: 'AI Lab', icon: Terminal },
-            { href: '/instructor/settings', label: 'Settings', icon: Settings },
-            { href: '/instructor/profile', label: 'Profile', icon: User },
-        ];
-    } else {
-        links = [
-            { href: '/student/dashboard', label: 'Dashboard', icon: Home },
-            { href: '/student/classes', label: 'My Classes', icon: GraduationCap },
-            { href: '/student/grades', label: 'My Grades', icon: FileText },
-            { href: '/student/profile', label: 'Profile', icon: User },
-        ];
-    }
+    const links = role === 'instructor' ? [
+        { href: '/instructor/dashboard', label: 'Dashboard', icon: Home },
+        { href: '/instructor/classes', label: 'Classes', icon: GraduationCap },
+        { href: '/instructor/library', label: 'Library', icon: BookOpen },
+        { href: '/instructor/calendar', label: 'Calendar', icon: Calendar },
+        { href: '/instructor/lab', label: 'AI Lab', icon: Terminal },
+        { href: '/instructor/settings', label: 'Settings', icon: Settings },
+        { href: '/instructor/profile', label: 'Profile', icon: User },
+    ] : [
+        { href: '/student/dashboard', label: 'Dashboard', icon: Home },
+        { href: '/student/classes', label: 'My Classes', icon: GraduationCap },
+        { href: '/student/grades', label: 'My Grades', icon: FileText },
+        { href: '/student/profile', label: 'Profile', icon: User },
+    ];
 
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isDemo, setIsDemo] = useState(false);

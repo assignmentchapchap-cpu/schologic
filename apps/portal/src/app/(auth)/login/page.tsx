@@ -79,27 +79,7 @@ function LoginContent() {
                 if (signInError) throw signInError;
 
                 // Success
-                // Success - Determine redirect based on role
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('role')
-                        .eq('id', user.id)
-                        .single();
-
-                    if (profile?.role === 'institution_admin') {
-                        router.push('/admin/dashboard');
-                    } else if (profile?.role === 'superadmin') {
-                        router.push('/superadmin/dashboard');
-                    } else if (profile?.role === 'student') {
-                        router.push('/student/dashboard');
-                    } else {
-                        router.push('/instructor/dashboard');
-                    }
-                } else {
-                    router.push('/instructor/dashboard'); // Fallback
-                }
+                router.push('/instructor/dashboard');
                 router.refresh();
             }
         } catch (err: unknown) {
