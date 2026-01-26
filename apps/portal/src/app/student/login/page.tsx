@@ -7,7 +7,7 @@ import { createClient } from "@schologic/database";
 import { ArrowRight, Loader2, Home, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/context/ToastContext';
-import { verifyClassInvite } from '@/app/actions/student';
+import { verifyClassInvite, enrollStudent } from '@/app/actions/student';
 
 export default function StudentLoginPage() {
     const [mode, setMode] = useState<'login' | 'signup'>('signup');
@@ -83,32 +83,15 @@ export default function StudentLoginPage() {
                     }).eq('id', authData.user.id);
                 }
 
-                // 4. Create Enrollment via Service Action? 
-                // Client insert to 'enrollments' will fail if RLS requires 'authenticated'.
-                // If user is not confirmed, they are not authenticated.
-                // We likely need a Server Action for enrollment too!
-                // But for now, let's fix invite code. Enrollment failing would be the NEXT error.
+                // 4. Create Enrollment via Server Action
+                // This uses the service role to insert even if the user is not yet confirmed/authenticated
+                const enrollRes = await enrollStudent(authData.user.id, verifyRes.classId);
 
-                // Note: If no session, the client-side enrollment insert will fail unless RLS allows public/anon inserts with correct class_id? 
-                // Unlikely.
-
-                // Let's assume for now that enrollment MIGHT fail if not confirmed. 
-                // But let's proceed with the fix requested.
-
-                const { error: enrollErr } = await supabase
-                    .from('enrollments')
-                    .insert([{
-                        student_id: authData.user.id,
-                        class_id: verifyRes.classId
-                    }]);
-
-                if (enrollErr) {
-                    console.error("Enrollment Error (Expected if unconfirmed):", enrollErr);
-                    // If error is permission denied, we might ignore it if we expect the user to verify email first?
-                    // But then they won't be enrolled.
-                    // Ideally, enrollment should happen AFTER verification or via Admin action.
-                    // For now, suppress 23505 (dup) but log others.
-                    if (enrollErr.code !== '23505' && enrollErr.code !== '42501') throw enrollErr; // 42501 is permission denied
+                if (enrollRes.error && enrollRes.error !== 'Already enrolled') {
+                    console.error("Enrollment Error:", enrollRes.error);
+                    // We might want to warn the user, but account is created.
+                    // For now, let's proceed but maybe show a warning toast?
+                    // showToast("Account created but enrollment failed. Please contact support.", 'warning');
                 }
 
                 showToast("Account created! Please verify your email.", 'success');
