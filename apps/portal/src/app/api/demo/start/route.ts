@@ -289,8 +289,23 @@ export async function POST(req: Request) {
             demo_student_email: students[4]?.email
         });
 
-    } catch (error: unknown) {
+    } catch (error: any) {
         console.error("Demo Setup Error:", error);
+
+        // Handle thrown errors from Supabase Admin (e.g. existing user 422)
+        const isDuplicate =
+            error?.status === 422 ||
+            error?.code === 'email_exists' ||
+            error?.code === 'unique_violation' ||
+            (error?.message && /already registered|exists/i.test(error.message));
+
+        if (isDuplicate) {
+            return NextResponse.json({
+                error: 'This email is already registered.',
+                code: 'email_exists'
+            }, { status: 409 });
+        }
+
         const message = error instanceof Error ? error.message : 'Internal Server Error';
         return NextResponse.json({ error: message }, { status: 500 });
     }

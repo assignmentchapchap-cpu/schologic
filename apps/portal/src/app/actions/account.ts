@@ -22,8 +22,24 @@ const supabaseAdmin = createClient(
 export async function claimDemoAccount(password: string) {
   const cookieStore = await cookies();
   const headerStore = await headers();
-  const origin = headerStore.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const supabase = createSessionClient(cookieStore);
+
+  // Robust Origin Detection
+  let origin = headerStore.get('origin');
+  if (!origin) {
+    const forwardedHost = headerStore.get('x-forwarded-host');
+    if (forwardedHost) {
+      origin = forwardedHost.startsWith('http') ? forwardedHost : `https://${forwardedHost}`;
+    }
+  }
+  if (!origin) {
+    origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  }
+
+  // Dev Safety Net
+  if (process.env.NODE_ENV === 'development' && origin.includes('schologic.com')) {
+    origin = 'http://localhost:3000';
+  }
 
   // 1. Verify Current User
   const { data: { user } } = await supabase.auth.getUser();
@@ -79,7 +95,7 @@ export async function claimDemoAccount(password: string) {
       type: 'magiclink',
       email: email,
       options: {
-        redirectTo: `${origin}/auth/callback?next=/instructor/dashboard`
+        redirectTo: `${origin}/auth/callback`
       }
     });
 
@@ -147,7 +163,29 @@ export async function claimDemoAccount(password: string) {
 
 export async function sendDemoRecoveryEmail(email: string) {
   const headerStore = await headers();
-  const origin = headerStore.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+  // Prefer 'origin' or 'x-forwarded-host' from the request
+  // Fallback to NEXT_PUBLIC_SITE_URL, then localhost
+  let origin = headerStore.get('origin');
+
+  if (!origin) {
+    const forwardedHost = headerStore.get('x-forwarded-host');
+    if (forwardedHost) {
+      origin = forwardedHost.startsWith('http') ? forwardedHost : `https://${forwardedHost}`;
+    }
+  }
+
+  // Final fallback
+  if (!origin) {
+    origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  }
+
+  // Development override: If running locally but env var points to prod, force localhost if header is missing
+  // (This handles cases where server actions might lose origin in some setups, though rare)
+  if (process.env.NODE_ENV === 'development' && origin.includes('schologic.com')) {
+    console.log("Dev mode suspected, but origin is prod. Defaulting to localhost.");
+    origin = 'http://localhost:3000';
+  }
 
   try {
     // 1. Get User ID (Service Role)
@@ -164,7 +202,7 @@ export async function sendDemoRecoveryEmail(email: string) {
       type: 'magiclink',
       email: email,
       options: {
-        redirectTo: `${origin}/auth/callback?next=/instructor/dashboard`
+        redirectTo: `${origin}/auth/callback`
       }
     });
 
