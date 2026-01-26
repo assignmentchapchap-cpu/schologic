@@ -13,8 +13,8 @@ function LoginContent() {
     const searchParams = useSearchParams();
 
     // State
-    const [isSignUp, setIsSignUp] = useState(false);
-    const [isReset, setIsReset] = useState(false); // Toggle for password reset
+    const [isSignUp, setIsSignUp] = useState(searchParams.get('view') === 'signup');
+    const [isReset, setIsReset] = useState(searchParams.get('view') === 'reset'); // Toggle for password reset
     const [showDemoModal, setShowDemoModal] = useState(false);
 
     // Auth Fields

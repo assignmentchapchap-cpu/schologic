@@ -117,19 +117,7 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
         }
     };
 
-    const handleRecovery = async () => {
-        setLoading(true);
-        try {
-            const { error } = await sendDemoRecoveryEmail(formData.email);
-            if (error) throw new Error(error);
-            showToast('Login link sent! Check your email.', 'success');
-            onClose();
-        } catch (err: any) {
-            console.error(err);
-            showToast(err.message || "Failed to send recovery email", 'error');
-            setLoading(false);
-        }
-    };
+
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -166,12 +154,15 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
                             It looks like <strong>{formData.email}</strong> already has an account.
                         </p>
 
+
                         <button
-                            onClick={handleRecovery}
-                            disabled={loading}
+                            onClick={() => {
+                                onClose();
+                                router.push('/login?view=reset'); // Redirect to manual reset
+                            }}
                             className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-black transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 mb-3"
                         >
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Email Me a Login Link</span>}
+                            <span>Go to Password Reset</span>
                         </button>
 
                         <button
