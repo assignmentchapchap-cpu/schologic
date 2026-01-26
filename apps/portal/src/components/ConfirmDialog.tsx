@@ -8,8 +8,8 @@ interface ConfirmDialogProps {
     title: string;
     message: string;
     strConfirm: string;
-    strCancel: string;
-    variant?: 'danger' | 'warning' | 'info';
+    strCancel?: string;
+    variant?: 'danger' | 'warning' | 'info' | 'success';
     onConfirm: () => Promise<void> | void;
     onCancel: () => void;
 }
@@ -57,6 +57,10 @@ export default function ConfirmDialog({
         info: {
             icon: 'text-blue-500 bg-blue-50',
             button: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
+        },
+        success: {
+            icon: 'text-emerald-500 bg-emerald-50',
+            button: 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500',
         }
     };
 
@@ -87,13 +91,15 @@ export default function ConfirmDialog({
 
                 {/* Actions */}
                 <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                    <button
-                        onClick={onCancel}
-                        disabled={isLoading}
-                        className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-50 transition-colors"
-                    >
-                        {strCancel}
-                    </button>
+                    {strCancel && (
+                        <button
+                            onClick={onCancel}
+                            disabled={isLoading}
+                            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-50 transition-colors"
+                        >
+                            {strCancel}
+                        </button>
+                    )}
                     <button
                         onClick={handleConfirm}
                         disabled={isLoading}
