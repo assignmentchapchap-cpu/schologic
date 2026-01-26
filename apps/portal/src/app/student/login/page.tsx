@@ -52,6 +52,7 @@ export default function StudentLoginPage() {
                     email,
                     password,
                     options: {
+                        emailRedirectTo: `${window.location.origin}/auth/callback?next=/student/dashboard`,
                         data: {
                             role: 'student',
                             full_name: studentName,
