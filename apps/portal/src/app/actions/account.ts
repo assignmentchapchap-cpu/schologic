@@ -9,91 +9,92 @@ const resend = new Resend(process.env.RESEND_API_KEY!);
 
 // Admin client for privileged operations (wiping data, updating auth flags)
 const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
-        }
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
     }
+  }
 );
 
 export async function claimDemoAccount(password: string) {
-    const cookieStore = await cookies();
-    const headerStore = await headers();
-    const origin = headerStore.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const supabase = createSessionClient(cookieStore);
+  const cookieStore = await cookies();
+  const headerStore = await headers();
+  const origin = headerStore.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const supabase = createSessionClient(cookieStore);
 
-    // 1. Verify Current User
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Unauthorized');
+  // 1. Verify Current User
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
 
-    if (user.user_metadata?.is_demo !== true) {
-        throw new Error('This account is not in Demo mode.');
+  if (user.user_metadata?.is_demo !== true) {
+    throw new Error('This account is not in Demo mode.');
+  }
+
+  try {
+    const userId = user.id;
+    const email = user.email!;
+
+    // 2. Wipe Data (Nuclear Option)
+    // Order matters for FK constraints if CASCADE is not set perfect, 
+    // but we added CASCADE in repair_permissions.sql so deleting parent records should work.
+    // However, we want to keep the *User* and *Profile*, just delete their created content.
+
+    // A. Delete Submissions (by students in this class? No, we delete Classes)
+    // B. Delete Classes (Cascades to Enrollments, ClassAssets, Assignments, Submissions)
+    const { error: classError } = await supabaseAdmin
+      .from('classes')
+      .delete()
+      .eq('instructor_id', userId);
+
+    if (classError) throw new Error(`Failed to wipe classes: ${classError.message}`);
+
+    // C. Delete Assets (Cascades to ClassAssets)
+    const { error: assetError } = await supabaseAdmin
+      .from('assets')
+      .delete()
+      .eq('instructor_id', userId);
+
+    if (assetError) throw new Error(`Failed to wipe files: ${assetError.message}`);
+
+    // 3. Update Password
+    const { error: passError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      password: password,
+      user_metadata: {
+        ...user.user_metadata,
+        is_demo: false, // Remove flag
+        demo_converted_at: new Date().toISOString() // Analytics tracking
+      },
+      email_confirm: false // STRICT VERIFICATION: Require email confirmation again
+    });
+
+    if (passError) throw passError;
+
+    // 4. Trigger Verification Email (Manual Link + Resend)
+    // We use 'magiclink' because the user already exists. 'signup' fails for existing users.
+    // Clicking this link will log them in and verify their email ownership.
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: email,
+      options: {
+        redirectTo: `${origin}/auth/callback`
+      }
+    });
+
+    if (linkError || !linkData?.properties?.action_link) {
+      console.error("Link Gen Error:", JSON.stringify(linkError, null, 2));
+      throw new Error(`Failed to generate verification link: ${linkError?.message || 'Unknown error'}`);
     }
 
-    try {
-        const userId = user.id;
-        const email = user.email!;
+    const actionLink = linkData.properties.action_link;
 
-        // 2. Wipe Data (Nuclear Option)
-        // Order matters for FK constraints if CASCADE is not set perfect, 
-        // but we added CASCADE in repair_permissions.sql so deleting parent records should work.
-        // However, we want to keep the *User* and *Profile*, just delete their created content.
-
-        // A. Delete Submissions (by students in this class? No, we delete Classes)
-        // B. Delete Classes (Cascades to Enrollments, ClassAssets, Assignments, Submissions)
-        const { error: classError } = await supabaseAdmin
-            .from('classes')
-            .delete()
-            .eq('instructor_id', userId);
-
-        if (classError) throw new Error(`Failed to wipe classes: ${classError.message}`);
-
-        // C. Delete Assets (Cascades to ClassAssets)
-        const { error: assetError } = await supabaseAdmin
-            .from('assets')
-            .delete()
-            .eq('instructor_id', userId);
-
-        if (assetError) throw new Error(`Failed to wipe files: ${assetError.message}`);
-
-        // 3. Update Password
-        const { error: passError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-            password: password,
-            user_metadata: {
-                ...user.user_metadata,
-                is_demo: false, // Remove flag
-                demo_converted_at: new Date().toISOString() // Analytics tracking
-            },
-            email_confirm: false // STRICT VERIFICATION: Require email confirmation again
-        });
-
-        if (passError) throw passError;
-
-        // 4. Trigger Verification Email (Manual Link + Resend)
-        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-            type: 'signup',
-            email: email,
-            password: password,
-            options: {
-                redirectTo: `${origin}/auth/callback`
-            }
-        });
-
-        if (linkError || !linkData?.properties?.action_link) {
-            console.error("Link Gen Error:", JSON.stringify(linkError, null, 2));
-            throw new Error(`Failed to generate verification link: ${linkError?.message || 'Unknown error'}`);
-        }
-
-        const actionLink = linkData.properties.action_link;
-
-        const { error: resendError } = await resend.emails.send({
-            from: 'Schologic <onboarding@schologic.com>', // Update this domain if needed
-            to: email,
-            subject: 'Verify your Schologic Account',
-            html: `
+    const { error: resendError } = await resend.emails.send({
+      from: 'Schologic <onboarding@schologic.com>', // Update this domain if needed
+      to: email,
+      subject: 'Verify your Schologic Account',
+      html: `
 <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 550px; margin: 0 auto; line-height: 1.5; color: #334155;">
   <!-- Minimalist Header -->
   <p style="font-size: 12px; color: #94a3b8; margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
@@ -128,57 +129,57 @@ export async function claimDemoAccount(password: string) {
   </div>
 </div>
             `
-        });
+    });
 
-        if (resendError) {
-            console.error("Resend API Error:", resendError);
-            throw new Error("Failed to send verification email via Resend.");
-        }
-
-        return { success: true };
-
-    } catch (error: any) {
-        console.error("Claim Account Error:", error);
-        return { error: error.message || 'Failed to claim account.' };
+    if (resendError) {
+      console.error("Resend API Error:", resendError);
+      throw new Error("Failed to send verification email via Resend.");
     }
+
+    return { success: true };
+
+  } catch (error: any) {
+    console.error("Claim Account Error:", error);
+    return { error: error.message || 'Failed to claim account.' };
+  }
 }
 
 export async function sendDemoRecoveryEmail(email: string) {
-    const headerStore = await headers();
-    const origin = headerStore.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const headerStore = await headers();
+  const origin = headerStore.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-    try {
-        // 1. Get User ID (Service Role)
-        const { data: { users }, error: userError } = await supabaseAdmin.auth.admin.listUsers();
-        if (userError) throw userError;
+  try {
+    // 1. Get User ID (Service Role)
+    const { data: { users }, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    if (userError) throw userError;
 
-        const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-        if (!user) {
-            return { error: 'User not found' };
-        }
+    const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    if (!user) {
+      return { error: 'User not found' };
+    }
 
-        // 2. Generate Magic Link
-        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-            type: 'magiclink',
-            email: email,
-            options: {
-                redirectTo: `${origin}/instructor/dashboard`
-            }
-        });
+    // 2. Generate Magic Link
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: email,
+      options: {
+        redirectTo: `${origin}/instructor/dashboard`
+      }
+    });
 
-        if (linkError || !linkData?.properties?.action_link) {
-            console.error("Recovery Link Gen Error:", JSON.stringify(linkError, null, 2));
-            throw new Error("Failed to generate login link");
-        }
+    if (linkError || !linkData?.properties?.action_link) {
+      console.error("Recovery Link Gen Error:", JSON.stringify(linkError, null, 2));
+      throw new Error("Failed to generate login link");
+    }
 
-        const actionLink = linkData.properties.action_link;
+    const actionLink = linkData.properties.action_link;
 
-        // 3. Send Email via Resend
-        const { error: resendError } = await resend.emails.send({
-            from: 'Schologic <onboarding@schologic.com>',
-            to: email,
-            subject: 'Log in to Schologic',
-            html: `
+    // 3. Send Email via Resend
+    const { error: resendError } = await resend.emails.send({
+      from: 'Schologic <onboarding@schologic.com>',
+      to: email,
+      subject: 'Log in to Schologic',
+      html: `
 <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 550px; margin: 0 auto; line-height: 1.5; color: #334155;">
   <p style="font-size: 12px; color: #94a3b8; margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
     SCHOLOGIC PORTAL SYSTEM // SECURITY_SERVICE
@@ -209,14 +210,14 @@ export async function sendDemoRecoveryEmail(email: string) {
   </div>
 </div>
             `
-        });
+    });
 
-        if (resendError) throw new Error("Failed to send email");
+    if (resendError) throw new Error("Failed to send email");
 
-        return { success: true };
+    return { success: true };
 
-    } catch (error: any) {
-        console.error("Recovery Error:", error);
-        return { error: error.message || 'Failed to send login link' };
-    }
+  } catch (error: any) {
+    console.error("Recovery Error:", error);
+    return { error: error.message || 'Failed to send login link' };
+  }
 }
