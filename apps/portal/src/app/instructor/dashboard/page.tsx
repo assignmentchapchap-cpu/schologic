@@ -58,12 +58,12 @@ function DashboardContent() {
         }
 
         if (searchParams.get('demo_restricted') === 'true') {
-            showToast('The AI Lab is not available in Demo mode.', 'error');
+            showToast('Sign up for a free account to enjoy full features', 'error');
             // Clean URL without reload
             const newUrl = window.location.pathname;
             window.history.replaceState({}, '', newUrl);
         }
-    }, [searchParams]);
+    }, [searchParams, showToast]);
 
     useEffect(() => {
         const query = searchQuery.toLowerCase().trim();

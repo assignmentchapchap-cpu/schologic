@@ -18,11 +18,10 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: Request) {
     try {
-        const { title, firstName, lastName } = await req.json();
+        const { title, firstName, lastName, email } = await req.json();
         const fullName = `${firstName} ${lastName}`.trim();
 
-        // 1. Create Auth User
-        const email = `demo_${Date.now()}_${Math.floor(Math.random() * 1000)}@schologic.demo`;
+        // 1. Create Auth User (Using provided email, skip verification)
         const password = `DemoPass_${uuidv4()}`; // Strong random password
 
         const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
@@ -34,7 +33,8 @@ export async function POST(req: Request) {
                 role: 'instructor',
                 title: title,
                 first_name: firstName,
-                last_name: lastName
+                last_name: lastName,
+                is_demo: true
             }
         });
 

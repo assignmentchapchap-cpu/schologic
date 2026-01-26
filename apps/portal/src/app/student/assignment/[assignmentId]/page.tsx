@@ -7,6 +7,7 @@ import { checkAIContent, cleanText } from '@/lib/ai-service';
 import { Upload, Type, ArrowLeft, Loader2, Calendar, FileText, CheckCircle, ChevronDown, ChevronUp, Eye, X, MessageSquare, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { Database } from "@schologic/database";
+import { useToast } from '@/context/ToastContext';
 import ReportView from '@/components/ReportView';
 import RubricComponent from '@/components/RubricComponent';
 import { ClassSettings, RubricItem, QuizData, QuizSubmission, isQuizData } from '@/types/json-schemas';
@@ -52,6 +53,7 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
 
     const router = useRouter();
     const supabase = createClient();
+    const { showToast } = useToast();
 
     useEffect(() => {
         loadData();
@@ -99,7 +101,7 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
 
         // Guard Clause: Prevent re-submission
         if (submission) {
-            alert("This assignment has already been submitted.");
+            showToast("This assignment has already been submitted.", 'error');
             return;
         }
 
@@ -133,21 +135,21 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
                 const policy = effectiveSettings.late_policy;
 
                 if (policy === 'strict') {
-                    alert("Submission Failed: The due date has passed (Strict Policy).");
+                    showToast("Submission Failed: The due date has passed (Strict Policy).", 'error');
                     return;
                 }
 
                 if (policy === 'grace_48h') {
                     const diffHours = (new Date().getTime() - new Date(assignment.due_date).getTime()) / (1000 * 60 * 60);
                     if (diffHours > 48) {
-                        alert("Submission Failed: The 48-hour grace period has passed.");
+                        showToast("Submission Failed: The 48-hour grace period has passed.", 'error');
                         return;
                     }
                 }
 
                 if (policy === 'class_end') {
                     if (assignment.classes?.end_date && new Date() > new Date(assignment.classes.end_date)) {
-                        alert("Submission Failed: The class has ended.");
+                        showToast("Submission Failed: The class has ended.", 'error');
                         return;
                     }
                 }
@@ -187,7 +189,7 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
 
         } catch (error: unknown) {
             console.error("Submission Error", error);
-            alert("Submission failed: " + (error instanceof Error ? error.message : String(error)));
+            showToast("Submission failed: " + (error instanceof Error ? error.message : String(error)), 'error');
         } finally {
             setAnalyzing(false);
         }
@@ -196,6 +198,12 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // 1. Size Validation (1MB)
+        if (file.size > 1 * 1024 * 1024) {
+            showToast("File size exceeds the 1MB limit for student submissions.", 'error');
+            return;
+        }
 
         // Validating File Type
         if (assignment) {
@@ -214,7 +222,7 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
             // Note: 'txt' usually means text/plain.
 
             if (ext && !allowedTypes.includes(ext)) {
-                alert(`File type .${ext} is not allowed. Allowed types: ${allowedTypes.join(', ').toUpperCase()}`);
+                showToast(`File type .${ext} is not allowed. Allowed types: ${allowedTypes.join(', ').toUpperCase()}`, 'error');
                 return;
             }
         }
@@ -232,7 +240,7 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
                 await handleSubmission(text);
             }
         } catch (err: unknown) {
-            alert("Error processing file: " + (err instanceof Error ? err.message : String(err)));
+            showToast("Error processing file: " + (err instanceof Error ? err.message : String(err)), 'error');
         } finally {
             setUploading(false);
         }
@@ -279,7 +287,7 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
 
         } catch (error: unknown) {
             console.error("Quiz Submission Error", error);
-            alert("Submission failed: " + (error instanceof Error ? error.message : String(error)));
+            showToast("Submission failed: " + (error instanceof Error ? error.message : String(error)), 'error');
         } finally {
             setQuizSubmitting(false);
         }

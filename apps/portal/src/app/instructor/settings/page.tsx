@@ -3,9 +3,10 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
-import { Settings, Save, Brain, CheckCircle, Clock, Loader2 } from 'lucide-react';
+import { Settings, Save, Brain, CheckCircle, Clock, Loader2, Sparkles } from 'lucide-react';
 import { MODELS, MODEL_LABELS, ScoringMethod, Granularity } from '@schologic/ai-bridge';
 import { ClassSettings, isClassSettings } from '@/types/json-schemas';
+import { claimDemoAccount } from '@/app/actions/account';
 
 export default function InstructorSettingsPage() {
     const supabase = createClient();
@@ -23,9 +24,111 @@ export default function InstructorSettingsPage() {
         allowed_file_types: ['txt', 'docx']
     });
 
+    const [isDemo, setIsDemo] = useState(false);
+
+    // Claim State
+    const [claiming, setClaiming] = useState(false);
+    const [claimForm, setClaimForm] = useState({ password: '', confirm: '' });
+
     useEffect(() => {
+        const checkDemo = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.user_metadata?.is_demo === true) {
+                setIsDemo(true);
+            }
+        };
+        checkDemo();
         fetchSettings();
     }, []);
+    const handleClaimAccount = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (claimForm.password !== claimForm.confirm) {
+            alert("Passwords do not match");
+            return;
+        }
+        if (claimForm.password.length < 6) {
+            alert("Password must be at least 6 characters");
+            return;
+        }
+
+        if (!confirm("Warning: This will DELETE all demo classes and files to prepare your new account. Are you sure?")) {
+            return;
+        }
+
+        setClaiming(true);
+        try {
+            const res = await claimDemoAccount(claimForm.password);
+            if (res.error) throw new Error(res.error);
+
+            alert("Success! Please check your email to verify your account. You will be logged out now.");
+            await supabase.auth.signOut();
+            window.location.href = '/login';
+        } catch (error: any) {
+            console.error("Claim error:", error);
+            alert(error.message || "Failed to claim account");
+            setClaiming(false);
+        }
+    };
+
+    if (isDemo) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center">
+                <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 max-w-md w-full animate-fade-in relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 to-orange-500" />
+
+                    <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Sparkles className="w-8 h-8 text-orange-500" />
+                    </div>
+
+                    <h1 className="text-2xl font-bold text-slate-900 mb-2">Upgrade to Standard Account</h1>
+                    <p className="text-slate-500 text-sm mb-6">
+                        Ready to upgrade? Set a password to keep your account.
+                        <br /><span className="text-red-500 font-bold text-xs mt-2 block">Note: This will clear all demo data.</span>
+                    </p>
+
+                    <form onSubmit={handleClaimAccount} className="space-y-4 text-left">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1 uppercase">Set Password</label>
+                            <input
+                                type="password"
+                                required
+                                minLength={6}
+                                value={claimForm.password}
+                                onChange={e => setClaimForm({ ...claimForm, password: e.target.value })}
+                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1 uppercase">Confirm Password</label>
+                            <input
+                                type="password"
+                                required
+                                minLength={6}
+                                value={claimForm.confirm}
+                                onChange={e => setClaimForm({ ...claimForm, confirm: e.target.value })}
+                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                                placeholder="••••••••"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={claiming}
+                            className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-black transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 mt-2"
+                        >
+                            {claiming ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
+                            Upgrade to Standard
+                        </button>
+                    </form>
+
+                    <button onClick={() => window.history.back()} className="mt-6 text-slate-400 font-bold text-xs hover:text-slate-600 transition-colors">
+                        Cancel, go back
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const fetchSettings = async () => {
         try {

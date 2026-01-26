@@ -98,6 +98,16 @@ function ClassesContent() {
             }
 
             // SAFETY CHECK: Ensure Profile Exists
+
+            // Demo Limit Check (Max 1 additional class, total 2)
+            if (user?.user_metadata?.is_demo) {
+                if (classes.length >= 2) {
+                    showToast("Demo Limit: You can only create 1 additional class.", 'error');
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+
             const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single();
             if (!profile) {
                 showToast('Profile missing. Please refresh or contact support.', 'error');

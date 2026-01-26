@@ -17,7 +17,8 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
     const [formData, setFormData] = useState({
         title: 'Dr.',
         firstName: '',
-        lastName: ''
+        lastName: '',
+        email: ''
     });
 
     const router = useRouter();
@@ -26,6 +27,14 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            showToast('Please enter a valid email address', 'error');
+            return;
+        }
+
         setLoading(true);
         setStep('creating');
 
@@ -181,6 +190,21 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
                                             className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all hover:border-slate-300"
                                         />
                                     </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email Address</label>
+                                <div className="relative">
+                                    <User className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+                                    <input
+                                        type="email"
+                                        required
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        placeholder="instructor@school.edu"
+                                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all hover:border-slate-300"
+                                    />
                                 </div>
                             </div>
 

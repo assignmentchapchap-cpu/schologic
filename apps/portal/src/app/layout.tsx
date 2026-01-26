@@ -8,8 +8,6 @@ export const metadata: Metadata = {
 
 import { ToastProvider } from "@/context/ToastContext";
 import DemoBanner from '@/components/DemoBanner';
-import { DemoTourProvider } from '@/context/DemoTourContext';
-import DemoTour from '@/components/DemoTour';
 import { UniversalReaderProvider } from '@/components/providers/UniversalReaderProvider';
 
 export default function RootLayout({
@@ -24,15 +22,12 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ToastProvider>
-          <DemoTourProvider>
-            <UniversalReaderProvider>
-              <DemoBanner />
-              <DemoTour />
-              {children}
-            </UniversalReaderProvider>
-          </DemoTourProvider>
+          <UniversalReaderProvider>
+            <DemoBanner />
+            {children}
+          </UniversalReaderProvider>
         </ToastProvider>
-      </body>
-    </html>
+      </body >
+    </html >
   );
 }

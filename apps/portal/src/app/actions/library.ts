@@ -64,7 +64,38 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Unauthorized');
 
+    // Demo Limit Check (Max 3 Files)
+    if (user.user_metadata?.is_demo) {
+        const { count, error: countErr } = await supabase
+            .from('assets')
+            .select('*', { count: 'exact', head: true })
+            .eq('instructor_id', user.id);
+
+        if (!countErr && (count || 0) >= 3) {
+            throw new Error("Demo Limit: You can only upload up to 3 files.");
+        }
+    }
+
     // 1. Upload to Blob (Safe)
+    // Check quota before upload if possible (approximate, since we don't have file size in args yet easily without extra call, 
+    // but we can check AFTER blob upload or pass size as argument. 
+    // Better: Helper function to check quota first.
+
+    // Quota Check (20MB Limit for Instructor)
+    const { data: assets, error: quotaErr } = await supabase
+        .from('assets')
+        .select('size_bytes' as any)
+        .eq('instructor_id', user.id);
+
+    if (!quotaErr && assets) {
+        // Explicitly cast to handle potential type mismatch during build
+        const typedAssets = assets as unknown as { size_bytes: number | null }[];
+        const totalSize = typedAssets.reduce((acc, curr) => acc + (curr.size_bytes || 0), 0);
+        if (totalSize + file.size > 20 * 1024 * 1024) {
+            throw new Error(`Storage quota exceeded. You have used ${(totalSize / 1024 / 1024).toFixed(2)}MB of 20MB.`);
+        }
+    }
+
     const blob = await put(file.name, file, { access: 'public', addRandomSuffix: true, token: process.env.BLOB_READ_WRITE_TOKEN });
 
     // 2. Extract Text via Doc Engine
@@ -102,7 +133,8 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
         mime_type: file.type,
         source: 'upload',
         collection_id: collectionId || null,
-        instructor_id: user.id
+        instructor_id: user.id,
+        size_bytes: file.size
     });
 
     if (error) throw error;

@@ -19,7 +19,14 @@ export default function AssetUploader({ onClose, onSuccess }: AssetUploaderProps
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0]);
+            const selectedFile = e.target.files[0];
+            if (selectedFile.size > 5 * 1024 * 1024) { // 5MB Limit
+                setError("File exceeds the 5MB limit.");
+                showToast("File exceeds the 5MB limit.", 'error');
+                setFile(null);
+                return;
+            }
+            setFile(selectedFile);
             setError(null);
         }
     };

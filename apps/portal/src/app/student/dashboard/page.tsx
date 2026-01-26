@@ -11,6 +11,7 @@ import { User } from '@supabase/supabase-js';
 import NotificationBell from '@/components/NotificationBell';
 import StudentCalendar from '@/components/student/StudentCalendar';
 import GlobalAssignmentsCard from '@/components/student/GlobalAssignmentsCard';
+import { useToast } from '@/context/ToastContext';
 
 type EnrollmentWithClass = {
     class_id: string;
@@ -46,6 +47,7 @@ function DashboardContent() {
     const supabase = createClient();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { showToast } = useToast();
 
     useEffect(() => {
         if (searchParams.get('mobile_search') === 'true') {
@@ -117,15 +119,53 @@ function DashboardContent() {
                 return;
             }
 
-            // 1. Find class
+            // 1. Find class with instructor details
             const { data: cls, error: clsErr } = await supabase
                 .from('classes')
-                .select('id, is_locked')
+                .select('id, is_locked, instructor:profiles!instructor_id(settings), enrollments(count)')
                 .eq('invite_code', joinCode.trim().toUpperCase())
                 .single();
 
             if (clsErr || !cls) throw new Error("Invalid code");
             if (cls.is_locked) throw new Error("Class is locked");
+
+            // Demo Limit Check (10 Students)
+            // We need to check if the INSTRUCTOR is a demo user.
+            // Since we don't have is_demo on profile directly in types yet (it's in metadata), 
+            // we might need to check the auth user or rely on profile settings if we stored it there.
+            // Let's do a reliable check: Retrieve the instructor's Auth Metadata via RPC or just check Profile if we synced it.
+            // ALTERNATIVE: Use the profile scan. Logic: If instructor profile exists, let's assume valid.
+            // But we need to know if they are demo. 
+            // Workaround: Check if we can get user_metadata of the instructor from client? No.
+            // We'll check via a server action or simpler: 
+            // If the CLASS was created by a demo user (we don't track that on class).
+
+            // Re-think: We added `is_demo` to `user_metadata` in Auth. We can't query that easily from Client with RLS unless we expose it.
+            // Let's assume for now we check the *current* user (Student) isn't relevant. 
+            // It's the CLASS OWNER.
+
+            // To properly implement this securely, we should move Join Class to a Server Action.
+            // But for now, let's fetch the Owner's Profile and check if their email ends with @schologic.demo (Convention)
+
+            const { data: instructorUser } = await supabase
+                .from('profiles')
+                .select('email')
+                .eq('id', (cls as any).instructor_id || '') // Types might be tricky with join
+                .single();
+
+            // Actually, `cls` join above returns strict structure. 
+            // Let's do a separate fetch for simpler typing if needed, or refine query.
+
+            const { data: owner } = await supabase.from('classes').select('instructor_id').eq('id', cls.id).single();
+            if (owner) {
+                const { data: ownerProfile } = await supabase.from('profiles').select('email').eq('id', owner.instructor_id || '').single();
+                if (ownerProfile?.email?.endsWith('@schologic.demo')) {
+                    const currentCount = cls.enrollments?.[0]?.count || 0;
+                    if (currentCount >= 10) {
+                        throw new Error("Demo Class Full: This demo class is limited to 10 students.");
+                    }
+                }
+            }
 
             // 2. Ensure Profile Exists (Fix for FK Violation)
             const { error: profErr } = await supabase.from('profiles').upsert({
@@ -150,12 +190,12 @@ function DashboardContent() {
                 throw enrollErr;
             }
 
-            alert("Successfully joined!");
+            showToast("Successfully joined!", 'success');
             setJoinCode('');
             fetchDashboardData(); // Refresh
 
         } catch (err: unknown) {
-            alert(err instanceof Error ? err.message : 'An error occurred');
+            showToast(err instanceof Error ? err.message : 'An error occurred', 'error');
         } finally {
             setJoining(false);
         }

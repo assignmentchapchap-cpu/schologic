@@ -59,7 +59,7 @@ export default function Sidebar({ role }: SidebarProps) {
     useEffect(() => {
         const checkUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (user?.email?.endsWith('@schologic.demo')) {
+            if (user?.user_metadata?.is_demo === true || user?.email?.endsWith('@schologic.demo')) {
                 setIsDemo(true);
             }
         };
@@ -165,17 +165,17 @@ export default function Sidebar({ role }: SidebarProps) {
 
                             if (isRestricted) {
                                 return (
-                                    <div
+                                    <Link
                                         key={link.href}
-                                        className="flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl text-slate-500 cursor-not-allowed opacity-60 hover:bg-slate-800/50"
-                                        title="Available in Full Version"
+                                        href={link.href}
+                                        className="flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl text-slate-500 hover:bg-slate-800/50 hover:text-white transition-colors group cursor-pointer"
                                     >
                                         <div className="flex items-center gap-3">
                                             <link.icon className="h-5 w-5" />
                                             {link.label}
                                         </div>
-                                        <span className="text-[10px] uppercase font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">Lock</span>
-                                    </div>
+                                        <span className="text-[10px] uppercase font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 group-hover:bg-slate-700 group-hover:text-white transition-colors">Lock</span>
+                                    </Link>
                                 );
                             }
 

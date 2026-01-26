@@ -410,13 +410,13 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
         // Validation for quizzes
         if (assignmentType === 'quiz' && quizQuestions.length === 0) {
-            alert("Please add at least one question to your quiz.");
+            showToast("Please add at least one question to your quiz.", 'error');
             return;
         }
 
         try {
             if (!newAssignment.title || !newAssignment.description || !newAssignment.short_code || !newAssignment.due_date) {
-                alert("Please fill in all mandatory fields (Title, Code, Description, Due Date).");
+                showToast("Please fill in all mandatory fields (Title, Code, Description, Due Date).", 'error');
                 return;
             }
 
