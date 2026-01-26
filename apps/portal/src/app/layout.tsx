@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: "Schologic LMS",
@@ -27,6 +28,7 @@ export default function RootLayout({
             {children}
           </UniversalReaderProvider>
         </ToastProvider>
+        <Analytics />
       </body >
     </html >
   );
