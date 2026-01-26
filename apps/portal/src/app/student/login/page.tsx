@@ -7,6 +7,7 @@ import { createClient } from "@schologic/database";
 import { ArrowRight, Loader2, Home, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/context/ToastContext';
+import { verifyClassInvite } from '@/app/actions/student';
 
 export default function StudentLoginPage() {
     const [mode, setMode] = useState<'login' | 'signup'>('signup');
@@ -22,8 +23,7 @@ export default function StudentLoginPage() {
     const supabase = createClient();
     const { showToast } = useToast();
 
-    import { verifyClassInvite } from '@/app/actions/student';
-    // ... imports
+
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
