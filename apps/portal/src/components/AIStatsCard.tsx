@@ -1,4 +1,5 @@
 import { ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
 
 interface AIStatsCardProps {
     averageScore: number; // 0-100
@@ -21,9 +22,10 @@ export default function AIStatsCard({ averageScore, studentCount, trend = 2.4, o
     const offset = circumference - (averageScore / 100) * circumference;
 
     return (
-        <div
+        <Card
             onClick={onClick}
-            className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden"
+            className="hover:border-indigo-200 group relative overflow-hidden"
+            hoverEffect
         >
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <Activity className="w-24 h-24 text-indigo-600" />
@@ -77,6 +79,6 @@ export default function AIStatsCard({ averageScore, studentCount, trend = 2.4, o
                 </div>
                 <span className="text-xs font-medium text-slate-400">{studentCount} active students</span>
             </div>
-        </div>
+        </Card>
     );
 }

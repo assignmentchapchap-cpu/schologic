@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { createClient, Database } from "@schologic/database";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
+import { Card } from '@/components/ui/Card';
 
 type Assignment = Database['public']['Tables']['assignments']['Row'];
 
@@ -74,7 +75,7 @@ export default function StudentCalendar() {
     const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
     return (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <Card className="h-full" hoverEffect={false}>
             <header className="flex items-center justify-between mb-6">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
                     <CalendarIcon className="w-5 h-5 text-indigo-600" /> Calendar
@@ -123,9 +124,6 @@ export default function StudentCalendar() {
                     );
                 })}
             </div>
-
-            {/* Optional: Legend or Mini List of selected day's events? */}
-            {/* Keeping it simple as per "just showing assignment due dates" visual request */}
-        </div>
+        </Card>
     );
 }

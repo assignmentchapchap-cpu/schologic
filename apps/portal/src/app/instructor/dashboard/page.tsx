@@ -5,6 +5,9 @@ import { createClient, Database } from "@schologic/database";
 import { User } from '@supabase/supabase-js';
 import { Home, Clock, ChevronRight, X, FileText, Search, Plus, Calendar as CalendarIcon, ArrowUpRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card } from '@/components/ui/Card';
 import NotificationBell from '@/components/NotificationBell';
 import AIStatsCard from '@/components/AIStatsCard';
 import AIInsightsModal from '@/components/AIInsightsModal';
@@ -334,13 +337,14 @@ function DashboardContent() {
                     {/* Mobile Search Overlay */}
                     {showMobileSearch && (
                         <div className="absolute inset-x-0 -top-2 bottom-0 bg-white z-[60] flex items-center gap-2 p-2 rounded-xl shadow-xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
-                            <Search className="w-5 h-5 text-indigo-600 flex-shrink-0 ml-2" />
-                            <input
+                            <Input
                                 autoFocus
-                                className="flex-1 bg-transparent border-none outline-none font-bold text-slate-700 placeholder:text-slate-300 text-sm h-full py-2"
+                                className="border-none bg-transparent focus:ring-0 p-0 text-lg"
                                 placeholder="Search students, classes..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
+                                leftIcon={<Search className="w-5 h-5 text-indigo-600" />}
+                                fullWidth
                             />
                             <button onClick={() => { setShowMobileSearch(false); setSearchQuery(''); }} className="p-2 bg-slate-50 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
                                 <X className="w-4 h-4" />
@@ -356,16 +360,14 @@ function DashboardContent() {
                     <div className={`flex items-center gap-3 w-auto ${showMobileSearch ? 'opacity-0 pointer-events-none' : ''}`}>
                         {/* Desktop Search Bar */}
                         <div className="relative hidden md:block group z-50">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none w-64 shadow-sm transition-all relative z-10"
-                                />
-                            </div>
+                            <Input
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                leftIcon={<Search className="w-4 h-4 text-slate-400" />}
+                                className="w-64 bg-white shadow-sm"
+                                fullWidth={false}
+                            />
 
                             {/* Search Results Dropdown */}
                             {searchQuery.trim().length > 0 && (
@@ -477,17 +479,14 @@ function DashboardContent() {
                         </div>
 
                         {/* New Class Button */}
-                        <button
+                        <Button
                             onClick={() => router.push('/instructor/classes?new=true')}
-                            className="bg-slate-900 hover:bg-slate-800 text-white p-2 px-3 rounded-xl transition-all shadow-sm hidden md:flex items-center justify-center gap-2 group"
-                            title="Create New Class"
+                            className="hidden md:flex bg-slate-900 hover:bg-slate-800"
+                            leftIcon={<Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />}
                             data-tour="create-class-btn"
                         >
-                            <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-bold whitespace-nowrap">
-                                New Class
-                            </span>
-                        </button>
+                            New Class
+                        </Button>
 
                         <div className="hidden md:block">
                             <NotificationBell />
@@ -508,7 +507,7 @@ function DashboardContent() {
                                 <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider px-1">Search Results</h3>
 
                                 {searchResults.map((item) => (
-                                    <div
+                                    <Card
                                         key={`${item.type}-${item.id}`}
                                         onClick={() => {
                                             if (item.type === 'student') {
@@ -517,7 +516,8 @@ function DashboardContent() {
                                                 router.push(item.url);
                                             }
                                         }}
-                                        className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4 active:scale-[0.98] transition-all"
+                                        className="flex items-center gap-4 active:scale-[0.98] transition-all p-4"
+                                        hoverEffect
                                     >
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.type === 'class' ? 'bg-indigo-50 text-indigo-600' :
                                             item.type === 'assignment' ? 'bg-emerald-50 text-emerald-600' :
@@ -540,7 +540,7 @@ function DashboardContent() {
                                             </p>
                                         </div>
                                         <ChevronRight className="w-5 h-5 text-slate-300 ml-auto" />
-                                    </div>
+                                    </Card>
                                 ))}
                             </div>
                         )}
@@ -550,9 +550,10 @@ function DashboardContent() {
                 {/* --- Row 1: High-Level Stats --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-in mb-8">
                     {/* Card 1: Classes & Assignments */}
-                    <div
+                    <Card
                         onClick={() => setShowAssignmentsModal(true)}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all group flex flex-col justify-between relative"
+                        className="hover:border-emerald-400 group flex flex-col justify-between relative"
+                        hoverEffect
                     >
                         <div className="absolute top-4 right-4 text-slate-300 group-hover:text-emerald-500 transition-colors">
                             <ArrowUpRight className="w-5 h-5" />
@@ -572,13 +573,14 @@ function DashboardContent() {
                                 <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Total Assignments</p>
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Card 2: Global Submissions */}
-                    <div
+                    <Card
                         onClick={() => setShowSubmissionsModal(true)}
                         data-tour="submissions-card"
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group flex flex-col justify-between relative"
+                        className="hover:border-blue-400 group flex flex-col justify-between relative"
+                        hoverEffect
                     >
                         <div className="absolute top-4 right-4 text-slate-300 group-hover:text-blue-500 transition-colors">
                             <ArrowUpRight className="w-5 h-5" />
@@ -604,7 +606,7 @@ function DashboardContent() {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Card 3: AI Integrity */}
                     <AIStatsCard

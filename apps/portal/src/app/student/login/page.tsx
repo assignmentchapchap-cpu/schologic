@@ -8,6 +8,9 @@ import { ArrowRight, Loader2, Home, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/context/ToastContext';
 import { verifyClassInvite, enrollStudent } from '@/app/actions/student';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card } from '@/components/ui/Card';
 
 export default function StudentLoginPage() {
     const [mode, setMode] = useState<'login' | 'signup'>('signup');
@@ -129,8 +132,8 @@ export default function StudentLoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-            <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 bg-grid-pattern">
+            <Card className="max-w-md w-full relative z-10" hoverEffect={false}>
                 <div className="text-center relative mb-8">
                     <Link href="/" className="absolute left-0 top-0 p-2 text-slate-400 hover:text-slate-600 transition-colors">
                         <Home className="w-5 h-5" />
@@ -138,96 +141,101 @@ export default function StudentLoginPage() {
                     <div className="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-4">
                         <ArrowRight className="w-6 h-6" />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-800">Student Portal</h1>
-                    <p className="text-slate-500 mt-2 text-sm">
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Student Portal</h1>
+                    <p className="text-slate-500 mt-2 text-sm font-medium">
                         {mode === 'signup' ? 'Join your class to access assignments' : 'Welcome back, log in to continue'}
                     </p>
                 </div>
 
-                <form onSubmit={handleAuth} className="space-y-4">
+                <form onSubmit={handleAuth} className="space-y-5">
 
                     {/* Common Fields */}
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
-                        <input
-                            type="email"
-                            value={email} onChange={e => setEmail(e.target.value)}
-                            className="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                            placeholder="student@school.edu"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password</label>
-                        <input
-                            type="password"
-                            value={password} onChange={e => setPassword(e.target.value)}
-                            className="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                            placeholder="••••••••"
-                            required
-                            minLength={6}
-                        />
-                    </div>
+                    <Input
+                        label="EMAIL ADDRESS"
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="student@school.edu"
+                        required
+                        fullWidth
+                    />
+
+                    <Input
+                        label="PASSWORD"
+                        type="password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        minLength={6}
+                        fullWidth
+                    />
 
                     {/* Signup Only Fields */}
                     {mode === 'signup' && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
+                        <div className="space-y-5 animate-in fade-in slide-in-from-top-4">
                             <div className="relative">
                                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-                                <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-400 font-bold">Class Details</span></div>
+                                <div className="relative flex justify-center text-xs uppercase font-bold tracking-wider"><span className="bg-white px-2 text-slate-400">Class Details</span></div>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Class Invite Code</label>
-                                <input
-                                    value={inviteCode} onChange={e => setInviteCode(e.target.value)}
-                                    className="w-full p-4 border border-slate-200 rounded-xl font-mono text-center text-xl tracking-widest uppercase focus:ring-2 focus:ring-emerald-500 outline-none"
-                                    placeholder="ABC-123"
-                                    required
-                                    maxLength={8}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
-                                <input
-                                    value={studentName} onChange={e => {
-                                        const val = e.target.value.replace(/(^\w|\s\w)/g, m => m.toUpperCase());
-                                        setStudentName(val);
-                                    }}
-                                    className="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                                    placeholder="John Doe"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Registration No</label>
-                                <input
-                                    value={regNumber} onChange={e => {
-                                        const val = e.target.value.toUpperCase();
-                                        if (val.length <= 12 && /^[A-Z0-9\-#/]*$/.test(val)) {
-                                            setRegNumber(val);
-                                            setRegError(null);
-                                        } else if (val.length <= 12) {
-                                            setRegError('Invalid characters');
-                                        }
-                                    }}
-                                    className={`w-full p-4 border rounded-xl focus:ring-2 outline-none font-mono ${regError ? 'border-red-300 bg-red-50' : 'border-slate-200 focus:ring-emerald-500'}`}
-                                    placeholder="A001/2023"
-                                    required
-                                />
-                            </div>
+                            <Input
+                                label="CLASS INVITE CODE"
+                                value={inviteCode}
+                                onChange={e => setInviteCode(e.target.value)}
+                                className="font-mono text-center text-xl tracking-widest uppercase focus:ring-emerald-500"
+                                placeholder="ABC-123"
+                                required
+                                maxLength={8}
+                                fullWidth
+                            />
+
+                            <Input
+                                label="FULL NAME"
+                                value={studentName}
+                                onChange={e => {
+                                    const val = e.target.value.replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+                                    setStudentName(val);
+                                }}
+                                placeholder="John Doe"
+                                required
+                                fullWidth
+                            />
+
+                            <Input
+                                label="REGISTRATION NO"
+                                value={regNumber}
+                                onChange={e => {
+                                    const val = e.target.value.toUpperCase();
+                                    if (val.length <= 12 && /^[A-Z0-9\-#/]*$/.test(val)) {
+                                        setRegNumber(val);
+                                        setRegError(null);
+                                    } else if (val.length <= 12) {
+                                        setRegError('Invalid characters');
+                                    }
+                                }}
+                                className={`font-mono ${regError ? 'border-red-300 bg-red-50' : 'focus:ring-emerald-500'}`}
+                                placeholder="A001/2023"
+                                required
+                                error={regError || undefined}
+                                fullWidth
+                            />
                         </div>
                     )}
 
-                    <button
-                        disabled={loading}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2 mt-6 active:scale-95"
+                    <Button
+                        type="submit"
+                        isLoading={loading}
+                        fullWidth
+                        size="lg"
+                        variant="success"
+                        className="active:scale-95 shadow-lg shadow-emerald-100"
                     >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (mode === 'signup' ? 'Join Class' : 'Log In')}
-                    </button>
+                        {mode === 'signup' ? 'Join Class' : 'Log In'}
+                    </Button>
                 </form>
 
-                <div className="mt-6 text-center">
+                <div className="mt-8 text-center bg-slate-50 p-4 rounded-xl">
                     <button
                         onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
                         className="text-sm font-bold text-slate-500 hover:text-emerald-600 transition-colors"
@@ -235,7 +243,7 @@ export default function StudentLoginPage() {
                         {mode === 'signup' ? 'Already have an account? Log In' : 'Need to join a class? Sign Up'}
                     </button>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 }

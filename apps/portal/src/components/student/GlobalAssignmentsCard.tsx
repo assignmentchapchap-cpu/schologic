@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
 import { FileText, CheckCircle, Clock, BookOpen, ArrowRight, X, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { Card } from '@/components/ui/Card';
 
 type AssignmentItem = {
     id: string;
@@ -12,6 +13,8 @@ type AssignmentItem = {
     due_date: string | null;
     class_name: string;
 };
+
+
 
 export default function GlobalAssignmentsCard() {
     const supabase = createClient();
@@ -27,6 +30,9 @@ export default function GlobalAssignmentsCard() {
     useEffect(() => {
         fetchGlobalStats();
     }, []);
+    // ... (omitted fetching logic for brevity in tool call, standard replace will keep lines not touched? No replace_file_content replaces range. I need to be careful.)
+
+    // Wait, I should use replace_file_content on specific blocks.
 
     const fetchGlobalStats = async () => {
         try {
@@ -118,9 +124,10 @@ export default function GlobalAssignmentsCard() {
 
     return (
         <>
-            <div
+            <Card
                 onClick={() => setShowModal(true)}
-                className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-indigo-400 hover:shadow-md transition-all cursor-pointer group"
+                className="hover:border-indigo-400 group"
+                hoverEffect
             >
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
@@ -152,7 +159,7 @@ export default function GlobalAssignmentsCard() {
                         </p>
                     </div>
                 </div>
-            </div>
+            </Card>
 
             {/* Modal */}
             {showModal && (

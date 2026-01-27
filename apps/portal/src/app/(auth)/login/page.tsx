@@ -5,6 +5,9 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from "@schologic/database";
 import { ArrowRight, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card } from '@/components/ui/Card';
 import DemoSignupModal from '@/components/auth/DemoSignupModal';
 import Alert from '@/components/Alert';
 
@@ -109,11 +112,11 @@ function LoginContent() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 bg-grid-pattern">
             {showDemoModal && <DemoSignupModal onClose={() => setShowDemoModal(false)} />}
 
-            <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full">
-                <h2 className="text-2xl font-bold mb-6 text-slate-800">
+            <Card className="w-full max-w-md relative z-10" hoverEffect={false}>
+                <h2 className="text-2xl md:text-3xl font-black mb-6 text-slate-900 text-center tracking-tight">
                     {getTitle()}
                 </h2>
 
@@ -121,63 +124,64 @@ function LoginContent() {
 
                 {successMsg && <Alert type="success" message={successMsg} />}
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     <form onSubmit={handleEmailAuth} className="space-y-4">
                         {isSignUp && !isReset && (
                             <div className="flex gap-4">
-                                <input
-                                    type="text"
+                                <Input
                                     placeholder="First Name"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value.replace(/(^\w|\s\w)/g, m => m.toUpperCase()))}
-                                    className="w-1/2 p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all"
                                     required={isSignUp}
+                                    className="bg-slate-50"
+                                    fullWidth
                                 />
-                                <input
-                                    type="text"
+                                <Input
                                     placeholder="Last Name"
                                     value={lastName}
                                     onChange={(e) => setLastName(e.target.value.replace(/(^\w|\s\w)/g, m => m.toUpperCase()))}
-                                    className="w-1/2 p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all"
                                     required={isSignUp}
+                                    className="bg-slate-50"
+                                    fullWidth
                                 />
                             </div>
                         )}
 
-                        <input
+                        <Input
                             type="email"
                             placeholder="Email Address"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all"
                             required
+                            className="bg-slate-50"
+                            fullWidth
                         />
 
                         {!isReset && (
-                            <input
+                            <Input
                                 type="password"
                                 placeholder="Password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all"
                                 required={!isReset}
                                 minLength={6}
+                                className="bg-slate-50"
+                                fullWidth
                             />
                         )}
 
-                        <button
+                        <Button
                             type="submit"
-                            disabled={loading}
-                            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
+                            isLoading={loading}
+                            fullWidth
+                            size="lg"
+                            variant="primary"
                         >
-                            {loading ? 'Processing...' : (
-                                isReset ? 'Send Reset Link' :
-                                    (isSignUp ? 'Create Account' : 'Sign In')
-                            )}
-                        </button>
+                            {isReset ? 'Send Reset Link' : (isSignUp ? 'Create Account' : 'Sign In')}
+                        </Button>
                     </form>
 
-                    <div className="flex flex-col gap-2 text-center text-sm text-slate-600">
+                    <div className="flex flex-col gap-3 text-center text-sm text-slate-600">
                         {!isReset ? (
                             <>
                                 <div>
@@ -188,7 +192,7 @@ function LoginContent() {
                                             setError(null);
                                             setSuccessMsg(null);
                                         }}
-                                        className="text-blue-600 font-medium hover:underline"
+                                        className="text-indigo-600 font-bold hover:underline"
                                         type="button"
                                     >
                                         {isSignUp ? 'Sign In' : 'Sign Up'}
@@ -201,7 +205,7 @@ function LoginContent() {
                                         setSuccessMsg(null);
                                         setIsSignUp(false);
                                     }}
-                                    className="text-slate-500 hover:text-slate-700 hover:underline"
+                                    className="text-slate-400 hover:text-slate-600 font-medium transition-colors"
                                     type="button"
                                 >
                                     Forgot Password?
@@ -214,7 +218,7 @@ function LoginContent() {
                                     setError(null);
                                     setSuccessMsg(null);
                                 }}
-                                className="text-blue-600 font-medium hover:underline"
+                                className="text-indigo-600 font-bold hover:underline"
                                 type="button"
                             >
                                 Back to Sign In
@@ -224,28 +228,29 @@ function LoginContent() {
 
                     {!isReset && (
                         <>
-                            <div className="relative">
+                            <div className="relative my-6">
                                 <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t border-slate-200" />
+                                    <span className="w-full border-t border-slate-100" />
                                 </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-white px-2 text-slate-500">Or</span>
+                                <div className="relative flex justify-center text-xs uppercase font-bold tracking-wider">
+                                    <span className="bg-white px-2 text-slate-400">Or Preview</span>
                                 </div>
                             </div>
 
-                            <button
+                            <Button
                                 onClick={() => setShowDemoModal(true)}
                                 disabled={loading}
-                                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3.5 px-4 rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 text-sm font-bold active:scale-[0.98]"
+                                fullWidth
+                                variant="outline"
+                                className="border-dashed border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                                rightIcon={<ArrowRight className="w-4 h-4" />}
                             >
-                                <Loader2 className="w-4 h-4 hidden" /> {/* Preload icon just in case? No need */}
                                 Try Demo Environment
-                                <ArrowRight className="w-4 h-4" />
-                            </button>
+                            </Button>
                         </>
                     )}
                 </div>
-            </div>
+            </Card>
         </div>
     );
 }

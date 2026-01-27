@@ -8,6 +8,9 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Database } from "@schologic/database";
 import { User } from '@supabase/supabase-js';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card } from '@/components/ui/Card';
 import NotificationBell from '@/components/NotificationBell';
 import StudentCalendar from '@/components/student/StudentCalendar';
 import GlobalAssignmentsCard from '@/components/student/GlobalAssignmentsCard';
@@ -227,13 +230,14 @@ function DashboardContent() {
                     {/* Mobile Search Overlay */}
                     {showMobileSearch && (
                         <div className="absolute inset-x-0 -top-2 bottom-0 bg-white z-[60] flex items-center gap-2 p-2 rounded-xl shadow-xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
-                            <Search className="w-5 h-5 text-indigo-600 flex-shrink-0 ml-2" />
-                            <input
+                            <Input
                                 autoFocus
-                                className="flex-1 bg-transparent border-none outline-none font-bold text-slate-700 placeholder:text-slate-300 text-sm h-full py-2"
+                                className="border-none bg-transparent focus:ring-0 p-0 text-lg"
                                 placeholder="Search courses or assignments..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
+                                leftIcon={<Search className="w-5 h-5 text-indigo-600" />}
+                                fullWidth
                             />
                             <button onClick={() => { setShowMobileSearch(false); setSearchQuery(''); }} className="p-2 bg-slate-50 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
                                 <X className="w-4 h-4" />
@@ -247,19 +251,24 @@ function DashboardContent() {
                     </div>
 
                     <div className={`flex items-center gap-2 md:gap-4 shrink-0 ${showMobileSearch ? 'opacity-0 pointer-events-none' : ''}`}>
-                        <form onSubmit={handleJoinClass} className="flex gap-1 md:gap-2 shadow-sm rounded-xl overflow-hidden">
-                            <input
+                        <form onSubmit={handleJoinClass} className="flex gap-0 shadow-sm rounded-xl overflow-hidden">
+                            <Input
                                 placeholder="Code"
                                 value={joinCode}
                                 onChange={e => setJoinCode(e.target.value)}
-                                className="p-2 md:p-3 text-xs md:text-base border border-slate-200 rounded-l-lg md:rounded-l-xl focus:ring-2 focus:ring-emerald-500 outline-none uppercase font-mono w-28 md:w-48 placeholder:normal-case placeholder:font-sans"
+                                className="rounded-r-none border-r-0 w-28 md:w-48 uppercase font-mono placeholder:normal-case placeholder:font-sans py-2.5"
+                                fullWidth={false}
                             />
-                            <button
+                            <Button
+                                type="submit"
                                 disabled={joining}
-                                className="bg-emerald-600 text-white px-3 py-2 md:px-5 md:py-3 text-xs md:text-base rounded-r-lg md:rounded-r-xl font-bold hover:bg-emerald-700 transition-colors disabled:opacity-70"
+                                isLoading={joining}
+                                size="md" // Match height roughly
+                                variant="success" // Emerald
+                                className="rounded-l-none px-4 md:px-6 h-[50px] md:h-[50px]" // Force height to match input
                             >
-                                {joining ? '...' : 'Join'}
-                            </button>
+                                Join
+                            </Button>
                         </form>
 
                         <div className="hidden md:block">
@@ -277,22 +286,22 @@ function DashboardContent() {
                         ) : (
                             <div className="space-y-4">
                                 {filteredEnrollments.map(e => (
-                                    <Link key={e.class_id} href={`/student/class/${e.class_id}`} className="block bg-white p-4 rounded-xl border border-slate-200 hover:border-emerald-400 transition-all">
-                                        <div className="flex items-center gap-2">
+                                    <Link key={e.class_id} href={`/student/class/${e.class_id}`}>
+                                        <Card className="flex items-center gap-2 p-4 hover:border-emerald-400 transition-all" hoverEffect>
                                             <BookOpen className="w-4 h-4 text-emerald-600" />
                                             <span className="font-bold text-slate-800">{e.classes?.name}</span>
-                                        </div>
+                                        </Card>
                                     </Link>
                                 ))}
                                 {filteredAssignments.map(a => (
-                                    <Link key={a.id} href={`/student/assignment/${a.id}`} className="block bg-white p-4 rounded-xl border border-slate-200 hover:border-indigo-400 transition-all">
-                                        <div className="flex items-center gap-2">
+                                    <Link key={a.id} href={`/student/assignment/${a.id}`}>
+                                        <Card className="flex items-center gap-2 p-4 hover:border-indigo-400 transition-all" hoverEffect>
                                             <div className="p-1 bg-indigo-50 rounded text-indigo-600"><Clock className="w-3 h-3" /></div>
                                             <div>
                                                 <p className="font-bold text-slate-800 text-sm">{a.title}</p>
                                                 <p className="text-xs text-slate-500">{a.classes?.name}</p>
                                             </div>
-                                        </div>
+                                        </Card>
                                     </Link>
                                 ))}
                             </div>
@@ -313,7 +322,7 @@ function DashboardContent() {
                         {/* Sidebar: Upcoming Work */}
                         <div className="space-y-6">
                             <StudentCalendar />
-                            <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full">
+                            <Card className="h-full relative" hoverEffect={false}>
                                 <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center justify-between">
                                     <span className="flex items-center gap-2"><Calendar className="w-5 h-5 text-indigo-600" /> Due Soon</span>
                                     <span className="bg-indigo-50 text-indigo-600 text-xs px-2 py-1 rounded-full">{upcomingAssignments.length}</span>
@@ -339,7 +348,7 @@ function DashboardContent() {
                                         ))}
                                     </div>
                                 )}
-                            </section>
+                            </Card>
                         </div>
 
                     </div>
