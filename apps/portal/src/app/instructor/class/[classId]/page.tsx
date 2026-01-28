@@ -25,6 +25,7 @@ import AssetPickerModal from '@/components/library/AssetPickerModal';
 import AssetUploader from '@/components/library/AssetUploader';
 import AIInsightsModal from '@/components/AIInsightsModal';
 import { useReader } from '@/context/UniversalReaderContext';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { Asset } from '@/types/library';
 
 type ClassData = Database['public']['Tables']['classes']['Row'] & { settings?: ClassSettings | null };
@@ -98,6 +99,21 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     const [assignmentType, setAssignmentType] = useState<'standard' | 'quiz'>('standard');
     const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
     const [showCreateMenu, setShowCreateMenu] = useState(false);
+    const [showResourceMenu, setShowResourceMenu] = useState(false);
+
+    // Confirmation Dialog State
+    const [confirmConfig, setConfirmConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => Promise<void> | void;
+        variant?: 'danger' | 'warning' | 'info' | 'success';
+    }>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
+
+    const openConfirm = (title: string, message: string, onConfirm: () => Promise<void> | void, variant: 'danger' | 'warning' | 'info' | 'success' = 'danger') => {
+        setConfirmConfig({ isOpen: true, title, message, onConfirm, variant });
+    };
+
 
     // Asset Integrations
     const [showAssetPicker, setShowAssetPicker] = useState(false);
@@ -1483,20 +1499,20 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                     <Card
                                         key={assign.id}
                                         onClick={() => router.push(`/instructor/assignment/${assign.id}`)}
-                                        className="p-4 rounded-2xl hover:border-indigo-300 transition-all group shadow-sm cursor-pointer hover:shadow-md flex flex-col gap-3"
+                                        className="p-3 md:p-6 rounded-2xl hover:border-indigo-300 transition-all group shadow-sm cursor-pointer hover:shadow-md flex flex-col md:flex-row md:items-center gap-2 md:gap-4"
                                         hoverEffect
                                         noPadding
                                     >
                                         {/* Row 1: Title */}
-                                        <div className="w-full">
-                                            <h3 className="font-bold text-slate-800 text-base md:text-lg group-hover:text-indigo-700 transition-colors">{assign.title}</h3>
-                                            <p className="text-slate-500 text-xs md:text-sm mt-1 line-clamp-1">{assign.description}</p>
+                                        <div className="w-full md:w-1/3 min-w-0">
+                                            <h3 className="font-bold text-slate-800 text-base md:text-lg group-hover:text-indigo-700 transition-colors truncate">{assign.title}</h3>
+                                            <p className="text-slate-500 text-xs md:text-sm mt-0.5 md:mt-1 line-clamp-2">{assign.description}</p>
                                         </div>
 
                                         {/* Row 2: Stats (Submissions) */}
-                                        <div className="flex gap-3 md:gap-4 flex-wrap text-xs md:text-sm text-slate-600">
+                                        <div className="flex gap-3 md:gap-6 flex-wrap text-xs md:text-sm text-slate-600 md:flex-1 md:justify-center">
                                             <div className="flex items-center gap-1.5">
-                                                <Users className="w-3.5 h-3.5 text-slate-400" />
+                                                <Users className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400" />
                                                 <span className="font-bold">{totalSubs}/{enrollments.length}</span> <span className="hidden xs:inline">Subs</span>
                                             </div>
                                             {ungradedSubs > 0 && (
@@ -1507,28 +1523,28 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                             )}
                                             {newSubs > 0 && (
                                                 <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-lg">
-                                                    <Clock className="w-3 h-3" />
+                                                    <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
                                                     <span className="font-bold">{newSubs}</span> New
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* Row 3: Type + Due Date + Actions */}
-                                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-1">
+                                        <div className="flex items-center justify-between pt-1 border-t border-slate-100 mt-0 md:border-0 md:pt-0 md:mt-0 md:justify-end md:gap-4 md:w-auto">
                                             <div className="flex items-center gap-3">
                                                 {/* Type Badge */}
                                                 {assign.assignment_type === 'quiz' ? (
-                                                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-wider flex items-center gap-1">
                                                         <Sparkles className="w-3 h-3" /> Quiz
                                                     </span>
                                                 ) : (
-                                                    <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                                                    <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-wider">
                                                         Essay
                                                     </span>
                                                 )}
 
                                                 {/* Due Date */}
-                                                <span className={`text-xs font-mono font-bold ${assign.due_date && new Date(assign.due_date) < new Date() ? 'text-red-500' : 'text-slate-500'}`}>
+                                                <span className={`text-xs md:text-sm font-mono font-bold ${assign.due_date && new Date(assign.due_date) < new Date() ? 'text-red-500' : 'text-slate-500'}`}>
                                                     {assign.due_date ? `Due: ${new Date(assign.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
                                                 </span>
                                             </div>
@@ -1556,11 +1572,22 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                     <Edit className="w-4 h-4" />
                                                 </button>
                                                 <button
-                                                    onClick={async (e) => {
+                                                    onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (!confirm("Are you sure? This will delete all student submissions!")) return;
-                                                        const { error } = await supabase.from('assignments').delete().eq('id', assign.id);
-                                                        if (!error) setAssignments(assignments.filter(a => a.id !== assign.id));
+                                                        openConfirm(
+                                                            "Delete Assignment?",
+                                                            "Are you sure you want to delete this assignment? This will permanently delete all student submissions and cannot be undone.",
+                                                            async () => {
+                                                                const { error } = await supabase.from('assignments').delete().eq('id', assign.id);
+                                                                if (!error) {
+                                                                    setAssignments(assignments.filter(a => a.id !== assign.id));
+                                                                    showToast('Assignment deleted', 'success');
+                                                                } else {
+                                                                    showToast('Failed to delete', 'error');
+                                                                }
+                                                                setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+                                                            }
+                                                        );
                                                     }}
                                                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Delete"
@@ -1586,26 +1613,65 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             {
                 activeTab === 'resources' && (
                     <div className="animate-fade-in space-y-6">
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center mb-6">
                             <h2 className="text-base md:text-xl font-bold text-slate-800">Shared Files & Notes</h2>
-                            <button
-                                onClick={() => setIsCreatingResource(true)}
-                                className="flex items-center gap-2 bg-slate-900 text-white px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold hover:bg-black transition-all shadow-md active:scale-95"
-                            >
-                                <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Add Note
-                            </button>
-                            <button
-                                onClick={() => setShowAssetPicker(true)}
-                                className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold hover:bg-indigo-100 transition-all border border-indigo-200"
-                            >
-                                <FolderOpen className="w-3.5 h-3.5 md:w-4 md:h-4" /> From Library
-                            </button>
-                            <button
-                                onClick={() => setShowUploader(true)}
-                                className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold hover:bg-indigo-100 transition-all border border-indigo-200"
-                            >
-                                <Upload className="w-3.5 h-3.5 md:w-4 md:h-4" /> Upload File
-                            </button>
+                            <div className="relative z-20">
+                                <button
+                                    onClick={() => setShowResourceMenu(!showResourceMenu)}
+                                    className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold shadow-md hover:bg-slate-800 transition-all active:scale-95 text-xs md:text-sm"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span>Add Resource</span>
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${showResourceMenu ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {showResourceMenu && (
+                                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 p-2 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                        <button
+                                            onClick={() => {
+                                                setIsCreatingResource(true);
+                                                setShowResourceMenu(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-slate-50 rounded-lg transition-colors group"
+                                        >
+                                            <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                                                <FileText className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-800 text-xs md:text-sm">Add Note</p>
+                                            </div>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setShowAssetPicker(true);
+                                                setShowResourceMenu(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-slate-50 rounded-lg transition-colors group"
+                                        >
+                                            <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                                <FolderOpen className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-800 text-xs md:text-sm">From Library</p>
+                                            </div>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setShowUploader(true);
+                                                setShowResourceMenu(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-slate-50 rounded-lg transition-colors group"
+                                        >
+                                            <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                                <Upload className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-800 text-xs md:text-sm">Upload File</p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Modals */}
@@ -1703,42 +1769,106 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                     }
 
                                     return (
-                                        <Card key={item.id} className="p-4 rounded-xl border border-slate-200 flex items-center gap-4 group hover:border-indigo-300 transition-colors" hoverEffect noPadding>
-                                            <div className={`p-3 rounded-xl shrink-0 ${colorClass}`}>
+                                        <Card key={item.id} className="p-3 md:p-5 rounded-2xl flex items-start md:items-center gap-3 md:gap-4 group hover:border-indigo-300 transition-colors cursor-pointer" hoverEffect noPadding>
+                                            <div className={`p-2.5 md:p-3 rounded-xl shrink-0 ${colorClass}`}>
                                                 {icon}
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-bold text-slate-800 truncate">{res.title}</h3>
-                                                <p className="text-xs text-slate-500 mt-0.5">Added {new Date(item.added_at ?? '').toLocaleDateString()}</p>
-                                            </div>
 
-                                            <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                {/* Read Online Button */}
-                                                {(isDocument || isCartridge) && (
-                                                    <button
-                                                        onClick={() => openReader(res as unknown as Asset)}
-                                                        className={`p-2 rounded-lg transition-all shadow-sm ${isCartridge
-                                                            ? 'bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white'
-                                                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white'
-                                                            }`}
-                                                        title={isCartridge ? "View Course Content" : "Read Online"}
-                                                    >
-                                                        <BookOpen className="w-5 h-5" />
-                                                    </button>
-                                                )}
+                                            {/* Content Wrapper */}
+                                            <div className="flex-1 w-full min-w-0 flex flex-col md:flex-row md:items-center md:justify-between">
 
-                                                {/* Download/Link Button */}
-                                                {res.file_url && (
-                                                    <a
-                                                        href={res.file_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-2 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 transition-all border border-slate-200 hover:border-slate-300"
-                                                        title={isLink ? 'Open Link' : 'Download File'}
-                                                    >
-                                                        {isLink ? <ExternalLink className="w-5 h-5" /> : <Download className="w-5 h-5" />}
-                                                    </a>
-                                                )}
+                                                {/* Title Row (Mobile) / Left Side (Desktop) */}
+                                                <div className="mb-2 md:mb-0 md:mr-4 min-w-0">
+                                                    <h3 className="font-bold text-slate-800 text-sm md:text-base line-clamp-2 md:truncate">{res.title}</h3>
+                                                    {/* Desktop Date (Hidden on Mobile) */}
+                                                    <p className="hidden md:block text-xs text-slate-400 font-bold uppercase mt-0.5">Added {new Date(item.added_at ?? '').toLocaleDateString()}</p>
+                                                </div>
+
+                                                {/* Mobile Row 2: Date + Actions / Right Side (Desktop) */}
+                                                <div className="flex items-center justify-between w-full md:w-auto md:justify-end gap-2 md:gap-4">
+
+                                                    {/* Mobile Date */}
+                                                    <p className="md:hidden text-[10px] text-slate-400 font-bold uppercase">Added {new Date(item.added_at ?? '').toLocaleDateString()}</p>
+
+                                                    {/* Actions */}
+                                                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                                                        {/* Read / Content Actions */}
+                                                        {(isDocument || isCartridge) && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    openReader(res as unknown as Asset);
+                                                                }}
+                                                                className={`p-1.5 md:p-2 rounded-lg transition-all ${isCartridge
+                                                                    ? 'text-orange-600 hover:bg-orange-50'
+                                                                    : 'text-indigo-600 hover:bg-indigo-50'
+                                                                    }`}
+                                                                title={isCartridge ? "View Course Content" : "Read Online"}
+                                                            >
+                                                                <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
+                                                            </button>
+                                                        )}
+
+                                                        {/* Link Action */}
+                                                        {isLink && (
+                                                            <a
+                                                                href={res.file_url || '#'}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="p-1.5 md:p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                            >
+                                                                <ExternalLink className="w-4 h-4 md:w-5 md:h-5" />
+                                                            </a>
+                                                        )}
+
+                                                        {/* Download Action */}
+                                                        {isDocument && (
+                                                            <a
+                                                                href={res.file_url || '#'}
+                                                                download
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="p-1.5 md:p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+                                                            >
+                                                                <Download className="w-4 h-4 md:w-5 md:h-5" />
+                                                            </a>
+                                                        )}
+
+                                                        {/* Edit / Delete Actions */}
+                                                        <div className="w-px h-4 bg-slate-200 mx-1 hidden md:block"></div>
+
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                // Handle Edit
+                                                            }}
+                                                            className="p-1.5 md:p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        >
+                                                            <Edit className="w-4 h-4 md:w-4 md:h-4" />
+                                                        </button>
+
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openConfirm(
+                                                                    "Remove Resource?",
+                                                                    "Are you sure you want to remove this resource from the class?",
+                                                                    async () => {
+                                                                        const { error } = await supabase.from('class_assets').delete().eq('id', item.id);
+                                                                        if (!error) {
+                                                                            setResources(resources.filter(r => r.id !== item.id));
+                                                                            showToast('Resource removed', 'success');
+                                                                        }
+                                                                        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+                                                                    }
+                                                                );
+                                                            }}
+                                                            className="p-1.5 md:p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        >
+                                                            <Trash2 className="w-4 h-4 md:w-4 md:h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </Card>
                                     );
@@ -2339,6 +2469,13 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                     setActiveTab('grades');
                     setGradesSearch(studentName);
                 }}
+            />
+
+            <ConfirmDialog
+                {...confirmConfig}
+                strConfirm="Delete"
+                strCancel="Cancel"
+                onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
             />
 
             {/* AI Loading Overlay */}

@@ -453,39 +453,67 @@ function GradingPage({ assignmentId }: { assignmentId: string }) {
 
                                                     <div className="flex-shrink-0">
                                                         {sub.grade !== null ? (
-                                                            <span className="bg-emerald-100 text-emerald-700 text-[10px] md:text-sm font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-emerald-200 whitespace-nowrap block">
-                                                                {sub.grade} / {assignment?.max_points}
-                                                            </span>
+                                                            <>
+                                                                {/* Mobile Badge */}
+                                                                <span className="md:hidden text-emerald-700 text-[10px] font-bold whitespace-nowrap block">
+                                                                    Graded
+                                                                </span>
+                                                                {/* Desktop Clean Text */}
+                                                                <span className="hidden md:block text-emerald-600 text-xs font-bold whitespace-nowrap">
+                                                                    Graded
+                                                                </span>
+                                                            </>
                                                         ) : (
-                                                            <span className="bg-slate-100 text-slate-500 text-[10px] md:text-sm font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-slate-200 whitespace-nowrap block">
-                                                                Ungraded
-                                                            </span>
+                                                            <>
+                                                                {/* Mobile Badge */}
+                                                                <span className="md:hidden text-slate-500 text-[10px] font-bold whitespace-nowrap block">
+                                                                    Ungraded
+                                                                </span>
+                                                                {/* Desktop Clean Text */}
+                                                                <span className="hidden md:block text-slate-400 text-xs font-bold whitespace-nowrap">
+                                                                    Ungraded
+                                                                </span>
+                                                            </>
                                                         )}
                                                     </div>
                                                 </div>
 
                                                 <div className="flex justify-between items-end pl-6 md:pl-8">
                                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-                                                        <span className="text-[10px] md:text-sm text-slate-500 flex items-center gap-1 font-medium">
-                                                            <Clock className="w-3 h-3 md:w-4 md:h-4" />
+                                                        <span className="text-[10px] md:text-xs text-slate-500 flex items-center gap-1 font-medium">
+                                                            <Clock className="w-3 h-3 md:w-3 md:h-3" />
                                                             {sub.created_at ? new Date(sub.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                                                         </span>
 
-                                                        {isLate && (
-                                                            <span className="flex items-center gap-1 bg-orange-50 text-orange-700 text-[10px] md:text-sm px-1.5 py-0.5 rounded border border-orange-200 font-semibold">
-                                                                <AlertTriangle className="w-3 h-3 md:w-4 md:h-4" /> Late
-                                                            </span>
+                                                        {sub.ai_score !== null && sub.ai_score !== undefined && (
+                                                            <>
+                                                                {/* Mobile Badge */}
+                                                                <span className={`md:hidden flex items-center gap-1 text-[10px] font-semibold ${sub.ai_score > 70 ? 'text-red-700' : 'text-emerald-700'}`}>
+                                                                    <Bot className="w-3 h-3" /> {sub.ai_score.toFixed(0)}% AI
+                                                                </span>
+                                                                {/* Desktop Clean Text */}
+                                                                <span className={`hidden md:flex items-center gap-1 text-xs font-bold ${sub.ai_score > 70 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                                                    <Bot className="w-3 h-3" /> {sub.ai_score.toFixed(0)}% AI
+                                                                </span>
+                                                            </>
                                                         )}
 
-                                                        {sub.ai_score !== null && sub.ai_score !== undefined && (
-                                                            <span className={`flex items-center gap-1 text-[10px] md:text-sm px-1.5 py-0.5 rounded border font-semibold ${sub.ai_score > 70 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                                                                <Bot className="w-3 h-3 md:w-4 md:h-4" /> {sub.ai_score.toFixed(0)}% AI
-                                                            </span>
+                                                        {isLate && (
+                                                            <>
+                                                                {/* Mobile Badge */}
+                                                                <span className="md:hidden flex items-center gap-1 text-orange-700 text-[10px] font-semibold">
+                                                                    <AlertTriangle className="w-3 h-3" /> Late
+                                                                </span>
+                                                                {/* Desktop Clean Text */}
+                                                                <span className="hidden md:flex items-center gap-1 text-orange-600 text-xs font-bold">
+                                                                    <AlertTriangle className="w-3 h-3" /> Late
+                                                                </span>
+                                                            </>
                                                         )}
                                                     </div>
 
                                                     {/* Navigation Arrow */}
-                                                    <div className="text-slate-300">
+                                                    <div className="text-slate-600">
                                                         <ChevronRight className="w-4 h-4 md:hidden" />
                                                     </div>
                                                 </div>

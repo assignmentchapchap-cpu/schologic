@@ -259,36 +259,38 @@ function StudentClassPage({ classId }: { classId: string }) {
                                 return (
                                     <Card
                                         key={assign.id}
-                                        className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4 p-4 md:p-6 transition-colors ${isSubmitted ? 'border-emerald-200 bg-emerald-50/10' : 'hover:border-emerald-200'}`}
+                                        className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-4 p-3 md:p-6 transition-colors ${isSubmitted ? 'border-emerald-200 bg-emerald-50/10' : 'hover:border-emerald-200'}`}
                                         hoverEffect={!isSubmitted}
                                     >
                                         <div className="w-full md:w-auto flex-1">
-                                            {/* Row 1: Title */}
-                                            <h3 className="font-bold text-base md:text-lg text-slate-800 mb-1">{assign.title}</h3>
+                                            {/* Header: Title & Badges (Mobile: Stacked, Desktop: Inline) */}
+                                            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 mb-2">
+                                                <h3 className="font-bold text-base md:text-lg text-slate-800">{assign.title}</h3>
 
-                                            {/* Row 2: Badges (Mobile Stacked) */}
-                                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                {assign.assignment_type === 'quiz' ? (
-                                                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                                                        <Sparkles className="w-3 h-3" /> Quiz
-                                                    </span>
-                                                ) : (
-                                                    <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                                                        Essay
-                                                    </span>
-                                                )}
-                                                {isGraded ? (
-                                                    <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-                                                        Graded: {submission.grade}/{assign.max_points}
-                                                    </span>
-                                                ) : isSubmitted ? (
-                                                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-                                                        Submitted
-                                                    </span>
-                                                ) : null}
+                                                {/* Badges */}
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    {assign.assignment_type === 'quiz' ? (
+                                                        <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                                                            <Sparkles className="w-3 h-3" /> Quiz
+                                                        </span>
+                                                    ) : (
+                                                        <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-wider">
+                                                            Essay
+                                                        </span>
+                                                    )}
+                                                    {isGraded ? (
+                                                        <span className="bg-indigo-100 text-indigo-700 text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                                                            Graded: {submission.grade}/{assign.max_points}
+                                                        </span>
+                                                    ) : isSubmitted ? (
+                                                        <span className="bg-emerald-100 text-emerald-700 text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                                                            Submitted
+                                                        </span>
+                                                    ) : null}
+                                                </div>
                                             </div>
 
-                                            <p className="text-slate-500 text-sm mb-3 line-clamp-2 max-w-xl">{assign.description}</p>
+                                            <p className="text-slate-500 text-sm mb-2 line-clamp-2 max-w-xl">{assign.description}</p>
 
                                             <div className="flex items-center gap-4 text-xs font-medium">
                                                 <span className={`flex items-center gap-1.5 ${isOverdue && !isSubmitted ? 'text-red-500 font-bold' : 'text-slate-500'}`}>
@@ -352,51 +354,69 @@ function StudentClassPage({ classId }: { classId: string }) {
                                 }
 
                                 return (
-                                    <div key={item.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative group overflow-hidden">
-                                        <div className={`absolute top-0 left-0 w-1 h-full ${isLink ? 'bg-indigo-400' : isCartridge ? 'bg-orange-400' : 'bg-amber-400'}`} />
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-3 rounded-xl shrink-0 ${colorClass}`}>
-                                                {icon}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-bold text-lg text-slate-800 mb-0.5 truncate pr-4">{res.title}</h3>
-                                                {/* Only show content for manual resources, not for uploaded docs */}
-                                                {typeof res.content === 'string' && source === 'manual' && (
-                                                    <p className="text-slate-600 text-sm line-clamp-2">{res.content}</p>
-                                                )}
+                                    <Card key={item.id} className="p-3 md:p-5 rounded-2xl flex items-start md:items-center gap-3 md:gap-4 group hover:border-indigo-300 transition-colors" hoverEffect noPadding>
+                                        <div className={`p-2.5 md:p-3 rounded-xl shrink-0 ${colorClass}`}>
+                                            {icon}
+                                        </div>
+
+                                        {/* Content Wrapper */}
+                                        <div className="flex-1 w-full min-w-0 flex flex-col md:flex-row md:items-center md:justify-between">
+
+                                            {/* Title Row (Mobile) / Left Side (Desktop) */}
+                                            <div className="mb-2 md:mb-0 md:mr-4 min-w-0">
+                                                <h3 className="font-bold text-slate-800 text-sm md:text-base line-clamp-2 md:truncate">{res.title}</h3>
+                                                {/* Desktop Date (Hidden on Mobile) */}
+                                                <p className="hidden md:block text-xs text-slate-400 font-bold uppercase mt-0.5">Added {new Date(item.added_at ?? '').toLocaleDateString()}</p>
                                             </div>
 
-                                            {/* Actions - Right Aligned */}
-                                            <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                {/* Universal Reader Button (Docs & Cartridges) */}
-                                                {(isDocument || isCartridge) && (
-                                                    <button
-                                                        onClick={() => openReader(res as unknown as Asset)}
-                                                        className={`p-2.5 rounded-lg transition-all shadow-sm group/btn ${isCartridge
-                                                            ? 'bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white'
-                                                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white'
-                                                            }`}
-                                                        title={isCartridge ? "View Course Content" : "Read Online"}
-                                                    >
-                                                        <BookOpen className="w-5 h-5" />
-                                                    </button>
-                                                )}
+                                            {/* Mobile Row 2: Date + Actions / Right Side (Desktop) */}
+                                            <div className="flex items-center justify-between w-full md:w-auto md:justify-end gap-2 md:gap-4">
 
-                                                {/* Download/Open Link Button */}
-                                                {res.file_url && (
-                                                    <a
-                                                        href={res.file_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-2.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 transition-all border border-slate-200 hover:border-slate-300"
-                                                        title={isLink ? 'Open Link' : 'Download File'}
-                                                    >
-                                                        {isLink ? <ExternalLink className="w-5 h-5" /> : <Download className="w-5 h-5" />}
-                                                    </a>
-                                                )}
+                                                {/* Mobile Date */}
+                                                <p className="md:hidden text-[10px] text-slate-400 font-bold uppercase">Added {new Date(item.added_at ?? '').toLocaleDateString()}</p>
+
+                                                {/* Actions */}
+                                                <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                                                    {/* Read / Content Actions */}
+                                                    {(isDocument || isCartridge) && (
+                                                        <button
+                                                            onClick={() => openReader(res as unknown as Asset)}
+                                                            className={`p-1.5 md:p-2 rounded-lg transition-all ${isCartridge
+                                                                ? 'text-orange-600 hover:bg-orange-50'
+                                                                : 'text-indigo-600 hover:bg-indigo-50'
+                                                                }`}
+                                                            title={isCartridge ? "View Course Content" : "Read Online"}
+                                                        >
+                                                            <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
+                                                        </button>
+                                                    )}
+
+                                                    {/* Link Action */}
+                                                    {isLink && (
+                                                        <a
+                                                            href={res.file_url || '#'}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="p-1.5 md:p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                        >
+                                                            <ExternalLink className="w-4 h-4 md:w-5 md:h-5" />
+                                                        </a>
+                                                    )}
+
+                                                    {/* Download Action */}
+                                                    {isDocument && (
+                                                        <a
+                                                            href={res.file_url || '#'}
+                                                            download
+                                                            className="p-1.5 md:p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+                                                        >
+                                                            <Download className="w-4 h-4 md:w-5 md:h-5" />
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </Card>
                                 )
                             })}
                             {resources.length === 0 && (
