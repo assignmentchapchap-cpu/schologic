@@ -358,8 +358,8 @@ function DashboardContent() {
                     </div>
 
                     <div className={`flex items-center gap-3 w-auto ${showMobileSearch ? 'opacity-0 pointer-events-none' : ''}`}>
-                        {/* Desktop Search Bar */}
-                        <div className="relative w-full md:w-80 h-12 flex items-center">
+                        {/* Desktop Search Bar - Hidden on Mobile */}
+                        <div className="relative hidden md:flex w-full md:w-80 h-12 items-center">
                             <Input
                                 placeholder="Search..."
                                 value={searchQuery}
