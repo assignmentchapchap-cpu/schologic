@@ -35,18 +35,18 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
     };
 
     const links = role === 'instructor' ? [
-        { href: '/instructor/dashboard', label: 'Dashboard', icon: Home },
-        { href: '/instructor/classes', label: 'Classes', icon: GraduationCap },
-        { href: '/instructor/library', label: 'Library', icon: BookOpen },
-        { href: '/instructor/calendar', label: 'Calendar', icon: Calendar },
-        { href: '/instructor/lab', label: 'AI Lab', icon: Terminal },
-        { href: '/instructor/settings', label: 'Settings', icon: Settings },
-        { href: '/instructor/profile', label: 'Profile', icon: User },
+        { href: '/instructor/dashboard', label: 'Dashboard', icon: Home, color: 'text-indigo-400' },
+        { href: '/instructor/classes', label: 'Classes', icon: GraduationCap, color: 'text-amber-500' },
+        { href: '/instructor/library', label: 'Library', icon: BookOpen, color: 'text-emerald-400' },
+        { href: '/instructor/calendar', label: 'Calendar', icon: Calendar, color: 'text-blue-400' },
+        { href: '/instructor/lab', label: 'AI Lab', icon: Terminal, color: 'text-rose-400' },
+        { href: '/instructor/settings', label: 'Settings', icon: Settings, color: 'text-slate-400' },
+        { href: '/instructor/profile', label: 'Profile', icon: User, color: 'text-teal-400' },
     ] : [
-        { href: '/student/dashboard', label: 'Dashboard', icon: Home },
-        { href: '/student/classes', label: 'My Classes', icon: GraduationCap },
-        { href: '/student/grades', label: 'My Grades', icon: FileText },
-        { href: '/student/profile', label: 'Profile', icon: User },
+        { href: '/student/dashboard', label: 'Dashboard', icon: Home, color: 'text-indigo-400' },
+        { href: '/student/classes', label: 'My Classes', icon: GraduationCap, color: 'text-amber-500' },
+        { href: '/student/grades', label: 'My Grades', icon: FileText, color: 'text-emerald-400' },
+        { href: '/student/profile', label: 'Profile', icon: User, color: 'text-teal-400' },
     ];
 
     const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -103,7 +103,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                             Class
                         </Link>
                     )}
-                    <NotificationBell />
+                    <NotificationBell variant="mobile" />
                 </div>
             </div>
 
@@ -125,7 +125,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                 {/* Desktop Toggle Button */}
                 <button
                     onClick={onToggleCollapse}
-                    className="hidden md:flex absolute -right-3 top-10 bg-slate-800 text-white p-1 rounded-full shadow-lg border border-slate-700 cursor-pointer z-50 hover:bg-slate-700 transition-colors"
+                    className="hidden md:flex absolute -right-3 top-10 bg-indigo-600 text-white p-1 rounded-full shadow-lg border border-indigo-500 cursor-pointer z-50 hover:bg-indigo-500 transition-colors"
                 >
                     {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 </button>
@@ -174,7 +174,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                                         title={isCollapsed ? `${link.label} (Locked)` : undefined}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <link.icon className="h-5 w-5 shrink-0" />
+                                            <link.icon className="h-6 w-6 shrink-0" />
                                             {!isCollapsed && <span>{link.label}</span>}
                                         </div>
                                         {!isCollapsed && <span className="text-[10px] uppercase font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 group-hover:bg-slate-700 group-hover:text-white transition-colors">Lock</span>}
@@ -195,7 +195,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                                     )}
                                     title={isCollapsed ? link.label : undefined}
                                 >
-                                    <link.icon className={cn("h-5 w-5 shrink-0 transition-colors", isActive ? "text-white" : "text-slate-500 group-hover:text-white")} />
+                                    <link.icon className={cn("h-6 w-6 shrink-0 transition-colors", isActive ? "text-white" : `${link.color} group-hover:text-white`)} />
                                     {!isCollapsed && <span className="whitespace-nowrap">{link.label}</span>}
 
                                     {/* Tooltip for collapsed state (optional css-only) */}
@@ -219,7 +219,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                             )}
                             title={isCollapsed ? "Sign Out" : undefined}
                         >
-                            <LogOut className="h-5 w-5 shrink-0" />
+                            <LogOut className="h-6 w-6 shrink-0" />
                             {!isCollapsed && <span>Sign Out</span>}
                         </button>
                     </div>

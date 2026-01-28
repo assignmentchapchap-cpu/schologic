@@ -359,15 +359,16 @@ function DashboardContent() {
 
                     <div className={`flex items-center gap-3 w-auto ${showMobileSearch ? 'opacity-0 pointer-events-none' : ''}`}>
                         {/* Desktop Search Bar */}
-                        <div className="relative hidden md:block group z-50">
+                        <div className="relative w-full md:w-80 h-12 flex items-center">
                             <Input
                                 placeholder="Search..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                leftIcon={<Search className="w-4 h-4 text-slate-400" />}
-                                className="w-64 bg-white shadow-sm"
-                                fullWidth={false}
+                                leftIcon={<Search className="h-5 w-5" />}
+                                className="pl-10 h-12"
+                                wrapperClassName="mb-0 w-full"
                             />
+
 
                             {/* Search Results Dropdown */}
                             {searchQuery.trim().length > 0 && (
@@ -481,7 +482,7 @@ function DashboardContent() {
                         {/* New Class Button */}
                         <Button
                             onClick={() => router.push('/instructor/classes?new=true')}
-                            className="hidden md:flex bg-slate-900 hover:bg-slate-800"
+                            className="hidden md:flex bg-slate-900 hover:bg-slate-800 h-12"
                             leftIcon={<Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />}
                             data-tour="create-class-btn"
                         >
@@ -489,63 +490,65 @@ function DashboardContent() {
                         </Button>
 
                         <div className="hidden md:block">
-                            <NotificationBell />
+                            <NotificationBell className="h-12 w-12 flex items-center justify-center p-0" />
                         </div>
                     </div>
                 </header>
 
                 {/* Mobile Search Results */}
-                {searchQuery && (
-                    <div className="md:hidden mb-8 animate-in fade-in slide-in-from-top-2">
-                        {searchResults.length === 0 ? (
-                            <div className="p-8 text-center bg-white rounded-2xl border border-slate-200">
-                                <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                <p className="text-slate-500 font-medium">No results found for "{searchQuery}"</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider px-1">Search Results</h3>
+                {
+                    searchQuery && (
+                        <div className="md:hidden mb-8 animate-in fade-in slide-in-from-top-2">
+                            {searchResults.length === 0 ? (
+                                <div className="p-8 text-center bg-white rounded-2xl border border-slate-200">
+                                    <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                    <p className="text-slate-500 font-medium">No results found for "{searchQuery}"</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider px-1">Search Results</h3>
 
-                                {searchResults.map((item) => (
-                                    <Card
-                                        key={`${item.type}-${item.id}`}
-                                        onClick={() => {
-                                            if (item.type === 'student') {
-                                                router.push(`/instructor/class/${item.classId}?tab=students`);
-                                            } else if (item.url && item.url !== '#') {
-                                                router.push(item.url);
-                                            }
-                                        }}
-                                        className="flex items-center gap-4 active:scale-[0.98] transition-all p-4"
-                                        hoverEffect
-                                    >
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.type === 'class' ? 'bg-indigo-50 text-indigo-600' :
-                                            item.type === 'assignment' ? 'bg-emerald-50 text-emerald-600' :
-                                                item.type === 'event' ? 'bg-blue-50 text-blue-600' :
-                                                    'bg-slate-100 text-slate-500' // student default
-                                            }`}>
-                                            {item.type === 'class' && <Home className="w-5 h-5" />}
-                                            {item.type === 'assignment' && <FileText className="w-5 h-5" />}
-                                            {item.type === 'event' && <CalendarIcon className="w-5 h-5" />}
-                                            {item.type === 'student' && (item.image ?
-                                                <img src={item.image} alt={item.title} className="w-full h-full object-cover rounded-xl" /> :
-                                                <span className="font-bold text-xs">{item.title.substring(0, 1)}</span>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-slate-800 text-sm line-clamp-1">{item.title}</h4>
-                                            <p className="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">
-                                                <span className="uppercase text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mr-2">{item.type}</span>
-                                                {item.subtitle}
-                                            </p>
-                                        </div>
-                                        <ChevronRight className="w-5 h-5 text-slate-300 ml-auto" />
-                                    </Card>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
+                                    {searchResults.map((item) => (
+                                        <Card
+                                            key={`${item.type}-${item.id}`}
+                                            onClick={() => {
+                                                if (item.type === 'student') {
+                                                    router.push(`/instructor/class/${item.classId}?tab=students`);
+                                                } else if (item.url && item.url !== '#') {
+                                                    router.push(item.url);
+                                                }
+                                            }}
+                                            className="flex items-center gap-4 active:scale-[0.98] transition-all p-4"
+                                            hoverEffect
+                                        >
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.type === 'class' ? 'bg-indigo-50 text-indigo-600' :
+                                                item.type === 'assignment' ? 'bg-emerald-50 text-emerald-600' :
+                                                    item.type === 'event' ? 'bg-blue-50 text-blue-600' :
+                                                        'bg-slate-100 text-slate-500' // student default
+                                                }`}>
+                                                {item.type === 'class' && <Home className="w-5 h-5" />}
+                                                {item.type === 'assignment' && <FileText className="w-5 h-5" />}
+                                                {item.type === 'event' && <CalendarIcon className="w-5 h-5" />}
+                                                {item.type === 'student' && (item.image ?
+                                                    <img src={item.image} alt={item.title} className="w-full h-full object-cover rounded-xl" /> :
+                                                    <span className="font-bold text-xs">{item.title.substring(0, 1)}</span>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-800 text-sm line-clamp-1">{item.title}</h4>
+                                                <p className="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">
+                                                    <span className="uppercase text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mr-2">{item.type}</span>
+                                                    {item.subtitle}
+                                                </p>
+                                            </div>
+                                            <ChevronRight className="w-5 h-5 text-slate-300 ml-auto" />
+                                        </Card>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )
+                }
 
                 {/* --- Row 1: High-Level Stats --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-in mb-8">

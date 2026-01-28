@@ -15,21 +15,28 @@ type Notification = {
     user_id: string | null;
 };
 
+import { twMerge } from 'tailwind-merge';
 import { useNotifications } from '@/context/NotificationContext';
 
-export default function NotificationBell() {
+export default function NotificationBell({ variant = 'default', className }: { variant?: 'default' | 'mobile'; className?: string }) {
     const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
     const [isOpen, setIsOpen] = useState(false);
+
+    const baseClass = variant === 'mobile'
+        ? "relative p-2 rounded-full text-white hover:bg-slate-800 transition-colors"
+        : "relative p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-indigo-600 shadow-sm hover:shadow-md transition-all";
+
+    const buttonClass = twMerge(baseClass, className);
 
     return (
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-indigo-600 shadow-sm hover:shadow-md transition-all"
+                className={buttonClass}
             >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                    <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                    <span className={`absolute ${variant === 'mobile' ? 'top-1 right-1 w-2 h-2 border-slate-800' : 'top-2 right-2 w-2.5 h-2.5 border-white'} bg-red-500 rounded-full border-2`}></span>
                 )}
             </button>
 

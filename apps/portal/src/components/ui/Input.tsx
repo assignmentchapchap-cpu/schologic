@@ -7,10 +7,12 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
     fullWidth?: boolean;
+    wrapperClassName?: string;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(({
     className,
+    wrapperClassName,
     label,
     error,
     leftIcon,
@@ -24,7 +26,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(({
     const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
 
     return (
-        <div className={`${fullWidth ? 'w-full' : 'inline-block'} mb-4`}>
+        <div className={twMerge(`${fullWidth ? 'w-full' : 'inline-block'} mb-4`, wrapperClassName)}>
             {label && (
                 <label
                     htmlFor={inputId}
