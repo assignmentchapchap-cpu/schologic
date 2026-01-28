@@ -385,14 +385,25 @@ function DashboardContent() {
                     <div className={`flex items-center gap-3 w-auto ${showMobileSearch ? 'opacity-0 pointer-events-none' : ''}`}>
                         {/* Desktop Search Bar - Hidden on Mobile */}
                         <div className="relative hidden md:flex w-full md:w-80 h-12 items-center">
-                            <Input
-                                placeholder="Search..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                leftIcon={<Search className="h-5 w-5" />}
-                                className="pl-10 h-12"
-                                wrapperClassName="mb-0 w-full"
-                            />
+                            <div className="relative w-full">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none z-10" />
+                                <input
+                                    placeholder="Search..."
+                                    className="w-full bg-white border border-slate-200 pl-10 pr-10 h-12 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:font-medium"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-20"
+                                        aria-label="Clear search"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
 
 
                             {/* Search Results Dropdown */}

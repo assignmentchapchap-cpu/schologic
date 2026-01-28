@@ -280,7 +280,7 @@ function DashboardContent() {
 
                     <div className={showMobileSearch ? 'opacity-0' : 'opacity-100 transition-opacity'}>
                         <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Dashboard</h1>
-                        <p className="text-slate-500 font-bold text-sm mt-1">Welcome back, get ready.</p>
+                        <p className="text-slate-500 font-medium text-sm mt-1">Welcome back, get ready.</p>
                     </div>
 
                     <div className={`flex items-center gap-2 md:gap-4 shrink-0 ${showMobileSearch ? 'opacity-0 pointer-events-none' : ''}`}>
@@ -315,7 +315,13 @@ function DashboardContent() {
                     <div className="mb-8 animate-in fade-in slide-in-from-top-2">
                         <h3 className="font-bold text-slate-400 text-sm uppercase mb-4">Search Results</h3>
                         {filteredEnrollments.length === 0 && filteredAssignments.length === 0 && filteredResources.length === 0 ? (
-                            <p className="text-slate-500 italic">No matches found.</p>
+                            <div className="flex flex-col items-center justify-center py-12 text-center animate-in fade-in zoom-in-95">
+                                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                                    <Search className="w-6 h-6 text-slate-300" />
+                                </div>
+                                <p className="font-bold text-slate-800">No matches found</p>
+                                <p className="text-slate-500 text-sm mt-1">Try adjusting your search terms</p>
+                            </div>
                         ) : (
                             <div className="space-y-4">
                                 {filteredEnrollments.map(e => (

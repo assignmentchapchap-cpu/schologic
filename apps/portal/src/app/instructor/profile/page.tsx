@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
 import { User, Mail, School, Save, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import { Database } from "@schologic/database";
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/context/ToastContext';
@@ -174,16 +175,16 @@ export default function InstructorProfilePage() {
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-slate-400" /></div>;
 
     return (
-        <div className="min-h-screen bg-slate-50 p-4 md:p-6">
-            <div className="max-w-2xl mx-auto">
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+            <div className="max-w-3xl mx-auto">
                 <header className="mb-6 md:mb-8 flex items-center justify-between">
                     <div>
-                        <h1 className="text-xl md:text-3xl font-bold text-slate-800">My Profile</h1>
-                        <p className="text-slate-500 text-xs md:text-base">Manage your personal information</p>
+                        <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">My Profile</h1>
+                        <p className="text-slate-500 text-xs md:text-base font-medium mt-1">Manage your personal information</p>
                     </div>
                 </header>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
                     <form onSubmit={handleSave} className="p-8 space-y-6">
 
                         {/* Avatar Section */}
@@ -299,15 +300,15 @@ export default function InstructorProfilePage() {
                             </div>
                         </div>
 
-                        <div className="pt-6 border-t border-slate-100 flex justify-end">
-                            <button
+                        <div className="flex justify-end pt-6">
+                            <Button
                                 type="submit"
-                                disabled={saving}
-                                className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-black transition-all shadow-lg active:scale-95 disabled:opacity-70"
+                                isLoading={saving}
+                                leftIcon={<Save className="w-4 h-4" />}
+                                className="bg-slate-900 hover:bg-black text-white shadow-lg w-full md:w-auto"
                             >
-                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                 Save Changes
-                            </button>
+                            </Button>
                         </div>
 
                     </form>
