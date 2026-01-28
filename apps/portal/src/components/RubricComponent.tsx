@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Sparkles, Edit2, Check, X, Trash2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
-import { createClient, Database } from "@schologic/database";
+import { createClient, type Database } from "@schologic/database";
 import { useToast } from '@/context/ToastContext';
 import { RubricItem, normalizeRubric } from '@/types/json-schemas';
 

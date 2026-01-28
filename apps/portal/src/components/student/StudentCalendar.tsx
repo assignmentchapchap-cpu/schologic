@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient, Database } from "@schologic/database";
+import { createClient, type Database } from "@schologic/database";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';

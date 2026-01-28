@@ -2,7 +2,7 @@
 
 import { X, AlertTriangle, CheckCircle, TrendingUp, Users, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Database } from "@schologic/database";
+import type { Database } from "@schologic/database";
 
 type Assignment = Database['public']['Tables']['assignments']['Row'];
 type Submission = Database['public']['Tables']['submissions']['Row'];

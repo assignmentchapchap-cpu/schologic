@@ -1,6 +1,6 @@
 'use server';
 
-import { createSessionClient, Database } from "@schologic/database";
+import { createSessionClient, type Database } from "@schologic/database";
 import { put } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 import { Asset, AssetType, AssetSource } from '@/types/library';

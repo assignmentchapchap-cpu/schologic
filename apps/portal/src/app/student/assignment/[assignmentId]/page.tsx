@@ -6,7 +6,7 @@ import { createClient } from "@schologic/database";
 import { checkAIContent, cleanText } from '@/lib/ai-service';
 import { Upload, Type, ArrowLeft, Loader2, Calendar, FileText, CheckCircle, ChevronDown, ChevronUp, Eye, X, MessageSquare, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { Database } from "@schologic/database";
+import type { Database } from "@schologic/database";
 import { useToast } from '@/context/ToastContext';
 import ReportView from '@/components/ReportView';
 import RubricComponent from '@/components/RubricComponent';

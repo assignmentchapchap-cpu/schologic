@@ -1,5 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
-import { Database } from "@schologic/database";
+import type { Database } from "@schologic/database";
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
