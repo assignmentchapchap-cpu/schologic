@@ -8,6 +8,7 @@
         "clean": "turbo clean"
     },
     "devDependencies": {
+        "supabase": "2.72.9",
         "turbo": "latest",
         "typescript": "^5.9.3"
     },

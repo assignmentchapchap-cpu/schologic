@@ -1,4 +1,5 @@
 import Sidebar from '@/components/Sidebar';
+import ChatWidget from '@/components/chat/ChatWidget';
 
 export default function InstructorLayout({
     children,
@@ -11,6 +12,7 @@ export default function InstructorLayout({
             <div className="md:ml-64 min-h-screen transition-all duration-300">
                 {children}
             </div>
+            <ChatWidget />
         </div>
     );
 }
