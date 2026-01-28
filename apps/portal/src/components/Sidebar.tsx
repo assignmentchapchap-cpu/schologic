@@ -4,20 +4,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Home, Terminal, User, Upload, LogOut, GraduationCap, Calendar, Settings, FileText, Menu, X, Search, Plus, Bell, BookOpen } from 'lucide-react';
+import { Home, Terminal, User, Upload, LogOut, GraduationCap, Calendar, Settings, FileText, Menu, X, Search, Plus, Bell, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NotificationBell from './NotificationBell';
 import { createClient } from "@schologic/database";
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
-
-
-
-// Simple utility if @/lib/utils doesn't exist yet, but previous files used it? 
-// Actually previous files used locally defined `cn` or imported. 
-// I'll assume standard imports or define local helper if needed. 
-// Checking imports... `ReportView.tsx` imported `clsx` and `tailwind-merge`.
-// I will just implement the component cleanly.
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -28,9 +20,11 @@ function cn(...inputs: ClassValue[]) {
 
 interface SidebarProps {
     role: 'instructor' | 'student';
+    isCollapsed?: boolean;
+    onToggleCollapse?: () => void;
 }
 
-export default function Sidebar({ role }: SidebarProps) {
+export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const supabase = createClient();
@@ -57,8 +51,6 @@ export default function Sidebar({ role }: SidebarProps) {
 
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const { isDemo } = useUser();
-
-    // Removed useEffect for checking user, now handled by UserContext
 
     // Close mobile menu when route changes
     useEffect(() => {
@@ -125,18 +117,31 @@ export default function Sidebar({ role }: SidebarProps) {
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed left-0 top-0 z-50 h-screen w-[240px] md:w-64 bg-slate-900 text-white border-r border-slate-800 transition-transform duration-300 ease-in-out font-sans shadow-2xl md:shadow-none",
+                "fixed left-0 top-0 z-50 h-screen bg-slate-900 text-white border-r border-slate-800 transition-all duration-300 ease-in-out font-sans shadow-2xl md:shadow-none",
+                "w-[240px]", // Mobile width
+                isCollapsed ? "md:w-20" : "md:w-64", // Desktop width handled by parent layout syncing usually, but generic here
                 isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             )}>
+                {/* Desktop Toggle Button */}
+                <button
+                    onClick={onToggleCollapse}
+                    className="hidden md:flex absolute -right-3 top-10 bg-slate-800 text-white p-1 rounded-full shadow-lg border border-slate-700 cursor-pointer z-50 hover:bg-slate-700 transition-colors"
+                >
+                    {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                </button>
+
                 <div className="flex h-full flex-col">
                     {/* Logo Area */}
-                    <div className="flex items-center justify-between p-6 border-b border-slate-800">
-                        <div className="flex items-center gap-3">
+                    <div className={cn(
+                        "flex items-center p-6 border-b border-slate-800 transition-all duration-300",
+                        isCollapsed ? "justify-center px-4" : "justify-end md:justify-between gap-3"
+                    )}>
+                        <div className={cn("hidden md:flex items-center gap-3 overflow-hidden")}>
                             <div className="relative w-10 h-10 shrink-0">
                                 <Image src="/logo.png" alt="Schologic LMS" fill className="object-cover rounded-xl" />
                             </div>
-                            <div>
-                                <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                            <div className={cn("transition-all duration-300", isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100")}>
+                                <span className="text-xl font-bold text-white whitespace-nowrap">
                                     Schologic LMS
                                 </span>
                                 <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{role}</p>
@@ -152,7 +157,7 @@ export default function Sidebar({ role }: SidebarProps) {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 space-y-1 px-4 py-8 overflow-y-auto">
+                    <nav className="flex-1 space-y-2 px-3 py-6 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-700">
                         {links.map((link) => {
                             const isActive = pathname === link.href || (link.href !== '/profile' && pathname?.startsWith(link.href));
                             const isRestricted = isDemo && (link.href === '/instructor/lab' || link.href === '/instructor/settings');
@@ -162,13 +167,17 @@ export default function Sidebar({ role }: SidebarProps) {
                                     <Link
                                         key={link.href}
                                         href={link.href}
-                                        className="flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl text-slate-500 hover:bg-slate-800/50 hover:text-white transition-colors group cursor-pointer"
+                                        className={cn(
+                                            "flex items-center px-3 py-3 text-sm font-bold rounded-xl text-slate-500 hover:bg-slate-800/50 hover:text-white transition-colors group cursor-pointer relative",
+                                            isCollapsed ? "justify-center" : "justify-between"
+                                        )}
+                                        title={isCollapsed ? `${link.label} (Locked)` : undefined}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <link.icon className="h-5 w-5" />
-                                            {link.label}
+                                            <link.icon className="h-5 w-5 shrink-0" />
+                                            {!isCollapsed && <span>{link.label}</span>}
                                         </div>
-                                        <span className="text-[10px] uppercase font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 group-hover:bg-slate-700 group-hover:text-white transition-colors">Lock</span>
+                                        {!isCollapsed && <span className="text-[10px] uppercase font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 group-hover:bg-slate-700 group-hover:text-white transition-colors">Lock</span>}
                                     </Link>
                                 );
                             }
@@ -178,14 +187,23 @@ export default function Sidebar({ role }: SidebarProps) {
                                     key={link.href}
                                     href={link.href}
                                     className={cn(
-                                        "flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group",
+                                        "flex items-center gap-3 px-3 py-3 text-sm font-bold rounded-xl transition-all duration-200 group relative",
                                         isActive
                                             ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/20"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800"
+                                            : "text-slate-400 hover:text-white hover:bg-slate-800",
+                                        isCollapsed ? "justify-center" : ""
                                     )}
+                                    title={isCollapsed ? link.label : undefined}
                                 >
-                                    <link.icon className={cn("h-5 w-5 transition-colors", isActive ? "text-white" : "text-slate-500 group-hover:text-white")} />
-                                    {link.label}
+                                    <link.icon className={cn("h-5 w-5 shrink-0 transition-colors", isActive ? "text-white" : "text-slate-500 group-hover:text-white")} />
+                                    {!isCollapsed && <span className="whitespace-nowrap">{link.label}</span>}
+
+                                    {/* Tooltip for collapsed state (optional css-only) */}
+                                    {isCollapsed && (
+                                        <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-xl border border-slate-700 transition-opacity">
+                                            {link.label}
+                                        </div>
+                                    )}
                                 </Link>
                             );
                         })}
@@ -195,10 +213,14 @@ export default function Sidebar({ role }: SidebarProps) {
                     <div className="p-4 border-t border-slate-800">
                         <button
                             onClick={handleSignOut}
-                            className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-xl transition-all"
+                            className={cn(
+                                "flex w-full items-center gap-3 px-3 py-3 text-sm font-bold text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-xl transition-all group",
+                                isCollapsed ? "justify-center" : ""
+                            )}
+                            title={isCollapsed ? "Sign Out" : undefined}
                         >
-                            <LogOut className="h-5 w-5" />
-                            Sign Out
+                            <LogOut className="h-5 w-5 shrink-0" />
+                            {!isCollapsed && <span>Sign Out</span>}
                         </button>
                     </div>
                 </div>

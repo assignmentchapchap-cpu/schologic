@@ -1,4 +1,4 @@
-import Sidebar from '@/components/Sidebar';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function StudentLayout({
     children,
@@ -6,11 +6,8 @@ export default function StudentLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="min-h-screen bg-slate-50">
-            <Sidebar role="student" />
-            <div className="md:ml-64 min-h-screen transition-all duration-300">
-                {children}
-            </div>
-        </div>
+        <DashboardLayout role="student">
+            {children}
+        </DashboardLayout>
     );
 }
