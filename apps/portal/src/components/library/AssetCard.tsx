@@ -1,7 +1,7 @@
 'use client';
 
 import { Asset } from '@/types/library';
-import { FileText, Link as LinkIcon, File, Layers, MoreVertical, Trash2, Download, CheckSquare, Eye } from 'lucide-react';
+import { FileText, Link as LinkIcon, File, Layers, MoreVertical, Trash2, Download, CheckSquare, Eye, BookOpen, Archive } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 interface AssetCardProps {
@@ -11,10 +11,11 @@ interface AssetCardProps {
     isSelectionMode: boolean; // New prop
     onToggleSelect: (id: string) => void;
     onRename: (id: string) => void;
+    onAddToClass?: (id: string) => void; // Optional prop
     onRead: (asset: Asset) => void; // New prop for Universal Reader
 }
 
-export default function AssetCard({ asset, onDelete, isSelected, isSelectionMode, onToggleSelect, onRename, onRead }: AssetCardProps) {
+export default function AssetCard({ asset, onDelete, isSelected, isSelectionMode, onToggleSelect, onRename, onAddToClass, onRead }: AssetCardProps) {
     const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const [imageError, setImageError] = useState(false);
@@ -30,7 +31,7 @@ export default function AssetCard({ asset, onDelete, isSelected, isSelectionMode
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleMenuAction = (action: 'view' | 'download' | 'select' | 'delete' | 'rename') => {
+    const handleMenuAction = (action: 'view' | 'download' | 'select' | 'delete' | 'rename' | 'addToClass') => {
         setShowMenu(false);
         switch (action) {
             case 'view':
@@ -42,6 +43,9 @@ export default function AssetCard({ asset, onDelete, isSelected, isSelectionMode
                 break;
             case 'download':
                 if (asset.file_url) window.open(asset.file_url, '_blank');
+                break;
+            case 'addToClass':
+                if (onAddToClass) onAddToClass(asset.id);
                 break;
             case 'select':
                 onToggleSelect(asset.id);
@@ -56,10 +60,20 @@ export default function AssetCard({ asset, onDelete, isSelected, isSelectionMode
     };
 
     const getIcon = () => {
+        const title = (asset.title || '').toLowerCase();
+        const mime = (asset.mime_type || '').toLowerCase();
+
         switch (asset.asset_type) {
-            case 'document': return <FileText className="w-8 h-8 text-blue-500" />;
+            case 'document':
+                if (mime.includes('pdf') || title.endsWith('.pdf')) {
+                    return <FileText className="w-8 h-8 text-rose-500" />;
+                }
+                if (mime.includes('word') || title.endsWith('.doc') || title.endsWith('.docx')) {
+                    return <FileText className="w-8 h-8 text-blue-600" />;
+                }
+                return <FileText className="w-8 h-8 text-slate-500" />;
             case 'url': return <LinkIcon className="w-8 h-8 text-indigo-500" />;
-            case 'cartridge_root': return <Layers className="w-8 h-8 text-orange-500" />;
+            case 'cartridge_root': return <Archive className="w-8 h-8 text-orange-600" />;
             default: return <File className="w-8 h-8 text-slate-400" />;
         }
     };
@@ -110,6 +124,12 @@ export default function AssetCard({ asset, onDelete, isSelected, isSelectionMode
                                         <Download className="w-4 h-4 text-slate-400" /> Download
                                     </button>
                                 )}
+                                <div className="h-px bg-slate-100 my-1"></div>
+                                {onAddToClass && (
+                                    <button onClick={() => handleMenuAction('addToClass')} className="w-full text-left px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2">
+                                        <BookOpen className="w-4 h-4 text-slate-400" /> Add to Class
+                                    </button>
+                                )}
                                 <button onClick={() => handleMenuAction('select')} className="w-full text-left px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2">
                                     <CheckSquare className="w-4 h-4 text-slate-400" /> {isSelected ? 'Deselect' : 'Select'}
                                 </button>
@@ -137,12 +157,12 @@ export default function AssetCard({ asset, onDelete, isSelected, isSelectionMode
                 }}
                 className="cursor-pointer"
             >
-                <h3 className="font-bold text-slate-800 text-sm mb-1 line-clamp-2 min-h-[40px]" title={asset.title || ''}>
+                <h3 className="font-bold text-slate-800 text-sm md:text-base mb-1 line-clamp-2 min-h-[40px]" title={asset.title || ''}>
                     {asset.title}
                 </h3>
 
-                <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
-                    <span className="bg-slate-100 px-2 py-0.5 rounded capitalize">{asset.asset_type.replace('_', ' ')}</span>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mb-3">
+                    <span className="capitalize">{asset.asset_type.replace('_', ' ')}</span>
                     <span>•</span>
                     <span suppressHydrationWarning>{new Date(asset.created_at).toLocaleDateString()}</span>
                 </div>

@@ -6,6 +6,7 @@ import AssetCard from './AssetCard';
 import AssetUploader from './AssetUploader';
 import { useReader } from '@/context/UniversalReaderContext';
 import AssetEditor from './AssetEditor';
+import AddToClassModal from './AddToClassModal';
 import ConfirmDialog from '../ConfirmDialog';
 import { Plus, Upload, FileText, Search, Grid, List, Trash2 } from 'lucide-react';
 import { deleteAsset, deleteAssets, renameAsset } from '@/app/actions/library'; // We will create this
@@ -33,6 +34,9 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
     // Rename State
     const [assetToRename, setAssetToRename] = useState<{ id: string, title: string } | null>(null);
     const [newTitle, setNewTitle] = useState('');
+
+    // Add to Class State
+    const [assetToAddToClass, setAssetToAddToClass] = useState<{ id: string, title: string } | null>(null);
 
     // Global Reader
     const { openReader } = useReader();
@@ -198,6 +202,10 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
                             isSelectionMode={selectedIds.size > 0}
                             onToggleSelect={toggleSelect}
                             onRename={startRename}
+                            onAddToClass={(id) => {
+                                const asset = assets.find(a => a.id === id);
+                                if (asset) setAssetToAddToClass({ id, title: asset.title || '' });
+                            }}
                             onRead={openReader}
                         />
                     ))}
@@ -252,6 +260,14 @@ export default function LibraryView({ initialAssets }: LibraryViewProps) {
                         {showEditor && <AssetEditor onClose={() => setShowEditor(false)} onSuccess={() => window.location.reload()} />}
                     </div>
                 </div>
+            )}
+
+            {assetToAddToClass && (
+                <AddToClassModal
+                    assetId={assetToAddToClass.id}
+                    assetTitle={assetToAddToClass.title}
+                    onClose={() => setAssetToAddToClass(null)}
+                />
             )}
 
 

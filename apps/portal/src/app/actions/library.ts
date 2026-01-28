@@ -234,3 +234,54 @@ export async function renameAsset(id: string, newTitle: string) {
         return { error: error.message || 'Failed to rename asset' };
     }
 }
+
+export async function getInstructorClasses() {
+    try {
+        const cookieStore = await cookies();
+        const supabase = createSessionClient(cookieStore);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        const { data, error } = await supabase
+            .from('classes')
+            .select('id, name')
+            .eq('instructor_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data || []).map(c => ({ id: c.id, title: c.name }));
+    } catch (e) {
+        console.error("Fetch Classes Error:", e);
+        return [];
+    }
+}
+
+export async function distributeAssetToClass(assetId: string, classId: string) {
+    try {
+        const cookieStore = await cookies();
+        const supabase = createSessionClient(cookieStore);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: 'Unauthorized' };
+
+        // Verify ownership of class (optional but good practice, though RLS handles it usually)
+        // Insert into class_assets
+        const { error } = await supabase
+            .from('class_assets')
+            .insert({
+                class_id: classId,
+                asset_id: assetId
+            });
+
+        if (error) {
+            if (error.code === '23505') { // Unique constraint violation
+                return { error: 'Asset is already added to this class.' };
+            }
+            throw error;
+        }
+
+        revalidatePath(`/instructor/class/${classId}`); // Revalidate the target class page
+        return { success: true };
+    } catch (e: any) {
+        return { error: e.message || 'Failed to add asset to class' };
+    }
+}
