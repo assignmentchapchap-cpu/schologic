@@ -115,7 +115,7 @@ function StudentClassPage({ classId }: { classId: string }) {
         <div className="min-h-screen bg-slate-50 p-6 md:p-8">
             <div className="max-w-5xl mx-auto">
                 <Link href="/student/classes" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 mb-6 transition-colors font-medium text-sm">
-                    <ArrowLeft className="w-4 h-4" /> Back to Classes
+                    <ArrowLeft className="w-4 h-4" /> <span className="hidden md:inline">Back to Classes</span>
                 </Link>
 
                 {/* Header */}
@@ -132,8 +132,8 @@ function StudentClassPage({ classId }: { classId: string }) {
                                     </h1>
                                 </div>
 
-                                {/* Actions (Collapse Header) */}
-                                <div className="flex items-center gap-2 shrink-0">
+                                {/* Actions (Collapse Header) - Desktop Only */}
+                                <div className="hidden md:flex items-center gap-2 shrink-0">
                                     <button
                                         onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
                                         className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors"
@@ -161,13 +161,36 @@ function StudentClassPage({ classId }: { classId: string }) {
                                     </button>
 
                                     {classData?.start_date && (
-                                        <span className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs md:text-sm">
+                                        <span className="hidden md:flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs md:text-sm">
                                             <Calendar className="w-4 h-4 text-slate-400" />
                                             {new Date(classData.start_date).toLocaleDateString()} - {classData.end_date ? new Date(classData.end_date).toLocaleDateString() : 'Ongoing'}
                                         </span>
                                     )}
                                 </div>
                             )}
+
+                            {/* Row 3 (Mobile Bottom): Date | Collapse */}
+                            <div className="flex md:hidden items-center justify-between pt-3 mt-1 border-t border-slate-100">
+                                {/* Left: Date Range */}
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                    {classData?.start_date && (
+                                        <>
+                                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                            {new Date(classData.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {classData.end_date ? new Date(classData.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Ongoing'}
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Right: Actions */}
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                                        className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+                                    >
+                                        {isHeaderExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -239,9 +262,12 @@ function StudentClassPage({ classId }: { classId: string }) {
                                         className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4 p-4 md:p-6 transition-colors ${isSubmitted ? 'border-emerald-200 bg-emerald-50/10' : 'hover:border-emerald-200'}`}
                                         hoverEffect={!isSubmitted}
                                     >
-                                        <div className="w-full md:w-auto">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="font-bold text-base md:text-lg text-slate-800">{assign.title}</h3>
+                                        <div className="w-full md:w-auto flex-1">
+                                            {/* Row 1: Title */}
+                                            <h3 className="font-bold text-base md:text-lg text-slate-800 mb-1">{assign.title}</h3>
+
+                                            {/* Row 2: Badges (Mobile Stacked) */}
+                                            <div className="flex flex-wrap items-center gap-2 mb-2">
                                                 {assign.assignment_type === 'quiz' ? (
                                                     <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                                                         <Sparkles className="w-3 h-3" /> Quiz
@@ -261,12 +287,13 @@ function StudentClassPage({ classId }: { classId: string }) {
                                                     </span>
                                                 ) : null}
                                             </div>
+
                                             <p className="text-slate-500 text-sm mb-3 line-clamp-2 max-w-xl">{assign.description}</p>
 
                                             <div className="flex items-center gap-4 text-xs font-medium">
-                                                <span className={`flex items-center gap-1.5 ${isOverdue && !isSubmitted ? 'text-red-500' : 'text-slate-500'}`}>
+                                                <span className={`flex items-center gap-1.5 ${isOverdue && !isSubmitted ? 'text-red-500 font-bold' : 'text-slate-500'}`}>
                                                     <Clock className="w-4 h-4" />
-                                                    {assign.due_date ? new Date(assign.due_date).toLocaleString() : 'No Deadline'}
+                                                    {assign.due_date ? `Due: ${new Date(assign.due_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'No Deadline'}
                                                 </span>
                                                 <span className="flex items-center gap-1.5 text-slate-500">
                                                     <CheckCircle className="w-4 h-4" />
@@ -276,7 +303,7 @@ function StudentClassPage({ classId }: { classId: string }) {
                                         </div>
                                         <Link
                                             href={`/student/assignment/${assign.id}`}
-                                            className={`px-6 py-3 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95 whitespace-nowrap flex items-center gap-2 ${isSubmitted
+                                            className={`w-full md:w-auto px-6 py-3 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95 whitespace-nowrap flex items-center justify-center gap-2 ${isSubmitted
                                                 ? 'bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50'
                                                 : 'bg-slate-900 text-white hover:bg-emerald-600 hover:shadow-lg'
                                                 }`}

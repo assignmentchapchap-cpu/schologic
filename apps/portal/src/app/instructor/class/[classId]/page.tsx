@@ -758,7 +758,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
         <div className="min-h-screen bg-slate-50 p-2 md:p-8">
             <div className="max-w-6xl mx-auto">
                 <Link href="/instructor/classes" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 mb-6 transition-colors font-medium text-sm">
-                    <ArrowLeft className="w-4 h-4" /> Back to Classes
+                    <ArrowLeft className="w-4 h-4" /> <span className="hidden md:inline">Back to Classes</span>
                 </Link>
 
                 {/* Header */}
@@ -776,15 +776,15 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                     </h1>
                                     <button
                                         onClick={() => setShowEditClassModal(true)}
-                                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all shrink-0"
+                                        className="hidden md:block p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all shrink-0"
                                         title="Edit Class Details"
                                     >
                                         <Edit className="w-5 h-5" />
                                     </button>
                                 </div>
 
-                                {/* Actions */}
-                                <div className="flex items-center gap-2 shrink-0">
+                                {/* Desktop Actions */}
+                                <div className="hidden md:flex items-center gap-2 shrink-0">
                                     <button
                                         onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
                                         className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors md:hidden"
@@ -799,7 +799,6 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                     >
                                         <Settings className="w-5 h-5" />
                                     </button>
-                                    {/* Lock/Active button - keep visible always? User said "leaving the first row only". Yes, keep row 1 intact. */}
                                     <button
                                         onClick={toggleLock}
                                         className={`px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 border shadow-sm ${classData?.is_locked
@@ -844,584 +843,160 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                         {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />}
                                     </button>
                                     {classData?.start_date && (
-                                        <span className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs md:text-sm">
+                                        <span className="hidden md:flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs md:text-sm">
                                             <Calendar className="w-4 h-4 text-slate-400" />
                                             {new Date(classData.start_date).toLocaleDateString()} - {new Date(classData.end_date!).toLocaleDateString()}
                                         </span>
                                     )}
                                 </div>
                             )}
-                        </div>
-                    </div>
-                </div>
 
-                {/* Tabs Navigation */}
-                <div className="flex gap-1 bg-slate-200/50 p-0.5 rounded-xl mb-8 w-full md:w-fit overflow-x-auto no-scrollbar">
-                    {(['overview', 'assignments', 'resources', 'grades'] as const).map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`flex-none px-4 py-2.5 rounded-lg text-sm font-bold capitalize transition-all whitespace-nowrap ${activeTab === tab
-                                ? 'bg-white text-indigo-600 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
-                                }`}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Overview View (Dashboard) */}
-                {activeTab === 'overview' && classData && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-                        {/* AI Authenticity Tracker */}
-                        <AIStatsCard
-                            averageScore={avgAuthScore}
-                            studentCount={enrollments.length}
-                            trend={trendValue}
-                            onClick={() => setShowAIModal(true)}
-                        />
-
-                        {/* Assignments */}
-                        <Card
-                            onClick={() => setShowAssignmentsModal(true)}
-                            className="hover:border-emerald-400 group flex flex-col justify-between relative"
-                            hoverEffect
-                        >
-                            <div className="absolute top-4 right-4 text-slate-300 group-hover:text-emerald-500 transition-colors">
-                                <ArrowUpRight className="w-5 h-5" />
-                            </div>
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors"><FileText className="w-5 h-5" /></div>
-                                <h3 className="font-bold text-slate-700 group-hover:text-emerald-700">Assignments</h3>
-                            </div>
-                            <div>
-                                <p className="text-3xl md:text-4xl font-black text-slate-900">{assignments.length}</p>
-                                <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Total Assignments</p>
-                            </div>
-                        </Card>
-
-                        {/* Submissions (New & Ungraded) */}
-                        <Card
-                            onClick={() => setShowSubmissionsModal(true)}
-                            className="hover:border-blue-400 group flex flex-col justify-between relative"
-                            hoverEffect
-                        >
-                            <div className="absolute top-4 right-4 text-slate-300 group-hover:text-blue-500 transition-colors">
-                                <ArrowUpRight className="w-5 h-5" />
-                            </div>
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors"><Clock className="w-5 h-5" /></div>
-                                <h3 className="font-bold text-slate-700 group-hover:text-blue-700">Submissions</h3>
-                            </div>
-                            <div className="flex items-end justify-between">
-                                <div>
-                                    <p className="text-3xl md:text-4xl font-black text-slate-900">{ungradedSubmissionsCount}</p>
-                                    <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Ungraded</p>
-                                </div>
-                                {newSubmissionsCount > 0 && (
-                                    <div className="text-right">
-                                        <p className="text-3xl md:text-4xl font-black text-blue-600">+{newSubmissionsCount}</p>
-                                        <p className="text-xs text-blue-400 mt-1 font-bold uppercase tracking-wider">New</p>
-                                    </div>
-                                )}
-                            </div>
-                        </Card>
-                    </div>
-
-                )}{/* Quick View Modals */}
-
-
-                {/* Assignments Quick View */}
-                {showAssignmentsModal && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[80vh] flex flex-col">
-                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
-                                <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
-                                    <FileText className="w-5 h-5 text-emerald-600" /> Assignment Overview
-                                </h3>
-                                <button onClick={() => setShowAssignmentsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                    <X className="w-5 h-5 text-slate-400" />
-                                </button>
-                            </div>
-                            <div className="p-6 overflow-y-auto">
-                                <div className="space-y-4">
-                                    {assignments.map(a => {
-                                        const assignSubs = submissions.filter(s => s.assignment_id === a.id);
-                                        const totalSubs = assignSubs.length;
-                                        const subPercentage = enrollments.length > 0 ? Math.round((totalSubs / enrollments.length) * 100) : 0;
-
-                                        // Time Left Logic
-                                        let timeStatus = { text: 'No Due Date', color: 'text-slate-400', bg: 'bg-white border-slate-200' };
-                                        if (a.due_date) {
-                                            const now = new Date();
-                                            const due = new Date(a.due_date);
-                                            const diff = due.getTime() - now.getTime();
-
-                                            if (diff < 0) {
-                                                timeStatus = { text: 'Ended', color: 'text-slate-500', bg: 'bg-slate-100 border-slate-200' };
-                                            } else {
-                                                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                                                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-                                                if (days > 0) {
-                                                    timeStatus = { text: `${days}d ${hours}h left`, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-100' };
-                                                } else {
-                                                    timeStatus = { text: `${hours}h remaining`, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-100' };
-                                                }
-                                            }
-                                        }
-
-                                        return (
-                                            <Card
-                                                key={a.id}
-                                                onClick={() => router.push(`/instructor/assignment/${a.id}`)}
-                                                className="flex flex-col md:flex-row items-center gap-3 md:gap-4 p-4 hover:border-emerald-300 transition-all group"
-                                                hoverEffect
-                                                noPadding
-                                            >
-                                                <div className="flex items-center gap-3 flex-1 w-full">
-                                                    <div className="p-1.5 md:p-2 bg-emerald-100 text-emerald-600 rounded-lg shrink-0">
-                                                        <FileText className="w-4 h-4 md:w-5 md:h-5" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <h4 className="font-bold text-base md:text-lg text-slate-800 group-hover:text-emerald-700 transition-colors truncate">{a.title}</h4>
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${timeStatus.bg} ${timeStatus.color} md:hidden mt-1 inline-block`}>
-                                                            {timeStatus.text}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Progress Bar (Visible on larger screens) */}
-                                                <div className="hidden md:flex flex-col items-center w-1/3 px-2">
-                                                    <div className="w-full flex justify-between text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
-                                                        <span>Progress</span>
-                                                        <span>{subPercentage}%</span>
-                                                    </div>
-                                                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden border border-slate-300 relative">
-                                                        <div
-                                                            className={`h-full rounded-full transition-all duration-1000 ease-out ${subPercentage === 100 ? 'bg-emerald-500' : 'bg-emerald-500'}`}
-                                                            style={{ width: `${subPercentage}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div className="hidden md:flex flex-col items-end min-w-[90px]">
-                                                    <span className={`text-[10px] font-bold px-2 py-1 rounded border ${timeStatus.bg} ${timeStatus.color} whitespace-nowrap`}>
-                                                        {timeStatus.text}
-                                                    </span>
-                                                </div>
-
-                                                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors shrink-0 hidden md:block" />
-                                            </Card>
-                                        );
-                                    })}
-                                    {assignments.length === 0 && <p className="text-center text-slate-400 py-4">No assignments yet.</p>}
-                                </div>
-                            </div>
-                            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
-                                <button
-                                    onClick={() => {
-                                        setActiveTab('assignments');
-                                        setShowAssignmentsModal(false);
-                                    }}
-                                    className="text-emerald-600 hover:text-emerald-700 font-bold text-sm px-4 py-2 transition-colors"
-                                >
-                                    Go to Full Manager
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Submissions Quick View */}
-                {showSubmissionsModal && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[80vh] flex flex-col">
-                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
-                                <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
-                                    <Clock className="w-5 h-5 text-blue-600" /> Recent Activity
-                                </h3>
-                                <button onClick={() => setShowSubmissionsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                    <X className="w-5 h-5 text-slate-400" />
-                                </button>
-                            </div>
-                            <div className="p-6 overflow-y-auto">
-                                <div className="space-y-4">
-                                    {assignments.map(a => {
-                                        const assignmentSubs = submissions.filter(s => s.assignment_id === a.id);
-                                        const ungraded = assignmentSubs.filter(s => s.grade === null).length;
-                                        const newSubs = assignmentSubs.filter(s => new Date(s.created_at) > lastViewedAt).length;
-                                        const totalAssignmentSubs = assignmentSubs.length;
-                                        const ungradedPercentage = totalAssignmentSubs > 0 ? Math.round((ungraded / totalAssignmentSubs) * 100) : 0;
-
-                                        if (ungraded === 0 && newSubs === 0) return null;
-
-                                        return (
-                                            <div
-                                                key={a.id}
-                                                onClick={() => router.push(`/instructor/assignment/${a.id}?tab=submissions`)}
-                                                className="flex flex-col md:flex-row items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all group"
-                                            >
-                                                <div className="flex-1 w-full text-left">
-                                                    <h4 className="font-bold text-slate-800 group-hover:text-blue-700 truncate">{a.title}</h4>
-                                                    <div className="flex gap-2 mt-1 md:hidden">
-                                                        {ungraded > 0 && <span className="text-xs font-bold text-slate-500">{ungraded} Ungraded</span>}
-                                                        {newSubs > 0 && <span className="text-xs font-bold text-blue-600">{newSubs} New</span>}
-                                                    </div>
-                                                </div>
-
-                                                {/* Progress Bar (Visible on larger screens) */}
-                                                <div className="hidden md:flex flex-col items-center w-1/3 px-2">
-                                                    <div className="w-full flex justify-between text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
-                                                        <span>Ungraded</span>
-                                                        <span>{ungradedPercentage}%</span>
-                                                    </div>
-                                                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden border border-slate-300 relative">
-                                                        <div
-                                                            className="h-full rounded-full transition-all duration-1000 ease-out bg-blue-500"
-                                                            style={{ width: `${ungradedPercentage}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div className="hidden md:flex gap-2 justify-end min-w-[120px]">
-                                                    {ungraded > 0 && (
-                                                        <span className="bg-slate-200 text-slate-600 px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap">
-                                                            {ungraded} Ungraded
-                                                        </span>
-                                                    )}
-                                                    {newSubs > 0 && (
-                                                        <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap">
-                                                            {newSubs} New
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-
-                                    {ungradedSubmissionsCount === 0 && newSubmissionsCount === 0 && (
-                                        <p className="text-center text-slate-400 py-4">No new or ungraded submissions.</p>
+                            {/* Row 3 (Mobile Bottom): Date | Settings, Edit, Collapse */}
+                            <div className="flex md:hidden items-center justify-between pt-3 mt-1 border-t border-slate-100">
+                                {/* Left: Date Range */}
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                    {classData?.start_date && (
+                                        <>
+                                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                            {new Date(classData.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {new Date(classData.end_date!).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                        </>
                                     )}
                                 </div>
-                            </div>
-                            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
-                                <button
-                                    onClick={() => {
-                                        updateLastViewed();
-                                        setShowSubmissionsModal(false);
-                                    }}
-                                    className="text-slate-500 hover:text-slate-800 font-bold text-sm px-4 py-2 transition-colors"
-                                >
-                                    Dismiss
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-                }
 
-                {/* Assignments View */}
-                {
-                    activeTab === 'assignments' && (
-                        <div className="animate-fade-in space-y-6">
-                            <div className="flex justify-between items-center">
-                                <h2 className="text-base md:text-xl font-bold text-slate-800">Manage Assignments</h2>
-                                <div className="relative">
+                                {/* Right: Actions */}
+                                <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => setShowCreateMenu(!showCreateMenu)}
-                                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold transition-all shadow-md active:scale-95"
+                                        onClick={toggleLock}
+                                        className={`p-1.5 rounded-lg border ${classData?.is_locked ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}
                                     >
-                                        <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Create New
-                                        <ChevronDown className={`w-3 h-3 md:w-4 md:h-4 transition-transform ${showCreateMenu ? 'rotate-180' : ''}`} />
+                                        {classData?.is_locked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
                                     </button>
-
-                                    {/* Dropdown Menu */}
-                                    {showCreateMenu && (
-                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
-                                            <button
-                                                onClick={() => {
-                                                    setAssignmentType('standard');
-                                                    setIsCreatingAssignment(true);
-                                                    setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
-                                                    setQuizQuestions([]);
-                                                    setShowCreateMenu(false);
-                                                }}
-                                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors group"
-                                            >
-                                                <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                                    <FileText className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-slate-800 text-sm">Assignment</p>
-                                                    <p className="text-[10px] text-slate-400">Essay, file upload</p>
-                                                </div>
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setAssignmentType('quiz');
-                                                    setIsCreatingAssignment(true);
-                                                    setNewAssignment({ title: '', description: '', due_date: '', max_points: 0, short_code: '', word_count: 0, reference_style: '' });
-                                                    setQuizQuestions([]);
-                                                    setShowCreateMenu(false);
-                                                }}
-                                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors border-t border-slate-100 group"
-                                            >
-                                                <div className="p-1.5 bg-purple-100 text-purple-600 rounded-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                                                    <Sparkles className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-slate-800 text-sm">Quiz</p>
-                                                    <p className="text-[10px] text-slate-400">Multiple choice</p>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    )}
+                                    <button
+                                        onClick={() => setShowEditClassModal(true)}
+                                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => setShowSettingsModal(true)}
+                                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-colors"
+                                    >
+                                        <Settings className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                                        className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+                                    >
+                                        {isHeaderExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                            {isCreatingAssignment && (
-                                <div className={`bg-white p-4 rounded-2xl shadow-sm border ring-4 mb-6 ${assignmentType === 'quiz' ? 'border-purple-100 ring-purple-50/50' : 'border-indigo-100 ring-indigo-50/50'}`}>
-                                    <h3 className={`font-bold mb-3 flex items-center gap-2 ${assignmentType === 'quiz' ? 'text-purple-900' : 'text-indigo-900'}`}>
-                                        {assignmentType === 'quiz' ? <Sparkles className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                        {newAssignment.id ? (assignmentType === 'quiz' ? 'Edit Quiz' : 'Edit Assignment') : (assignmentType === 'quiz' ? 'New Quiz' : 'New Assignment')}
-                                    </h3>
-                                    <form onSubmit={handleCreateAssignment} className="space-y-3">
-                                        <div className="grid md:grid-cols-2 gap-3">
-                                            <div className="col-span-2">
-                                                <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Title</label>
-                                                <input
-                                                    className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-sm md:text-base"
-                                                    placeholder="e.g. Midterm Essay"
-                                                    value={newAssignment.title}
-                                                    onChange={e => setNewAssignment({ ...newAssignment, title: e.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            {/* Standard Assignment Fields - Hidden for Quizzes */}
-                                            {assignmentType === 'standard' && (
-                                                <div className="col-span-2 grid grid-cols-3 gap-3 md:gap-6">
-                                                    <div>
-                                                        <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Short Code</label>
-                                                        <input
-                                                            className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold font-mono text-sm md:text-base ${shortCodeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
-                                                            placeholder="CAT 1"
-                                                            value={newAssignment.short_code || ''}
-                                                            required
-                                                            onChange={e => {
-                                                                const val = e.target.value.toUpperCase();
-                                                                if (val.length <= 8) {
-                                                                    if (/^[A-Z0-9\-#/]*$/.test(val)) {
-                                                                        setNewAssignment({ ...newAssignment, short_code: val });
-                                                                        setShortCodeError(null);
-                                                                    } else {
-                                                                        setShortCodeError('Invalid char');
-                                                                    }
-                                                                }
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Word Count</label>
-                                                        <input
-                                                            type="number"
-                                                            className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-sm md:text-base"
-                                                            placeholder="500"
-                                                            value={newAssignment.word_count || ''}
-                                                            onChange={e => setNewAssignment({ ...newAssignment, word_count: parseInt(e.target.value) || 0 })}
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Style</label>
-                                                        <select
-                                                            className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold bg-white text-sm md:text-base"
-                                                            value={newAssignment.reference_style}
-                                                            onChange={e => setNewAssignment({ ...newAssignment, reference_style: e.target.value })}
-                                                        >
-                                                            <option value="APA">APA</option>
-                                                            <option value="MLA">MLA</option>
-                                                            <option value="Harvard">Harvard</option>
-                                                            <option value="Chicago">Chicago</option>
-                                                            <option value="IEEE">IEEE</option>
-                                                        </select>
-                                                    </div>
+            {/* Tabs Navigation */}
+            <div className="flex gap-1 bg-slate-200/50 p-0.5 rounded-xl mb-8 w-full md:w-fit overflow-x-auto no-scrollbar">
+                {(['overview', 'assignments', 'resources', 'grades'] as const).map(tab => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`flex-none px-4 py-2.5 rounded-lg text-sm font-bold capitalize transition-all whitespace-nowrap ${activeTab === tab
+                            ? 'bg-white text-indigo-600 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
 
-                                                    <div className="col-span-2 flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                                        <div className="flex items-center gap-2">
-                                                            <Sparkles className="w-4 h-4 text-indigo-600" />
-                                                            <span className="text-xs font-bold text-slate-700 uppercase">Auto-generate Rubric with AI</span>
-                                                        </div>
-                                                        <div className="relative inline-flex items-center cursor-pointer" onClick={() => setAutoGenerateRubric(!autoGenerateRubric)}>
-                                                            <div className={`w-11 h-6 rounded-full transition-colors ${autoGenerateRubric ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                                                                <div className={`absolute top-1 left-1 bg-white border border-slate-300 rounded-full h-4 w-4 transition-transform ${autoGenerateRubric ? 'translate-x-5 border-transparent' : ''}`}></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
+            {/* Overview View (Dashboard) */}
+            {activeTab === 'overview' && classData && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+                    {/* AI Authenticity Tracker */}
+                    <AIStatsCard
+                        averageScore={avgAuthScore}
+                        studentCount={enrollments.length}
+                        trend={trendValue}
+                        onClick={() => setShowAIModal(true)}
+                    />
 
-                                            {/* Quiz Short Code */}
-                                            {assignmentType === 'quiz' && (
-                                                <div className="col-span-2 md:col-span-1">
-                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Short Code</label>
-                                                    <input
-                                                        className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold font-mono text-sm md:text-base ${shortCodeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-purple-500'}`}
-                                                        placeholder="QUIZ 1"
-                                                        value={newAssignment.short_code || ''}
-                                                        required
-                                                        onChange={e => {
-                                                            const val = e.target.value.toUpperCase();
-                                                            if (val.length <= 8) {
-                                                                if (/^[A-Z0-9\-#/]*$/.test(val)) {
-                                                                    setNewAssignment({ ...newAssignment, short_code: val });
-                                                                    setShortCodeError(null);
-                                                                } else {
-                                                                    setShortCodeError('Invalid char');
-                                                                }
-                                                            }
-                                                        }}
-                                                    />
-                                                </div>
-                                            )}
-                                            {shortCodeError && (
-                                                <div className="col-span-2 flex items-start gap-1 -mt-1 text-red-500 animate-fade-in">
-                                                    <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                                                    <span className="text-[10px] font-medium">{shortCodeError}</span>
-                                                </div>
-                                            )}
-                                            <div className="col-span-2">
-                                                <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Description</label>
-                                                <textarea
-                                                    className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none overflow-hidden min-h-[64px] max-h-[300px] text-sm md:text-base"
-                                                    placeholder="Instructions..."
-                                                    value={newAssignment.description}
-                                                    maxLength={1000}
-                                                    onChange={e => setNewAssignment({ ...newAssignment, description: e.target.value })}
-                                                    onInput={(e) => {
-                                                        e.currentTarget.style.height = 'auto';
-                                                        e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
-                                                    }}
-                                                    required
-                                                />
-                                                <div className="text-right text-[10px] md:text-xs text-slate-400 mt-1 font-mono">
-                                                    {(newAssignment.description || '').length}/1000
-                                                </div>
-                                            </div>
+                    {/* Assignments */}
+                    <Card
+                        onClick={() => setShowAssignmentsModal(true)}
+                        className="hover:border-emerald-400 group flex flex-col justify-between relative"
+                        hoverEffect
+                    >
+                        <div className="absolute top-4 right-4 text-slate-300 group-hover:text-emerald-500 transition-colors">
+                            <ArrowUpRight className="w-5 h-5" />
+                        </div>
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors"><FileText className="w-5 h-5" /></div>
+                            <h3 className="font-bold text-slate-700 group-hover:text-emerald-700">Assignments</h3>
+                        </div>
+                        <div>
+                            <p className="text-3xl md:text-4xl font-black text-slate-900">{assignments.length}</p>
+                            <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Total Assignments</p>
+                        </div>
+                    </Card>
 
-                                            {/* Quiz Builder - Only for Quizzes */}
-                                            {assignmentType === 'quiz' && (
-                                                <div className="col-span-2">
-                                                    <QuizBuilder
-                                                        questions={quizQuestions}
-                                                        onChange={(questions) => {
-                                                            setQuizQuestions(questions);
-                                                            // Auto-calculate points from questions
-                                                            const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
-                                                            setNewAssignment({ ...newAssignment, max_points: totalPoints });
-                                                        }}
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {/* Due Date & Points Row */}
-                                            <div className="col-span-2 grid grid-cols-2 gap-3 md:gap-6">
-                                                <div>
-                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Due Date</label>
-                                                    <input
-                                                        type="datetime-local"
-                                                        className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none text-slate-600 font-medium text-xs md:text-sm ${dueDateError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
-                                                        value={newAssignment.due_date}
-                                                        onChange={e => {
-                                                            setNewAssignment({ ...newAssignment, due_date: e.target.value });
-                                                            if (dueDateError) setDueDateError(null);
-                                                        }}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">
-                                                        {assignmentType === 'quiz' ? 'Total Points' : 'Points'}
-                                                    </label>
-                                                    <div className="relative">
-                                                        <input
-                                                            type="number"
-                                                            className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold pr-12 text-sm md:text-base ${assignmentType === 'quiz'
-                                                                ? 'border-purple-200 bg-purple-50 text-purple-700 cursor-not-allowed focus:ring-purple-500'
-                                                                : 'border-slate-200 focus:ring-indigo-500'
-                                                                }`}
-                                                            placeholder="100"
-                                                            value={newAssignment.max_points}
-                                                            onChange={e => {
-                                                                if (assignmentType === 'standard') {
-                                                                    const val = parseInt(e.target.value);
-                                                                    setNewAssignment({ ...newAssignment, max_points: isNaN(val) ? 0 : val });
-                                                                }
-                                                            }}
-                                                            readOnly={assignmentType === 'quiz'}
-                                                            required
-                                                            min="1"
-                                                        />
-                                                        {assignmentType === 'quiz' ? (
-                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 font-bold text-xs pointer-events-none">from quiz</span>
-                                                        ) : (
-                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs pointer-events-none">/ 100</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {dueDateError && (
-                                                <div className="col-span-2 flex items-start gap-1 -mt-1 text-red-500 animate-fade-in">
-                                                    <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                                                    <span className="text-[10px] font-medium">{dueDateError}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex justify-end gap-3 pt-2 md:pt-6">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setIsCreatingAssignment(false);
-                                                    setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
-                                                    setAutoGenerateRubric(false);
-                                                    setQuizQuestions([]);
-                                                    setAssignmentType('standard');
-                                                }}
-                                                className="px-3 py-2 md:px-6 md:py-2.5 text-slate-500 hover:text-slate-700 font-bold text-xs md:text-sm transition-colors"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                className={`text-white px-4 py-2 md:px-8 md:py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-lg transition-transform active:scale-95 ${assignmentType === 'quiz'
-                                                    ? 'bg-purple-600 hover:bg-purple-700'
-                                                    : 'bg-indigo-600 hover:bg-indigo-700'
-                                                    }`}
-                                                disabled={assignmentType === 'quiz' && quizQuestions.length === 0}
-                                            >
-                                                {newAssignment.id ? 'Update' : 'Publish'} {assignmentType === 'quiz' ? 'Quiz' : 'Assignment'}
-                                            </button>
-                                        </div>
-                                    </form>
+                    {/* Submissions (New & Ungraded) */}
+                    <Card
+                        onClick={() => setShowSubmissionsModal(true)}
+                        className="hover:border-blue-400 group flex flex-col justify-between relative"
+                        hoverEffect
+                    >
+                        <div className="absolute top-4 right-4 text-slate-300 group-hover:text-blue-500 transition-colors">
+                            <ArrowUpRight className="w-5 h-5" />
+                        </div>
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors"><Clock className="w-5 h-5" /></div>
+                            <h3 className="font-bold text-slate-700 group-hover:text-blue-700">Submissions</h3>
+                        </div>
+                        <div className="flex items-end justify-between">
+                            <div>
+                                <p className="text-3xl md:text-4xl font-black text-slate-900">{ungradedSubmissionsCount}</p>
+                                <p className="text-xs text-slate-400 mt-1 font-bold uppercase tracking-wider">Ungraded</p>
+                            </div>
+                            {newSubmissionsCount > 0 && (
+                                <div className="text-right">
+                                    <p className="text-3xl md:text-4xl font-black text-blue-600">+{newSubmissionsCount}</p>
+                                    <p className="text-xs text-blue-400 mt-1 font-bold uppercase tracking-wider">New</p>
                                 </div>
-                            )
-                            }
+                            )}
+                        </div>
+                    </Card>
+                </div>
 
-                            <div className="grid gap-4">
-                                {assignments.map(assign => {
-                                    // Calculate stats
-                                    const assignSubs = submissions.filter(s => s.assignment_id === assign.id);
+            )}{/* Quick View Modals */}
+
+
+            {/* Assignments Quick View */}
+            {showAssignmentsModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[80vh] flex flex-col">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+                            <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
+                                <FileText className="w-5 h-5 text-emerald-600" /> Assignment Overview
+                            </h3>
+                            <button onClick={() => setShowAssignmentsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto">
+                            <div className="space-y-4">
+                                {assignments.map(a => {
+                                    const assignSubs = submissions.filter(s => s.assignment_id === a.id);
                                     const totalSubs = assignSubs.length;
-                                    const ungradedSubs = assignSubs.filter(s => s.grade === null).length;
-                                    const newSubs = assignSubs.filter(s => new Date(s.created_at) > lastViewedAt).length;
-
                                     const subPercentage = enrollments.length > 0 ? Math.round((totalSubs / enrollments.length) * 100) : 0;
 
                                     // Time Left Logic
-                                    let timeStatus = { text: 'No Due Date', color: 'text-slate-400', bg: 'bg-slate-50 border-slate-200' };
-                                    if (assign.due_date) {
+                                    let timeStatus = { text: 'No Due Date', color: 'text-slate-400', bg: 'bg-white border-slate-200' };
+                                    if (a.due_date) {
                                         const now = new Date();
-                                        const due = new Date(assign.due_date);
+                                        const due = new Date(a.due_date);
                                         const diff = due.getTime() - now.getTime();
 
                                         if (diff < 0) {
@@ -1439,56 +1014,527 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                     }
 
                                     return (
-                                        <div
-                                            key={assign.id}
-                                            onClick={() => router.push(`/instructor/assignment/${assign.id}`)}
-                                            className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-indigo-300 transition-all group shadow-sm cursor-pointer hover:shadow-md"
+                                        <Card
+                                            key={a.id}
+                                            onClick={() => router.push(`/instructor/assignment/${a.id}`)}
+                                            className="flex flex-col md:flex-row items-center gap-3 md:gap-4 p-4 hover:border-emerald-300 transition-all group"
+                                            hoverEffect
+                                            noPadding
                                         >
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <h3 className="font-bold text-slate-800 text-lg group-hover:text-indigo-700 transition-colors">{assign.title}</h3>
-                                                        {assign.assignment_type === 'quiz' ? (
-                                                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                                                                <Sparkles className="w-3 h-3" /> Quiz
-                                                            </span>
-                                                        ) : (
-                                                            <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                                                                Essay
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-slate-500 text-sm mt-1 line-clamp-2">{assign.description}</p>
+                                            <div className="flex items-center gap-3 flex-1 w-full">
+                                                <div className="p-1.5 md:p-2 bg-emerald-100 text-emerald-600 rounded-lg shrink-0">
+                                                    <FileText className="w-4 h-4 md:w-5 md:h-5" />
                                                 </div>
-                                                <div className="text-right">
-                                                    <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Due Date</span>
-                                                    <span className={`block font-mono text-sm font-bold ${assign.due_date && new Date(assign.due_date) < new Date() ? 'text-red-500' : 'text-emerald-600'}`}>
-                                                        {assign.due_date ? new Date(assign.due_date).toLocaleDateString() : 'No Due Date'}
+                                                <div className="min-w-0">
+                                                    <h4 className="font-bold text-base md:text-lg text-slate-800 group-hover:text-emerald-700 transition-colors truncate">{a.title}</h4>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${timeStatus.bg} ${timeStatus.color} md:hidden mt-1 inline-block`}>
+                                                        {timeStatus.text}
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            {/* Stats Row */}
-                                            <div className="flex gap-4 mt-3 pt-3 border-t border-slate-100 flex-wrap">
-                                                <div className="flex items-center gap-2 text-sm text-slate-600">
-                                                    <Users className="w-4 h-4 text-slate-400" />
-                                                    <span className="font-bold">{totalSubs} / {enrollments.length}</span> Submissions
+                                            {/* Progress Bar (Visible on larger screens) */}
+                                            <div className="hidden md:flex flex-col items-center w-1/3 px-2">
+                                                <div className="w-full flex justify-between text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
+                                                    <span>Progress</span>
+                                                    <span>{subPercentage}%</span>
                                                 </div>
-                                                {ungradedSubs > 0 && (
-                                                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                                                        <div className="w-2 h-2 rounded-full bg-slate-400"></div>
-                                                        <span className="font-bold text-slate-800">{ungradedSubs}</span> Ungraded
-                                                    </div>
-                                                )}
-                                                {newSubs > 0 && (
-                                                    <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg">
-                                                        <Clock className="w-3.5 h-3.5" />
-                                                        <span className="font-bold">{newSubs}</span> New
-                                                    </div>
-                                                )}
+                                                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden border border-slate-300 relative">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-1000 ease-out ${subPercentage === 100 ? 'bg-emerald-500' : 'bg-emerald-500'}`}
+                                                        style={{ width: `${subPercentage}%` }}
+                                                    />
+                                                </div>
                                             </div>
 
-                                            <div className="flex justify-end gap-2 mt-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                            <div className="hidden md:flex flex-col items-end min-w-[90px]">
+                                                <span className={`text-[10px] font-bold px-2 py-1 rounded border ${timeStatus.bg} ${timeStatus.color} whitespace-nowrap`}>
+                                                    {timeStatus.text}
+                                                </span>
+                                            </div>
+
+                                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors shrink-0 hidden md:block" />
+                                        </Card>
+                                    );
+                                })}
+                                {assignments.length === 0 && <p className="text-center text-slate-400 py-4">No assignments yet.</p>}
+                            </div>
+                        </div>
+                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                            <button
+                                onClick={() => {
+                                    setActiveTab('assignments');
+                                    setShowAssignmentsModal(false);
+                                }}
+                                className="text-emerald-600 hover:text-emerald-700 font-bold text-sm px-4 py-2 transition-colors"
+                            >
+                                Go to Full Manager
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Submissions Quick View */}
+            {showSubmissionsModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[80vh] flex flex-col">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+                            <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
+                                <Clock className="w-5 h-5 text-blue-600" /> Recent Activity
+                            </h3>
+                            <button onClick={() => setShowSubmissionsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto">
+                            <div className="space-y-4">
+                                {assignments.map(a => {
+                                    const assignmentSubs = submissions.filter(s => s.assignment_id === a.id);
+                                    const ungraded = assignmentSubs.filter(s => s.grade === null).length;
+                                    const newSubs = assignmentSubs.filter(s => new Date(s.created_at) > lastViewedAt).length;
+                                    const totalAssignmentSubs = assignmentSubs.length;
+                                    const ungradedPercentage = totalAssignmentSubs > 0 ? Math.round((ungraded / totalAssignmentSubs) * 100) : 0;
+
+                                    if (ungraded === 0 && newSubs === 0) return null;
+
+                                    return (
+                                        <div
+                                            key={a.id}
+                                            onClick={() => router.push(`/instructor/assignment/${a.id}?tab=submissions`)}
+                                            className="flex flex-col md:flex-row items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all group"
+                                        >
+                                            <div className="flex-1 w-full text-left">
+                                                <h4 className="font-bold text-slate-800 group-hover:text-blue-700 truncate">{a.title}</h4>
+                                                <div className="flex gap-2 mt-1 md:hidden">
+                                                    {ungraded > 0 && <span className="text-xs font-bold text-slate-500">{ungraded} Ungraded</span>}
+                                                    {newSubs > 0 && <span className="text-xs font-bold text-blue-600">{newSubs} New</span>}
+                                                </div>
+                                            </div>
+
+                                            {/* Progress Bar (Visible on larger screens) */}
+                                            <div className="hidden md:flex flex-col items-center w-1/3 px-2">
+                                                <div className="w-full flex justify-between text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
+                                                    <span>Ungraded</span>
+                                                    <span>{ungradedPercentage}%</span>
+                                                </div>
+                                                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden border border-slate-300 relative">
+                                                    <div
+                                                        className="h-full rounded-full transition-all duration-1000 ease-out bg-blue-500"
+                                                        style={{ width: `${ungradedPercentage}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="hidden md:flex gap-2 justify-end min-w-[120px]">
+                                                {ungraded > 0 && (
+                                                    <span className="bg-slate-200 text-slate-600 px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap">
+                                                        {ungraded} Ungraded
+                                                    </span>
+                                                )}
+                                                {newSubs > 0 && (
+                                                    <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap">
+                                                        {newSubs} New
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                {ungradedSubmissionsCount === 0 && newSubmissionsCount === 0 && (
+                                    <p className="text-center text-slate-400 py-4">No new or ungraded submissions.</p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                            <button
+                                onClick={() => {
+                                    updateLastViewed();
+                                    setShowSubmissionsModal(false);
+                                }}
+                                className="text-slate-500 hover:text-slate-800 font-bold text-sm px-4 py-2 transition-colors"
+                            >
+                                Dismiss
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )
+            }
+
+            {/* Assignments View */}
+            {
+                activeTab === 'assignments' && (
+                    <div className="animate-fade-in space-y-6">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-base md:text-xl font-bold text-slate-800">Manage Assignments</h2>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowCreateMenu(!showCreateMenu)}
+                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold transition-all shadow-md active:scale-95"
+                                >
+                                    <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Create New
+                                    <ChevronDown className={`w-3 h-3 md:w-4 md:h-4 transition-transform ${showCreateMenu ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                {showCreateMenu && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                                        <button
+                                            onClick={() => {
+                                                setAssignmentType('standard');
+                                                setIsCreatingAssignment(true);
+                                                setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
+                                                setQuizQuestions([]);
+                                                setShowCreateMenu(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors group"
+                                        >
+                                            <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                                <FileText className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-800 text-sm">Assignment</p>
+                                                <p className="text-[10px] text-slate-400">Essay, file upload</p>
+                                            </div>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setAssignmentType('quiz');
+                                                setIsCreatingAssignment(true);
+                                                setNewAssignment({ title: '', description: '', due_date: '', max_points: 0, short_code: '', word_count: 0, reference_style: '' });
+                                                setQuizQuestions([]);
+                                                setShowCreateMenu(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors border-t border-slate-100 group"
+                                        >
+                                            <div className="p-1.5 bg-purple-100 text-purple-600 rounded-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                                                <Sparkles className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-800 text-sm">Quiz</p>
+                                                <p className="text-[10px] text-slate-400">Multiple choice</p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {isCreatingAssignment && (
+                            <div className={`bg-white p-4 rounded-2xl shadow-sm border ring-4 mb-6 ${assignmentType === 'quiz' ? 'border-purple-100 ring-purple-50/50' : 'border-indigo-100 ring-indigo-50/50'}`}>
+                                <h3 className={`font-bold mb-3 flex items-center gap-2 ${assignmentType === 'quiz' ? 'text-purple-900' : 'text-indigo-900'}`}>
+                                    {assignmentType === 'quiz' ? <Sparkles className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                    {newAssignment.id ? (assignmentType === 'quiz' ? 'Edit Quiz' : 'Edit Assignment') : (assignmentType === 'quiz' ? 'New Quiz' : 'New Assignment')}
+                                </h3>
+                                <form onSubmit={handleCreateAssignment} className="space-y-3">
+                                    <div className="grid md:grid-cols-2 gap-3">
+                                        <div className="col-span-2">
+                                            <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Title</label>
+                                            <input
+                                                className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-sm md:text-base"
+                                                placeholder="e.g. Midterm Essay"
+                                                value={newAssignment.title}
+                                                onChange={e => setNewAssignment({ ...newAssignment, title: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        {/* Standard Assignment Fields - Hidden for Quizzes */}
+                                        {assignmentType === 'standard' && (
+                                            <div className="col-span-2 grid grid-cols-3 gap-3 md:gap-6">
+                                                <div>
+                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Short Code</label>
+                                                    <input
+                                                        className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold font-mono text-sm md:text-base ${shortCodeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
+                                                        placeholder="CAT 1"
+                                                        value={newAssignment.short_code || ''}
+                                                        required
+                                                        onChange={e => {
+                                                            const val = e.target.value.toUpperCase();
+                                                            if (val.length <= 8) {
+                                                                if (/^[A-Z0-9\-#/]*$/.test(val)) {
+                                                                    setNewAssignment({ ...newAssignment, short_code: val });
+                                                                    setShortCodeError(null);
+                                                                } else {
+                                                                    setShortCodeError('Invalid char');
+                                                                }
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Word Count</label>
+                                                    <input
+                                                        type="number"
+                                                        className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-sm md:text-base"
+                                                        placeholder="500"
+                                                        value={newAssignment.word_count || ''}
+                                                        onChange={e => setNewAssignment({ ...newAssignment, word_count: parseInt(e.target.value) || 0 })}
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Style</label>
+                                                    <select
+                                                        className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold bg-white text-sm md:text-base"
+                                                        value={newAssignment.reference_style}
+                                                        onChange={e => setNewAssignment({ ...newAssignment, reference_style: e.target.value })}
+                                                    >
+                                                        <option value="APA">APA</option>
+                                                        <option value="MLA">MLA</option>
+                                                        <option value="Harvard">Harvard</option>
+                                                        <option value="Chicago">Chicago</option>
+                                                        <option value="IEEE">IEEE</option>
+                                                    </select>
+                                                </div>
+
+                                                <div className="col-span-2 flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                                    <div className="flex items-center gap-2">
+                                                        <Sparkles className="w-4 h-4 text-indigo-600" />
+                                                        <span className="text-xs font-bold text-slate-700 uppercase">Auto-generate Rubric with AI</span>
+                                                    </div>
+                                                    <div className="relative inline-flex items-center cursor-pointer" onClick={() => setAutoGenerateRubric(!autoGenerateRubric)}>
+                                                        <div className={`w-11 h-6 rounded-full transition-colors ${autoGenerateRubric ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                                                            <div className={`absolute top-1 left-1 bg-white border border-slate-300 rounded-full h-4 w-4 transition-transform ${autoGenerateRubric ? 'translate-x-5 border-transparent' : ''}`}></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Quiz Short Code */}
+                                        {assignmentType === 'quiz' && (
+                                            <div className="col-span-2 md:col-span-1">
+                                                <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2 truncate">Short Code</label>
+                                                <input
+                                                    className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold font-mono text-sm md:text-base ${shortCodeError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-purple-500'}`}
+                                                    placeholder="QUIZ 1"
+                                                    value={newAssignment.short_code || ''}
+                                                    required
+                                                    onChange={e => {
+                                                        const val = e.target.value.toUpperCase();
+                                                        if (val.length <= 8) {
+                                                            if (/^[A-Z0-9\-#/]*$/.test(val)) {
+                                                                setNewAssignment({ ...newAssignment, short_code: val });
+                                                                setShortCodeError(null);
+                                                            } else {
+                                                                setShortCodeError('Invalid char');
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                        {shortCodeError && (
+                                            <div className="col-span-2 flex items-start gap-1 -mt-1 text-red-500 animate-fade-in">
+                                                <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                                <span className="text-[10px] font-medium">{shortCodeError}</span>
+                                            </div>
+                                        )}
+                                        <div className="col-span-2">
+                                            <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Description</label>
+                                            <textarea
+                                                className="w-full p-2 md:p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none overflow-hidden min-h-[64px] max-h-[300px] text-sm md:text-base"
+                                                placeholder="Instructions..."
+                                                value={newAssignment.description}
+                                                maxLength={1000}
+                                                onChange={e => setNewAssignment({ ...newAssignment, description: e.target.value })}
+                                                onInput={(e) => {
+                                                    e.currentTarget.style.height = 'auto';
+                                                    e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+                                                }}
+                                                required
+                                            />
+                                            <div className="text-right text-[10px] md:text-xs text-slate-400 mt-1 font-mono">
+                                                {(newAssignment.description || '').length}/1000
+                                            </div>
+                                        </div>
+
+                                        {/* Quiz Builder - Only for Quizzes */}
+                                        {assignmentType === 'quiz' && (
+                                            <div className="col-span-2">
+                                                <QuizBuilder
+                                                    questions={quizQuestions}
+                                                    onChange={(questions) => {
+                                                        setQuizQuestions(questions);
+                                                        // Auto-calculate points from questions
+                                                        const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
+                                                        setNewAssignment({ ...newAssignment, max_points: totalPoints });
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Due Date & Points Row */}
+                                        <div className="col-span-2 grid grid-cols-2 gap-3 md:gap-6">
+                                            <div>
+                                                <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">Due Date</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none text-slate-600 font-medium text-xs md:text-sm ${dueDateError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-200 focus:ring-indigo-500'}`}
+                                                    value={newAssignment.due_date}
+                                                    onChange={e => {
+                                                        setNewAssignment({ ...newAssignment, due_date: e.target.value });
+                                                        if (dueDateError) setDueDateError(null);
+                                                    }}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] md:text-xs font-bold text-slate-500 uppercase mb-1 md:mb-2">
+                                                    {assignmentType === 'quiz' ? 'Total Points' : 'Points'}
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        className={`w-full p-2 md:p-3 border rounded-xl focus:ring-2 outline-none font-bold pr-12 text-sm md:text-base ${assignmentType === 'quiz'
+                                                            ? 'border-purple-200 bg-purple-50 text-purple-700 cursor-not-allowed focus:ring-purple-500'
+                                                            : 'border-slate-200 focus:ring-indigo-500'
+                                                            }`}
+                                                        placeholder="100"
+                                                        value={newAssignment.max_points}
+                                                        onChange={e => {
+                                                            if (assignmentType === 'standard') {
+                                                                const val = parseInt(e.target.value);
+                                                                setNewAssignment({ ...newAssignment, max_points: isNaN(val) ? 0 : val });
+                                                            }
+                                                        }}
+                                                        readOnly={assignmentType === 'quiz'}
+                                                        required
+                                                        min="1"
+                                                    />
+                                                    {assignmentType === 'quiz' ? (
+                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 font-bold text-xs pointer-events-none">from quiz</span>
+                                                    ) : (
+                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs pointer-events-none">/ 100</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {dueDateError && (
+                                            <div className="col-span-2 flex items-start gap-1 -mt-1 text-red-500 animate-fade-in">
+                                                <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                                <span className="text-[10px] font-medium">{dueDateError}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex justify-end gap-3 pt-2 md:pt-6">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsCreatingAssignment(false);
+                                                setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
+                                                setAutoGenerateRubric(false);
+                                                setQuizQuestions([]);
+                                                setAssignmentType('standard');
+                                            }}
+                                            className="px-3 py-2 md:px-6 md:py-2.5 text-slate-500 hover:text-slate-700 font-bold text-xs md:text-sm transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            className={`text-white px-4 py-2 md:px-8 md:py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-lg transition-transform active:scale-95 ${assignmentType === 'quiz'
+                                                ? 'bg-purple-600 hover:bg-purple-700'
+                                                : 'bg-indigo-600 hover:bg-indigo-700'
+                                                }`}
+                                            disabled={assignmentType === 'quiz' && quizQuestions.length === 0}
+                                        >
+                                            {newAssignment.id ? 'Update' : 'Publish'} {assignmentType === 'quiz' ? 'Quiz' : 'Assignment'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )
+                        }
+
+                        <div className="grid gap-4">
+                            {assignments.map(assign => {
+                                // Calculate stats
+                                const assignSubs = submissions.filter(s => s.assignment_id === assign.id);
+                                const totalSubs = assignSubs.length;
+                                const ungradedSubs = assignSubs.filter(s => s.grade === null).length;
+                                const newSubs = assignSubs.filter(s => new Date(s.created_at) > lastViewedAt).length;
+
+                                const subPercentage = enrollments.length > 0 ? Math.round((totalSubs / enrollments.length) * 100) : 0;
+
+                                // Time Left Logic
+                                let timeStatus = { text: 'No Due Date', color: 'text-slate-400', bg: 'bg-slate-50 border-slate-200' };
+                                if (assign.due_date) {
+                                    const now = new Date();
+                                    const due = new Date(assign.due_date);
+                                    const diff = due.getTime() - now.getTime();
+
+                                    if (diff < 0) {
+                                        timeStatus = { text: 'Ended', color: 'text-slate-500', bg: 'bg-slate-100 border-slate-200' };
+                                    } else {
+                                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+                                        if (days > 0) {
+                                            timeStatus = { text: `${days}d ${hours}h left`, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-100' };
+                                        } else {
+                                            timeStatus = { text: `${hours}h remaining`, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-100' };
+                                        }
+                                    }
+                                }
+
+                                return (
+                                    <Card
+                                        key={assign.id}
+                                        onClick={() => router.push(`/instructor/assignment/${assign.id}`)}
+                                        className="p-4 rounded-2xl hover:border-indigo-300 transition-all group shadow-sm cursor-pointer hover:shadow-md flex flex-col gap-3"
+                                        hoverEffect
+                                        noPadding
+                                    >
+                                        {/* Row 1: Title */}
+                                        <div className="w-full">
+                                            <h3 className="font-bold text-slate-800 text-base md:text-lg group-hover:text-indigo-700 transition-colors">{assign.title}</h3>
+                                            <p className="text-slate-500 text-xs md:text-sm mt-1 line-clamp-1">{assign.description}</p>
+                                        </div>
+
+                                        {/* Row 2: Stats (Submissions) */}
+                                        <div className="flex gap-3 md:gap-4 flex-wrap text-xs md:text-sm text-slate-600">
+                                            <div className="flex items-center gap-1.5">
+                                                <Users className="w-3.5 h-3.5 text-slate-400" />
+                                                <span className="font-bold">{totalSubs}/{enrollments.length}</span> <span className="hidden xs:inline">Subs</span>
+                                            </div>
+                                            {ungradedSubs > 0 && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                                                    <span className="font-bold text-slate-800">{ungradedSubs}</span> Ungraded
+                                                </div>
+                                            )}
+                                            {newSubs > 0 && (
+                                                <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-lg">
+                                                    <Clock className="w-3 h-3" />
+                                                    <span className="font-bold">{newSubs}</span> New
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Row 3: Type + Due Date + Actions */}
+                                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-1">
+                                            <div className="flex items-center gap-3">
+                                                {/* Type Badge */}
+                                                {assign.assignment_type === 'quiz' ? (
+                                                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                                        <Sparkles className="w-3 h-3" /> Quiz
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                                                        Essay
+                                                    </span>
+                                                )}
+
+                                                {/* Due Date */}
+                                                <span className={`text-xs font-mono font-bold ${assign.due_date && new Date(assign.due_date) < new Date() ? 'text-red-500' : 'text-slate-500'}`}>
+                                                    {assign.due_date ? `Due: ${new Date(assign.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
+                                                </span>
+                                            </div>
+
+                                            {/* Action Icons */}
+                                            <div className="flex items-center gap-1">
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -1504,9 +1550,10 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                         });
                                                         setIsCreatingAssignment(true);
                                                     }}
-                                                    className="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100"
+                                                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                    title="Edit"
                                                 >
-                                                    Edit
+                                                    <Edit className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={async (e) => {
@@ -1515,190 +1562,192 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                                         const { error } = await supabase.from('assignments').delete().eq('id', assign.id);
                                                         if (!error) setAssignments(assignments.filter(a => a.id !== assign.id));
                                                     }}
-                                                    className="px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100"
+                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Delete"
                                                 >
-                                                    Delete
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </div>
-                                    );
-                                })}
-                                {assignments.length === 0 && !isCreatingAssignment && (
-                                    <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 border-dashed">
-                                        <p className="text-slate-400 font-medium">No assignments created yet.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div >
-                    )
-                }
-
-                {/* Resources View */}
-                {
-                    activeTab === 'resources' && (
-                        <div className="animate-fade-in space-y-6">
-                            <div className="flex justify-between items-center">
-                                <h2 className="text-base md:text-xl font-bold text-slate-800">Shared Files & Notes</h2>
-                                <button
-                                    onClick={() => setIsCreatingResource(true)}
-                                    className="flex items-center gap-2 bg-slate-900 text-white px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold hover:bg-black transition-all shadow-md active:scale-95"
-                                >
-                                    <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Add Note
-                                </button>
-                                <button
-                                    onClick={() => setShowAssetPicker(true)}
-                                    className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold hover:bg-indigo-100 transition-all border border-indigo-200"
-                                >
-                                    <FolderOpen className="w-3.5 h-3.5 md:w-4 md:h-4" /> From Library
-                                </button>
-                                <button
-                                    onClick={() => setShowUploader(true)}
-                                    className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold hover:bg-indigo-100 transition-all border border-indigo-200"
-                                >
-                                    <Upload className="w-3.5 h-3.5 md:w-4 md:h-4" /> Upload File
-                                </button>
-                            </div>
-
-                            {/* Modals */}
-                            {showAssetPicker && (
-                                <AssetPickerModal
-                                    onClose={() => setShowAssetPicker(false)}
-                                    onSelect={handleLinkAsset}
-                                />
-                            )}
-
-                            {showUploader && (
-                                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-                                    <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl p-6">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h3 className="font-bold text-slate-800">Upload File</h3>
-                                            <button onClick={() => setShowUploader(false)}><X className="w-5 h-5 text-slate-400" /></button>
-                                        </div>
-                                        <AssetUploader
-                                            onClose={() => setShowUploader(false)}
-                                            onSuccess={() => {
-                                                // Refresh resources after upload
-                                                setShowUploader(false);
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            {isCreatingResource && (
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-amber-100 ring-4 ring-amber-50/50 mb-6">
-                                    <h3 className="font-bold text-amber-900 mb-4 flex items-center gap-2">
-                                        <Plus className="w-4 h-4" /> New Resource
-                                    </h3>
-                                    <form onSubmit={handleCreateResource} className="space-y-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Title</label>
-                                            <input
-                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none font-bold"
-                                                placeholder="e.g. Lecture Notes: Week 1"
-                                                value={newResource.title}
-                                                onChange={e => setNewResource({ ...newResource, title: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Content / URL</label>
-                                            <textarea
-                                                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none h-24 resize-none"
-                                                placeholder="Add a description or paste a link..."
-                                                value={newResource.content}
-                                                onChange={e => setNewResource({ ...newResource, content: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="flex justify-end gap-3 pt-4">
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsCreatingResource(false)}
-                                                className="px-4 py-2 text-slate-500 hover:text-slate-700 font-bold text-sm"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button className="bg-slate-900 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-black shadow-lg">
-                                                Post Resource
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            )}
-
-                            {resources.length === 0 ? (
+                                    </Card>
+                                );
+                            })}
+                            {assignments.length === 0 && !isCreatingAssignment && (
                                 <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 border-dashed">
-                                    <p className="text-slate-400 font-medium">No resources shared yet.</p>
-                                </div>
-                            ) : (
-                                <div className="grid gap-4">
-                                    {resources.map((item) => {
-                                        const res = item.assets;
-                                        if (!res) return null;
-
-                                        const type = res.asset_type || 'document';
-                                        const isLink = type === 'url';
-                                        const isCartridge = type === 'cartridge_root';
-                                        const isDocument = type === 'document' || type === 'file';
-
-                                        let icon = <FileText className="w-6 h-6" />;
-                                        let colorClass = "bg-amber-50 text-amber-600";
-
-                                        if (isLink) {
-                                            icon = <LinkIcon className="w-6 h-6" />;
-                                            colorClass = "bg-indigo-50 text-indigo-600";
-                                        } else if (isCartridge) {
-                                            icon = <Layers className="w-6 h-6" />;
-                                            colorClass = "bg-orange-50 text-orange-600";
-                                        }
-
-                                        return (
-                                            <Card key={item.id} className="p-4 rounded-xl border border-slate-200 flex items-center gap-4 group hover:border-indigo-300 transition-colors" hoverEffect noPadding>
-                                                <div className={`p-3 rounded-xl shrink-0 ${colorClass}`}>
-                                                    {icon}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h3 className="font-bold text-slate-800 truncate">{res.title}</h3>
-                                                    <p className="text-xs text-slate-500 mt-0.5">Added {new Date(item.added_at ?? '').toLocaleDateString()}</p>
-                                                </div>
-
-                                                <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                    {/* Read Online Button */}
-                                                    {(isDocument || isCartridge) && (
-                                                        <button
-                                                            onClick={() => openReader(res as unknown as Asset)}
-                                                            className={`p-2 rounded-lg transition-all shadow-sm ${isCartridge
-                                                                ? 'bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white'
-                                                                : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white'
-                                                                }`}
-                                                            title={isCartridge ? "View Course Content" : "Read Online"}
-                                                        >
-                                                            <BookOpen className="w-5 h-5" />
-                                                        </button>
-                                                    )}
-
-                                                    {/* Download/Link Button */}
-                                                    {res.file_url && (
-                                                        <a
-                                                            href={res.file_url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="p-2 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 transition-all border border-slate-200 hover:border-slate-300"
-                                                            title={isLink ? 'Open Link' : 'Download File'}
-                                                        >
-                                                            {isLink ? <ExternalLink className="w-5 h-5" /> : <Download className="w-5 h-5" />}
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </Card>
-                                        );
-                                    })}
+                                    <p className="text-slate-400 font-medium">No assignments created yet.</p>
                                 </div>
                             )}
                         </div>
-                    )
-                }
+                    </div >
+                )
+            }
+
+            {/* Resources View */}
+            {
+                activeTab === 'resources' && (
+                    <div className="animate-fade-in space-y-6">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-base md:text-xl font-bold text-slate-800">Shared Files & Notes</h2>
+                            <button
+                                onClick={() => setIsCreatingResource(true)}
+                                className="flex items-center gap-2 bg-slate-900 text-white px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold hover:bg-black transition-all shadow-md active:scale-95"
+                            >
+                                <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Add Note
+                            </button>
+                            <button
+                                onClick={() => setShowAssetPicker(true)}
+                                className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold hover:bg-indigo-100 transition-all border border-indigo-200"
+                            >
+                                <FolderOpen className="w-3.5 h-3.5 md:w-4 md:h-4" /> From Library
+                            </button>
+                            <button
+                                onClick={() => setShowUploader(true)}
+                                className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 text-xs md:px-4 md:py-2 md:text-sm rounded-xl font-bold hover:bg-indigo-100 transition-all border border-indigo-200"
+                            >
+                                <Upload className="w-3.5 h-3.5 md:w-4 md:h-4" /> Upload File
+                            </button>
+                        </div>
+
+                        {/* Modals */}
+                        {showAssetPicker && (
+                            <AssetPickerModal
+                                onClose={() => setShowAssetPicker(false)}
+                                onSelect={handleLinkAsset}
+                            />
+                        )}
+
+                        {showUploader && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+                                <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl p-6">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="font-bold text-slate-800">Upload File</h3>
+                                        <button onClick={() => setShowUploader(false)}><X className="w-5 h-5 text-slate-400" /></button>
+                                    </div>
+                                    <AssetUploader
+                                        onClose={() => setShowUploader(false)}
+                                        onSuccess={() => {
+                                            // Refresh resources after upload
+                                            setShowUploader(false);
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {isCreatingResource && (
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-amber-100 ring-4 ring-amber-50/50 mb-6">
+                                <h3 className="font-bold text-amber-900 mb-4 flex items-center gap-2">
+                                    <Plus className="w-4 h-4" /> New Resource
+                                </h3>
+                                <form onSubmit={handleCreateResource} className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Title</label>
+                                        <input
+                                            className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none font-bold"
+                                            placeholder="e.g. Lecture Notes: Week 1"
+                                            value={newResource.title}
+                                            onChange={e => setNewResource({ ...newResource, title: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Content / URL</label>
+                                        <textarea
+                                            className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none h-24 resize-none"
+                                            placeholder="Add a description or paste a link..."
+                                            value={newResource.content}
+                                            onChange={e => setNewResource({ ...newResource, content: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex justify-end gap-3 pt-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCreatingResource(false)}
+                                            className="px-4 py-2 text-slate-500 hover:text-slate-700 font-bold text-sm"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button className="bg-slate-900 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-black shadow-lg">
+                                            Post Resource
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+
+                        {resources.length === 0 ? (
+                            <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 border-dashed">
+                                <p className="text-slate-400 font-medium">No resources shared yet.</p>
+                            </div>
+                        ) : (
+                            <div className="grid gap-4">
+                                {resources.map((item) => {
+                                    const res = item.assets;
+                                    if (!res) return null;
+
+                                    const type = res.asset_type || 'document';
+                                    const isLink = type === 'url';
+                                    const isCartridge = type === 'cartridge_root';
+                                    const isDocument = type === 'document' || type === 'file';
+
+                                    let icon = <FileText className="w-6 h-6" />;
+                                    let colorClass = "bg-amber-50 text-amber-600";
+
+                                    if (isLink) {
+                                        icon = <LinkIcon className="w-6 h-6" />;
+                                        colorClass = "bg-indigo-50 text-indigo-600";
+                                    } else if (isCartridge) {
+                                        icon = <Layers className="w-6 h-6" />;
+                                        colorClass = "bg-orange-50 text-orange-600";
+                                    }
+
+                                    return (
+                                        <Card key={item.id} className="p-4 rounded-xl border border-slate-200 flex items-center gap-4 group hover:border-indigo-300 transition-colors" hoverEffect noPadding>
+                                            <div className={`p-3 rounded-xl shrink-0 ${colorClass}`}>
+                                                {icon}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-bold text-slate-800 truncate">{res.title}</h3>
+                                                <p className="text-xs text-slate-500 mt-0.5">Added {new Date(item.added_at ?? '').toLocaleDateString()}</p>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                {/* Read Online Button */}
+                                                {(isDocument || isCartridge) && (
+                                                    <button
+                                                        onClick={() => openReader(res as unknown as Asset)}
+                                                        className={`p-2 rounded-lg transition-all shadow-sm ${isCartridge
+                                                            ? 'bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white'
+                                                            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white'
+                                                            }`}
+                                                        title={isCartridge ? "View Course Content" : "Read Online"}
+                                                    >
+                                                        <BookOpen className="w-5 h-5" />
+                                                    </button>
+                                                )}
+
+                                                {/* Download/Link Button */}
+                                                {res.file_url && (
+                                                    <a
+                                                        href={res.file_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 transition-all border border-slate-200 hover:border-slate-300"
+                                                        title={isLink ? 'Open Link' : 'Download File'}
+                                                    >
+                                                        {isLink ? <ExternalLink className="w-5 h-5" /> : <Download className="w-5 h-5" />}
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )
+            }
 
 
 
@@ -1708,590 +1757,590 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
 
 
-                {/* Grades Tab */}
-                {
-                    activeTab === 'grades' && (
-                        <div className="animate-fade-in space-y-6">
-                            {/* Controls */}
-                            {/* Controls */}
-                            {/* Desktop Toolbar (Hidden on Mobile) */}
-                            <div className="hidden md:flex items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl flex-1 max-w-sm">
-                                    <Search className="w-4 h-4 text-slate-400" />
+            {/* Grades Tab */}
+            {
+                activeTab === 'grades' && (
+                    <div className="animate-fade-in space-y-6">
+                        {/* Controls */}
+                        {/* Controls */}
+                        {/* Desktop Toolbar (Hidden on Mobile) */}
+                        <div className="hidden md:flex items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl flex-1 max-w-sm">
+                                <Search className="w-4 h-4 text-slate-400" />
+                                <input
+                                    placeholder="Search by name or reg no"
+                                    className="bg-transparent outline-none text-sm font-bold text-slate-700 w-full"
+                                    value={gradesSearch}
+                                    onChange={(e) => setGradesSearch(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">FILTER:</span>
+                                    <div className="relative">
+                                        <select
+                                            className="appearance-none bg-slate-50 border border-slate-200 pl-3 pr-8 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
+                                            value={gradesFilter}
+                                            onChange={(e) => setGradesFilter(e.target.value as 'all' | 'passing' | 'failing' | 'missing_submissions' | 'needs_grading')}
+                                        >
+                                            <option value="all">All Students</option>
+                                            <option value="passing">Passing</option>
+                                            <option value="failing">Failing</option>
+                                            <option value="missing_submissions">Missing</option>
+                                            <option value="needs_grading">Needs Grading</option>
+                                        </select>
+                                        <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                    </div>
+                                </div>
+
+                                <div className="w-px h-6 bg-slate-200"></div>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">SORT:</span>
+                                    <div className="relative">
+                                        <select
+                                            className="appearance-none bg-slate-50 border border-slate-200 pl-3 pr-8 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
+                                            value={gradesSort}
+                                            onChange={(e) => setGradesSort(e.target.value as 'name' | 'score_high' | 'score_low' | 'ai_high' | 'ai_low')}
+                                        >
+                                            <option value="name">Name (A-Z)</option>
+                                            <option value="score_high">Score (High-Low)</option>
+                                            <option value="score_low">Score (Low-High)</option>
+                                            <option value="ai_high">AI (High-Low)</option>
+                                            <option value="ai_low">AI (Low-High)</option>
+                                        </select>
+                                        <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={exportToPDF}
+                                    className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-black transition-all shadow-md active:scale-95 ml-2"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    <span className="font-bold text-sm">Export PDF</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Mobile Toolbar (Hidden on Desktop) */}
+                        <div className="flex md:hidden items-center justify-between gap-2 bg-white p-2 md:p-4 rounded-2xl border border-slate-200 shadow-sm transition-all">
+                            {isSearchExpanded ? (
+                                <div className="flex-1 flex items-center gap-2 animate-fade-in w-full">
+                                    <Search className="w-4 h-4 text-slate-400 shrink-0" />
                                     <input
-                                        placeholder="Search by name or reg no"
-                                        className="bg-transparent outline-none text-sm font-bold text-slate-700 w-full"
+                                        autoFocus
+                                        placeholder="Search by name or reg no..."
+                                        className="flex-1 bg-transparent outline-none text-sm font-bold min-w-0"
                                         value={gradesSearch}
                                         onChange={(e) => setGradesSearch(e.target.value)}
                                     />
+                                    <button
+                                        onClick={() => { setIsSearchExpanded(false); setGradesSearch(''); }}
+                                        className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 shrink-0"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
                                 </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-center gap-2 flex-1 overflow-x-auto no-scrollbar mask-grad-r">
+                                        <button
+                                            onClick={() => setIsSearchExpanded(true)}
+                                            className="p-2 md:p-2.5 text-slate-500 hover:bg-slate-50 rounded-lg shrink-0 transition-colors"
+                                            title="Search"
+                                        >
+                                            <Search className="w-4 h-4 md:w-5 md:h-5" />
+                                        </button>
 
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">FILTER:</span>
-                                        <div className="relative">
-                                            <select
-                                                className="appearance-none bg-slate-50 border border-slate-200 pl-3 pr-8 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
-                                                value={gradesFilter}
-                                                onChange={(e) => setGradesFilter(e.target.value as 'all' | 'passing' | 'failing' | 'missing_submissions' | 'needs_grading')}
-                                            >
-                                                <option value="all">All Students</option>
-                                                <option value="passing">Passing</option>
-                                                <option value="failing">Failing</option>
-                                                <option value="missing_submissions">Missing</option>
-                                                <option value="needs_grading">Needs Grading</option>
-                                            </select>
-                                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                        </div>
-                                    </div>
+                                        <div className="w-px h-6 bg-slate-200 shrink-0"></div>
 
-                                    <div className="w-px h-6 bg-slate-200"></div>
+                                        <select
+                                            className="p-2 md:p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-slate-600 min-w-fit"
+                                            value={gradesFilter}
+                                            onChange={(e) => setGradesFilter(e.target.value as 'all' | 'passing' | 'failing' | 'missing_submissions' | 'needs_grading')}
+                                        >
+                                            <option value="all">All</option>
+                                            <option value="passing">Passing</option>
+                                            <option value="failing">Failing</option>
+                                            <option value="missing_submissions">Missing</option>
+                                            <option value="needs_grading">Needs Grading</option>
+                                        </select>
 
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">SORT:</span>
-                                        <div className="relative">
-                                            <select
-                                                className="appearance-none bg-slate-50 border border-slate-200 pl-3 pr-8 py-2 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer min-w-[140px]"
-                                                value={gradesSort}
-                                                onChange={(e) => setGradesSort(e.target.value as 'name' | 'score_high' | 'score_low' | 'ai_high' | 'ai_low')}
-                                            >
-                                                <option value="name">Name (A-Z)</option>
-                                                <option value="score_high">Score (High-Low)</option>
-                                                <option value="score_low">Score (Low-High)</option>
-                                                <option value="ai_high">AI (High-Low)</option>
-                                                <option value="ai_low">AI (Low-High)</option>
-                                            </select>
-                                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                        </div>
+                                        <select
+                                            className="p-2 md:p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-slate-600 min-w-fit"
+                                            value={gradesSort}
+                                            onChange={(e) => setGradesSort(e.target.value as 'name' | 'score_high' | 'score_low' | 'ai_high' | 'ai_low')}
+                                        >
+                                            <option value="name">Name</option>
+                                            <option value="score_high">Score (High-Low)</option>
+                                            <option value="score_low">Score (Low-High)</option>
+                                            <option value="ai_high">AI (High-Low)</option>
+                                            <option value="ai_low">AI (Low-High)</option>
+                                        </select>
                                     </div>
 
                                     <button
                                         onClick={exportToPDF}
-                                        className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-black transition-all shadow-md active:scale-95 ml-2"
+                                        className="p-2 md:p-2.5 bg-slate-900 text-white rounded-xl hover:bg-black transition-all shadow-md active:scale-95 shrink-0"
+                                        title="Export PDF"
                                     >
-                                        <Download className="w-4 h-4" />
-                                        <span className="font-bold text-sm">Export PDF</span>
+                                        <Download className="w-4 h-4 md:w-5 md:h-5" />
                                     </button>
-                                </div>
-                            </div>
+                                </>
+                            )}
+                        </div>
 
-                            {/* Mobile Toolbar (Hidden on Desktop) */}
-                            <div className="flex md:hidden items-center justify-between gap-2 bg-white p-2 md:p-4 rounded-2xl border border-slate-200 shadow-sm transition-all">
-                                {isSearchExpanded ? (
-                                    <div className="flex-1 flex items-center gap-2 animate-fade-in w-full">
-                                        <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                                        <input
-                                            autoFocus
-                                            placeholder="Search by name or reg no..."
-                                            className="flex-1 bg-transparent outline-none text-sm font-bold min-w-0"
-                                            value={gradesSearch}
-                                            onChange={(e) => setGradesSearch(e.target.value)}
-                                        />
-                                        <button
-                                            onClick={() => { setIsSearchExpanded(false); setGradesSearch(''); }}
-                                            className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 shrink-0"
-                                        >
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div className="flex items-center gap-2 flex-1 overflow-x-auto no-scrollbar mask-grad-r">
-                                            <button
-                                                onClick={() => setIsSearchExpanded(true)}
-                                                className="p-2 md:p-2.5 text-slate-500 hover:bg-slate-50 rounded-lg shrink-0 transition-colors"
-                                                title="Search"
-                                            >
-                                                <Search className="w-4 h-4 md:w-5 md:h-5" />
-                                            </button>
-
-                                            <div className="w-px h-6 bg-slate-200 shrink-0"></div>
-
-                                            <select
-                                                className="p-2 md:p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-slate-600 min-w-fit"
-                                                value={gradesFilter}
-                                                onChange={(e) => setGradesFilter(e.target.value as 'all' | 'passing' | 'failing' | 'missing_submissions' | 'needs_grading')}
-                                            >
-                                                <option value="all">All</option>
-                                                <option value="passing">Passing</option>
-                                                <option value="failing">Failing</option>
-                                                <option value="missing_submissions">Missing</option>
-                                                <option value="needs_grading">Needs Grading</option>
-                                            </select>
-
-                                            <select
-                                                className="p-2 md:p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-slate-600 min-w-fit"
-                                                value={gradesSort}
-                                                onChange={(e) => setGradesSort(e.target.value as 'name' | 'score_high' | 'score_low' | 'ai_high' | 'ai_low')}
-                                            >
-                                                <option value="name">Name</option>
-                                                <option value="score_high">Score (High-Low)</option>
-                                                <option value="score_low">Score (Low-High)</option>
-                                                <option value="ai_high">AI (High-Low)</option>
-                                                <option value="ai_low">AI (Low-High)</option>
-                                            </select>
-                                        </div>
-
-                                        <button
-                                            onClick={exportToPDF}
-                                            className="p-2 md:p-2.5 bg-slate-900 text-white rounded-xl hover:bg-black transition-all shadow-md active:scale-95 shrink-0"
-                                            title="Export PDF"
-                                        >
-                                            <Download className="w-4 h-4 md:w-5 md:h-5" />
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Gradebook Table */}
-                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-50 border-b border-slate-200">
-                                            <th className={`p-2 md:p-4 font-bold text-[10px] md:text-xs text-slate-500 uppercase tracking-wider sticky left-0 bg-slate-50 z-20 w-32 md:w-64 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] whitespace-nowrap border-r border-slate-300 transition-all ${showMobileNames ? '' : 'hidden md:table-cell'}`}>
-                                                <div className="flex items-center justify-between gap-1">
-                                                    <span>Student</span>
+                        {/* Gradebook Table */}
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-200">
+                                        <th className={`p-2 md:p-4 font-bold text-[10px] md:text-xs text-slate-500 uppercase tracking-wider sticky left-0 bg-slate-50 z-20 w-32 md:w-64 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] whitespace-nowrap border-r border-slate-300 transition-all ${showMobileNames ? '' : 'hidden md:table-cell'}`}>
+                                            <div className="flex items-center justify-between gap-1">
+                                                <span>Student</span>
+                                                <button
+                                                    onClick={() => setShowMobileNames(false)}
+                                                    className="md:hidden p-1 -mr-1 text-slate-400 hover:text-indigo-500 transition-colors"
+                                                >
+                                                    <EyeOff className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        </th>
+                                        <th className={`p-2 md:p-4 font-bold text-[10px] md:text-xs text-slate-500 uppercase tracking-wider border-l border-slate-200 w-20 md:w-32 whitespace-nowrap transition-all ${!showMobileNames ? 'sticky left-0 bg-slate-50 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] border-r border-slate-300' : ''}`}>
+                                            <div className="flex items-center justify-between gap-1">
+                                                <span>Reg No</span>
+                                                {!showMobileNames && (
                                                     <button
-                                                        onClick={() => setShowMobileNames(false)}
-                                                        className="md:hidden p-1 -mr-1 text-slate-400 hover:text-indigo-500 transition-colors"
+                                                        onClick={() => setShowMobileNames(true)}
+                                                        className="md:hidden p-1 -mr-1 text-indigo-500 transition-colors"
                                                     >
-                                                        <EyeOff className="w-3 h-3" />
+                                                        <Eye className="w-3 h-3" />
                                                     </button>
-                                                </div>
+                                                )}
+                                            </div>
+                                        </th>
+                                        {assignments.map(a => (
+                                            <th key={a.id} className="p-2 md:p-4 font-bold text-[10px] md:text-xs text-slate-500 uppercase tracking-wider border-l border-slate-200 text-center min-w-[80px] md:min-w-[100px] whitespace-nowrap" title={a.title}>
+                                                {a.short_code || a.title.substring(0, 10) + (a.title.length > 10 ? '...' : '')}
                                             </th>
-                                            <th className={`p-2 md:p-4 font-bold text-[10px] md:text-xs text-slate-500 uppercase tracking-wider border-l border-slate-200 w-20 md:w-32 whitespace-nowrap transition-all ${!showMobileNames ? 'sticky left-0 bg-slate-50 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] border-r border-slate-300' : ''}`}>
-                                                <div className="flex items-center justify-between gap-1">
-                                                    <span>Reg No</span>
-                                                    {!showMobileNames && (
-                                                        <button
-                                                            onClick={() => setShowMobileNames(true)}
-                                                            className="md:hidden p-1 -mr-1 text-indigo-500 transition-colors"
-                                                        >
-                                                            <Eye className="w-3 h-3" />
-                                                        </button>
+                                        ))}
+                                        <th className="p-2 md:p-4 font-bold text-[10px] md:text-xs text-indigo-600 uppercase tracking-wider border-l border-slate-200 text-center w-16 md:w-24 bg-indigo-50/30 whitespace-nowrap">Avg AI</th>
+                                        <th className="p-2 md:p-4 font-bold text-[10px] md:text-xs text-emerald-600 uppercase tracking-wider border-l border-slate-200 text-center w-16 md:w-24 bg-emerald-50/30 whitespace-nowrap">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {(() => {
+                                        // Process Data
+                                        const processed = enrollments.map(enroll => {
+                                            const studentSubs = submissions.filter(s => s.student_id === enroll.student_id);
+                                            const totalScore = studentSubs.reduce((acc, curr) => acc + (curr.grade || 0), 0);
+
+                                            // AI Avg: Exclude nulls
+                                            const aiScores = studentSubs.filter(s => s.ai_score !== null && s.ai_score !== undefined).map(s => s.ai_score as number);
+                                            const avgAi = aiScores.length > 0 ? Math.round(aiScores.reduce((a, b) => a + b, 0) / aiScores.length) : null;
+
+                                            return {
+                                                enroll,
+                                                studentSubs,
+                                                totalScore,
+                                                avgAi
+                                            };
+                                        })
+                                            .filter(item => {
+                                                const search = gradesSearch.toLowerCase();
+                                                const name = item.enroll.profiles?.full_name?.toLowerCase() || '';
+                                                const reg = item.enroll.profiles?.registration_number?.toLowerCase() || '';
+                                                let match = name.includes(search) || reg.includes(search);
+                                                // Filter Logic
+                                                if (gradesFilter !== 'all') {
+                                                    const totalPossible = assignments.reduce((acc, curr) => acc + curr.max_points, 0);
+                                                    const studentTotalPoints = item.totalScore;
+                                                    const avgPct = totalPossible > 0 ? (studentTotalPoints / totalPossible) * 100 : 0;
+
+                                                    if (gradesFilter === 'passing' && avgPct < 50) match = false;
+                                                    if (gradesFilter === 'failing' && avgPct >= 50) match = false;
+
+                                                    if (gradesFilter === 'missing_submissions') {
+                                                        // Check if any assignment has passed due date AND is not submitted
+                                                        const hasMissing = assignments.some(a => {
+                                                            const isDue = a.due_date && new Date(a.due_date) < new Date();
+                                                            const isSubmitted = item.studentSubs.some(s => s.assignment_id === a.id);
+                                                            return isDue && !isSubmitted;
+                                                        });
+                                                        if (!hasMissing) match = false;
+                                                    }
+
+                                                    if (gradesFilter === 'needs_grading') {
+                                                        // Check if any submission has no grade
+                                                        const needsGrading = item.studentSubs.some(s => s.grade === null);
+                                                        if (!needsGrading) match = false;
+                                                    }
+                                                }
+
+                                                return match;
+                                            })
+                                            .sort((a, b) => {
+                                                if (gradesSort === 'name') return (a.enroll.profiles?.full_name || '').localeCompare(b.enroll.profiles?.full_name || '');
+                                                if (gradesSort === 'score_high') return b.totalScore - a.totalScore;
+                                                if (gradesSort === 'score_low') return a.totalScore - b.totalScore;
+                                                if (gradesSort === 'ai_high') return (b.avgAi || 0) - (a.avgAi || 0);
+                                                if (gradesSort === 'ai_low') return (a.avgAi || 0) - (b.avgAi || 0);
+                                                return 0;
+                                            });
+
+                                        if (processed.length === 0) {
+                                            return (
+                                                <tr>
+                                                    <td colSpan={3 + assignments.length} className="p-12 text-center text-slate-400">
+                                                        No students found matching your criteria.
+                                                    </td>
+                                                </tr>
+                                            )
+                                        }
+
+                                        return processed.map(({ enroll, studentSubs, totalScore, avgAi }, i) => (
+                                            <tr key={enroll.id} className="hover:bg-slate-50 transition-colors group">
+                                                <td className={`p-2 md:p-4 sticky left-0 bg-white group-hover:bg-slate-50 z-20 border-r border-slate-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] whitespace-nowrap transition-all ${showMobileNames ? '' : 'hidden md:table-cell'}`}>
+                                                    <div className="flex items-center gap-2 md:gap-3">
+                                                        <div className="text-slate-400 font-mono text-[10px] md:text-sm font-bold w-4 md:w-6 text-right flex-shrink-0">{i + 1}.</div>
+                                                        <div className="min-w-0">
+                                                            <div className="font-bold text-slate-700 text-xs md:text-sm whitespace-nowrap truncate max-w-[80px] md:max-w-none">{enroll.profiles?.full_name || 'Unknown'}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className={`p-2 md:p-4 border-l border-slate-100 text-[10px] md:text-xs font-mono font-bold text-slate-500 whitespace-nowrap transition-all ${!showMobileNames ? 'sticky left-0 bg-white group-hover:bg-slate-50 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] border-r border-slate-300' : ''}`}>
+                                                    {enroll.profiles?.registration_number || '-'}
+                                                </td>
+                                                {assignments.map(a => {
+                                                    const sub = studentSubs.find(s => s.assignment_id === a.id);
+                                                    return (
+                                                        <td key={a.id} className="p-2 md:p-4 border-l border-slate-100 text-center whitespace-nowrap">
+                                                            {sub ? (
+                                                                <div className="flex flex-col items-center">
+                                                                    <span className={`font-bold text-xs md:text-sm ${sub.grade !== null ? 'text-slate-800' : 'text-slate-400 italic'}`}>
+                                                                        {sub.grade !== null ? sub.grade : 'Ungraded'}
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-slate-300 font-bold">-</span>
+                                                            )}
+                                                        </td>
+                                                    );
+                                                })}
+                                                <td className="p-2 md:p-4 border-l border-slate-100 text-center bg-indigo-50/10 whitespace-nowrap">
+                                                    {avgAi !== null ? (
+                                                        <span className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded text-[10px] md:text-xs font-bold ${avgAi < 20 ? 'bg-emerald-100 text-emerald-700' :
+                                                            avgAi < 50 ? 'bg-amber-100 text-amber-700' :
+                                                                'bg-red-100 text-red-700'
+                                                            }`}>
+                                                            {avgAi}%
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-slate-300">-</span>
                                                     )}
-                                                </div>
-                                            </th>
-                                            {assignments.map(a => (
-                                                <th key={a.id} className="p-2 md:p-4 font-bold text-[10px] md:text-xs text-slate-500 uppercase tracking-wider border-l border-slate-200 text-center min-w-[80px] md:min-w-[100px] whitespace-nowrap" title={a.title}>
-                                                    {a.short_code || a.title.substring(0, 10) + (a.title.length > 10 ? '...' : '')}
-                                                </th>
-                                            ))}
-                                            <th className="p-2 md:p-4 font-bold text-[10px] md:text-xs text-indigo-600 uppercase tracking-wider border-l border-slate-200 text-center w-16 md:w-24 bg-indigo-50/30 whitespace-nowrap">Avg AI</th>
-                                            <th className="p-2 md:p-4 font-bold text-[10px] md:text-xs text-emerald-600 uppercase tracking-wider border-l border-slate-200 text-center w-16 md:w-24 bg-emerald-50/30 whitespace-nowrap">Total</th>
+                                                </td>
+                                                <td className="p-2 md:p-4 border-l border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/10 whitespace-nowrap text-xs md:text-sm">
+                                                    {totalScore}
+                                                </td>
+                                            </tr>
+                                        ));
+                                    })()}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )
+            }
+
+
+
+            {/* Students List Modal */}
+            {
+                showStudentsModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+                                <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
+                                    <Users className="w-5 h-5 text-indigo-600" /> Enrolled Students
+                                </h3>
+                                <button onClick={() => setShowStudentsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="overflow-y-auto p-0">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 sticky top-0 outline outline-1 outline-slate-100">
+                                        <tr>
+                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Student</th>
+                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Email</th>
+                                            <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Joined</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {(() => {
-                                            // Process Data
-                                            const processed = enrollments.map(enroll => {
-                                                const studentSubs = submissions.filter(s => s.student_id === enroll.student_id);
-                                                const totalScore = studentSubs.reduce((acc, curr) => acc + (curr.grade || 0), 0);
-
-                                                // AI Avg: Exclude nulls
-                                                const aiScores = studentSubs.filter(s => s.ai_score !== null && s.ai_score !== undefined).map(s => s.ai_score as number);
-                                                const avgAi = aiScores.length > 0 ? Math.round(aiScores.reduce((a, b) => a + b, 0) / aiScores.length) : null;
-
-                                                return {
-                                                    enroll,
-                                                    studentSubs,
-                                                    totalScore,
-                                                    avgAi
-                                                };
-                                            })
-                                                .filter(item => {
-                                                    const search = gradesSearch.toLowerCase();
-                                                    const name = item.enroll.profiles?.full_name?.toLowerCase() || '';
-                                                    const reg = item.enroll.profiles?.registration_number?.toLowerCase() || '';
-                                                    let match = name.includes(search) || reg.includes(search);
-                                                    // Filter Logic
-                                                    if (gradesFilter !== 'all') {
-                                                        const totalPossible = assignments.reduce((acc, curr) => acc + curr.max_points, 0);
-                                                        const studentTotalPoints = item.totalScore;
-                                                        const avgPct = totalPossible > 0 ? (studentTotalPoints / totalPossible) * 100 : 0;
-
-                                                        if (gradesFilter === 'passing' && avgPct < 50) match = false;
-                                                        if (gradesFilter === 'failing' && avgPct >= 50) match = false;
-
-                                                        if (gradesFilter === 'missing_submissions') {
-                                                            // Check if any assignment has passed due date AND is not submitted
-                                                            const hasMissing = assignments.some(a => {
-                                                                const isDue = a.due_date && new Date(a.due_date) < new Date();
-                                                                const isSubmitted = item.studentSubs.some(s => s.assignment_id === a.id);
-                                                                return isDue && !isSubmitted;
-                                                            });
-                                                            if (!hasMissing) match = false;
-                                                        }
-
-                                                        if (gradesFilter === 'needs_grading') {
-                                                            // Check if any submission has no grade
-                                                            const needsGrading = item.studentSubs.some(s => s.grade === null);
-                                                            if (!needsGrading) match = false;
-                                                        }
-                                                    }
-
-                                                    return match;
-                                                })
-                                                .sort((a, b) => {
-                                                    if (gradesSort === 'name') return (a.enroll.profiles?.full_name || '').localeCompare(b.enroll.profiles?.full_name || '');
-                                                    if (gradesSort === 'score_high') return b.totalScore - a.totalScore;
-                                                    if (gradesSort === 'score_low') return a.totalScore - b.totalScore;
-                                                    if (gradesSort === 'ai_high') return (b.avgAi || 0) - (a.avgAi || 0);
-                                                    if (gradesSort === 'ai_low') return (a.avgAi || 0) - (b.avgAi || 0);
-                                                    return 0;
-                                                });
-
-                                            if (processed.length === 0) {
-                                                return (
-                                                    <tr>
-                                                        <td colSpan={3 + assignments.length} className="p-12 text-center text-slate-400">
-                                                            No students found matching your criteria.
-                                                        </td>
-                                                    </tr>
-                                                )
-                                            }
-
-                                            return processed.map(({ enroll, studentSubs, totalScore, avgAi }, i) => (
-                                                <tr key={enroll.id} className="hover:bg-slate-50 transition-colors group">
-                                                    <td className={`p-2 md:p-4 sticky left-0 bg-white group-hover:bg-slate-50 z-20 border-r border-slate-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] whitespace-nowrap transition-all ${showMobileNames ? '' : 'hidden md:table-cell'}`}>
-                                                        <div className="flex items-center gap-2 md:gap-3">
-                                                            <div className="text-slate-400 font-mono text-[10px] md:text-sm font-bold w-4 md:w-6 text-right flex-shrink-0">{i + 1}.</div>
-                                                            <div className="min-w-0">
-                                                                <div className="font-bold text-slate-700 text-xs md:text-sm whitespace-nowrap truncate max-w-[80px] md:max-w-none">{enroll.profiles?.full_name || 'Unknown'}</div>
-                                                            </div>
+                                        {enrollments.map((enroll) => (
+                                            <tr key={enroll.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                                                            {enroll.profiles?.avatar_url ? (
+                                                                <img src={enroll.profiles.avatar_url} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <Users className="w-4 h-4 text-slate-400" />
+                                                            )}
                                                         </div>
-                                                    </td>
-                                                    <td className={`p-2 md:p-4 border-l border-slate-100 text-[10px] md:text-xs font-mono font-bold text-slate-500 whitespace-nowrap transition-all ${!showMobileNames ? 'sticky left-0 bg-white group-hover:bg-slate-50 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] border-r border-slate-300' : ''}`}>
-                                                        {enroll.profiles?.registration_number || '-'}
-                                                    </td>
-                                                    {assignments.map(a => {
-                                                        const sub = studentSubs.find(s => s.assignment_id === a.id);
-                                                        return (
-                                                            <td key={a.id} className="p-2 md:p-4 border-l border-slate-100 text-center whitespace-nowrap">
-                                                                {sub ? (
-                                                                    <div className="flex flex-col items-center">
-                                                                        <span className={`font-bold text-xs md:text-sm ${sub.grade !== null ? 'text-slate-800' : 'text-slate-400 italic'}`}>
-                                                                            {sub.grade !== null ? sub.grade : 'Ungraded'}
-                                                                        </span>
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-slate-300 font-bold">-</span>
-                                                                )}
-                                                            </td>
-                                                        );
-                                                    })}
-                                                    <td className="p-2 md:p-4 border-l border-slate-100 text-center bg-indigo-50/10 whitespace-nowrap">
-                                                        {avgAi !== null ? (
-                                                            <span className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded text-[10px] md:text-xs font-bold ${avgAi < 20 ? 'bg-emerald-100 text-emerald-700' :
-                                                                avgAi < 50 ? 'bg-amber-100 text-amber-700' :
-                                                                    'bg-red-100 text-red-700'
-                                                                }`}>
-                                                                {avgAi}%
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-slate-300">-</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-2 md:p-4 border-l border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/10 whitespace-nowrap text-xs md:text-sm">
-                                                        {totalScore}
-                                                    </td>
-                                                </tr>
-                                            ));
-                                        })()}
+                                                        <span className="font-bold text-slate-700">{enroll.profiles?.full_name || 'Unknown'}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-sm text-slate-500 font-mono">
+                                                    {enroll.profiles?.email || '-'}
+                                                </td>
+                                                <td className="p-4 text-sm text-slate-400 text-right font-medium">
+                                                    {new Date(enroll.joined_at || '').toLocaleDateString()}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {enrollments.length === 0 && (
+                                            <tr>
+                                                <td colSpan={3} className="p-12 text-center text-slate-400">
+                                                    No students enrolled yet. Share the code
+                                                    <span className="mx-2 font-mono font-bold bg-slate-100 px-2 py-1 rounded text-slate-800">{classData?.invite_code}</span>
+                                                    to invite them!
+                                                </td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
-                    )
-                }
-
-
-
-                {/* Students List Modal */}
-                {
-                    showStudentsModal && (
-                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
-                                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
-                                    <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
-                                        <Users className="w-5 h-5 text-indigo-600" /> Enrolled Students
-                                    </h3>
-                                    <button onClick={() => setShowStudentsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                        <X className="w-5 h-5 text-slate-400" />
-                                    </button>
-                                </div>
-                                <div className="overflow-y-auto p-0">
-                                    <table className="w-full text-left">
-                                        <thead className="bg-slate-50 sticky top-0 outline outline-1 outline-slate-100">
-                                            <tr>
-                                                <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Student</th>
-                                                <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Email</th>
-                                                <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Joined</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {enrollments.map((enroll) => (
-                                                <tr key={enroll.id} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="p-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
-                                                                {enroll.profiles?.avatar_url ? (
-                                                                    <img src={enroll.profiles.avatar_url} className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <Users className="w-4 h-4 text-slate-400" />
-                                                                )}
-                                                            </div>
-                                                            <span className="font-bold text-slate-700">{enroll.profiles?.full_name || 'Unknown'}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-4 text-sm text-slate-500 font-mono">
-                                                        {enroll.profiles?.email || '-'}
-                                                    </td>
-                                                    <td className="p-4 text-sm text-slate-400 text-right font-medium">
-                                                        {new Date(enroll.joined_at || '').toLocaleDateString()}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {enrollments.length === 0 && (
-                                                <tr>
-                                                    <td colSpan={3} className="p-12 text-center text-slate-400">
-                                                        No students enrolled yet. Share the code
-                                                        <span className="mx-2 font-mono font-bold bg-slate-100 px-2 py-1 rounded text-slate-800">{classData?.invite_code}</span>
-                                                        to invite them!
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
-                                    <button
-                                        onClick={() => setShowStudentsModal(false)}
-                                        className="px-5 py-2.5 text-slate-500 font-bold text-sm hover:text-slate-700"
-                                    >
-                                        Close
-                                    </button>
-                                </div>
+                            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                                <button
+                                    onClick={() => setShowStudentsModal(false)}
+                                    className="px-5 py-2.5 text-slate-500 font-bold text-sm hover:text-slate-700"
+                                >
+                                    Close
+                                </button>
                             </div>
                         </div>
-                    )
-                }
+                    </div>
+                )
+            }
 
-                {/* Class Settings Modal */}
-                {
-                    showSettingsModal && (
-                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
-                                <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                                    <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
-                                        <Settings className="w-5 h-5 text-indigo-600" /> Class Configuration
-                                    </h3>
-                                    <button onClick={() => setShowSettingsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                        <X className="w-5 h-5 text-slate-400" />
-                                    </button>
+            {/* Class Settings Modal */}
+            {
+                showSettingsModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                                <h3 className="font-bold text-xl text-slate-900 flex items-center gap-2">
+                                    <Settings className="w-5 h-5 text-indigo-600" /> Class Configuration
+                                </h3>
+                                <button onClick={() => setShowSettingsModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                {/* Inheritance Toggle */}
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                                    <div>
+                                        <span className="block font-bold text-slate-700 text-sm">Override Global Defaults</span>
+                                        <p className="text-xs text-slate-500">Enable to customize rules for this class.</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={isOverriding}
+                                            onChange={(e) => setIsOverriding(e.target.checked)}
+                                        />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
                                 </div>
 
-                                <div className="p-6 space-y-6">
-                                    {/* Inheritance Toggle */}
-                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
-                                        <div>
-                                            <span className="block font-bold text-slate-700 text-sm">Override Global Defaults</span>
-                                            <p className="text-xs text-slate-500">Enable to customize rules for this class.</p>
+                                <div className={`space-y-6 transition-opacity ${isOverriding ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+
+                                    {/* AI Model */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">AI Model</label>
+                                        <select
+                                            value={settingsForm.model}
+                                            onChange={(e) => setSettingsForm({ ...settingsForm, model: e.target.value })}
+                                            className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        >
+                                            {Object.entries(MODELS).map(([key, value]) => (
+                                                <option key={value} value={value}>{MODEL_LABELS[value] || key}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Late Policy */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Late Policy</label>
+                                        <div className="space-y-2">
+                                            {[
+                                                { id: 'strict', label: 'Strict' },
+                                                { id: 'grace_48h', label: '48h Grace' },
+                                                { id: 'class_end', label: 'Until Class End' }
+                                            ].map(policy => (
+                                                <label key={policy.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${settingsForm.late_policy === policy.id
+                                                    ? 'border-indigo-600 bg-indigo-50'
+                                                    : 'border-slate-200 hover:bg-slate-50'
+                                                    }`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="class_late_policy"
+                                                        value={policy.id}
+                                                        checked={settingsForm.late_policy === policy.id}
+                                                        onChange={(e) => setSettingsForm({ ...settingsForm, late_policy: e.target.value })}
+                                                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
+                                                    />
+                                                    <span className="font-bold text-sm text-slate-700">{policy.label}</span>
+                                                </label>
+                                            ))}
                                         </div>
-                                        <label className="relative inline-flex items-center cursor-pointer">
+                                    </div>
+
+                                    {/* File Types */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Allowed Files</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {['pdf', 'docx', 'txt', 'jpg', 'png', 'zip'].map(type => (
+                                                <label key={type} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer ${settingsForm.allowed_file_types.includes(type)
+                                                    ? 'border-indigo-600 bg-indigo-50'
+                                                    : 'border-slate-200 hover:bg-slate-50'
+                                                    }`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={settingsForm.allowed_file_types.includes(type)}
+                                                        onChange={() => toggleFileType(type)}
+                                                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                    />
+                                                    <span className="font-bold text-xs uppercase text-slate-700">{type}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowSettingsModal(false)}
+                                    className="px-5 py-2.5 text-slate-500 font-bold text-sm hover:text-slate-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={saveSettings}
+                                    disabled={savingSettings}
+                                    className="px-6 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-black transition-all shadow-lg active:scale-95 flex items-center gap-2"
+                                >
+                                    {savingSettings ? 'Saving...' : 'Save Configuration'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+
+            {/* Edit Class Modal */}
+            {
+                showEditClassModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                                <h3 className="font-bold text-xl text-slate-900">Edit Class Details</h3>
+                                <button onClick={() => setShowEditClassModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+                            <form onSubmit={handleUpdateClass}>
+                                <div className="p-6 space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">Class Code</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={editClassForm.class_code}
+                                            onChange={e => setEditClassForm({ ...editClassForm, class_code: e.target.value })}
+                                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                                            placeholder="e.g. CS101"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">Class Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={editClassForm.name}
+                                            onChange={e => setEditClassForm({ ...editClassForm, name: e.target.value })}
+                                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                                            placeholder="e.g. Introduction to Computer Science"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-700 mb-1">Start Date</label>
                                             <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                checked={isOverriding}
-                                                onChange={(e) => setIsOverriding(e.target.checked)}
+                                                type="date"
+                                                value={editClassForm.start_date ? new Date(editClassForm.start_date).toISOString().split('T')[0] : ''}
+                                                onChange={e => setEditClassForm({ ...editClassForm, start_date: e.target.value })}
+                                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:ring-2 focus:ring-indigo-500"
                                             />
-                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                                        </label>
-                                    </div>
-
-                                    <div className={`space-y-6 transition-opacity ${isOverriding ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-
-                                        {/* AI Model */}
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">AI Model</label>
-                                            <select
-                                                value={settingsForm.model}
-                                                onChange={(e) => setSettingsForm({ ...settingsForm, model: e.target.value })}
-                                                className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            >
-                                                {Object.entries(MODELS).map(([key, value]) => (
-                                                    <option key={value} value={value}>{MODEL_LABELS[value] || key}</option>
-                                                ))}
-                                            </select>
                                         </div>
-
-                                        {/* Late Policy */}
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Late Policy</label>
-                                            <div className="space-y-2">
-                                                {[
-                                                    { id: 'strict', label: 'Strict' },
-                                                    { id: 'grace_48h', label: '48h Grace' },
-                                                    { id: 'class_end', label: 'Until Class End' }
-                                                ].map(policy => (
-                                                    <label key={policy.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${settingsForm.late_policy === policy.id
-                                                        ? 'border-indigo-600 bg-indigo-50'
-                                                        : 'border-slate-200 hover:bg-slate-50'
-                                                        }`}>
-                                                        <input
-                                                            type="radio"
-                                                            name="class_late_policy"
-                                                            value={policy.id}
-                                                            checked={settingsForm.late_policy === policy.id}
-                                                            onChange={(e) => setSettingsForm({ ...settingsForm, late_policy: e.target.value })}
-                                                            className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
-                                                        />
-                                                        <span className="font-bold text-sm text-slate-700">{policy.label}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* File Types */}
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Allowed Files</label>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {['pdf', 'docx', 'txt', 'jpg', 'png', 'zip'].map(type => (
-                                                    <label key={type} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer ${settingsForm.allowed_file_types.includes(type)
-                                                        ? 'border-indigo-600 bg-indigo-50'
-                                                        : 'border-slate-200 hover:bg-slate-50'
-                                                        }`}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={settingsForm.allowed_file_types.includes(type)}
-                                                            onChange={() => toggleFileType(type)}
-                                                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                        />
-                                                        <span className="font-bold text-xs uppercase text-slate-700">{type}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
+                                            <label className="block text-sm font-bold text-slate-700 mb-1">End Date</label>
+                                            <input
+                                                type="date"
+                                                value={editClassForm.end_date ? new Date(editClassForm.end_date).toISOString().split('T')[0] : ''}
+                                                onChange={e => setEditClassForm({ ...editClassForm, end_date: e.target.value })}
+                                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+                                            />
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
                                     <button
-                                        onClick={() => setShowSettingsModal(false)}
+                                        type="button"
+                                        onClick={() => setShowEditClassModal(false)}
                                         className="px-5 py-2.5 text-slate-500 font-bold text-sm hover:text-slate-700"
                                     >
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={saveSettings}
-                                        disabled={savingSettings}
-                                        className="px-6 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-black transition-all shadow-lg active:scale-95 flex items-center gap-2"
+                                        type="submit"
+                                        disabled={savingClass}
+                                        className="px-6 py-2.5 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95 flex items-center gap-2"
                                     >
-                                        {savingSettings ? 'Saving...' : 'Save Configuration'}
+                                        {savingClass ? (
+                                            <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                                        ) : (
+                                            'Save Changes'
+                                        )}
                                     </button>
                                 </div>
-                            </div>
+                            </form>
                         </div>
-                    )
-                }
+                    </div>
+                )
+            }
 
+            <AIInsightsModal
+                isOpen={showAIModal}
+                onClose={() => setShowAIModal(false)}
+                averageScore={avgAuthScore}
+                assignments={assignments}
+                submissions={submissions}
+                enrollments={enrollments}
+                onStudentClick={(studentId: string, studentName: string) => {
+                    setShowAIModal(false);
+                    setActiveTab('grades');
+                    setGradesSearch(studentName);
+                }}
+            />
 
-                {/* Edit Class Modal */}
-                {
-                    showEditClassModal && (
-                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
-                                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
-                                    <h3 className="font-bold text-xl text-slate-900">Edit Class Details</h3>
-                                    <button onClick={() => setShowEditClassModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                        <X className="w-5 h-5 text-slate-400" />
-                                    </button>
-                                </div>
-                                <form onSubmit={handleUpdateClass}>
-                                    <div className="p-6 space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-bold text-slate-700 mb-1">Class Code</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                value={editClassForm.class_code}
-                                                onChange={e => setEditClassForm({ ...editClassForm, class_code: e.target.value })}
-                                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500"
-                                                placeholder="e.g. CS101"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-slate-700 mb-1">Class Name</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                value={editClassForm.name}
-                                                onChange={e => setEditClassForm({ ...editClassForm, name: e.target.value })}
-                                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500"
-                                                placeholder="e.g. Introduction to Computer Science"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-bold text-slate-700 mb-1">Start Date</label>
-                                                <input
-                                                    type="date"
-                                                    value={editClassForm.start_date ? new Date(editClassForm.start_date).toISOString().split('T')[0] : ''}
-                                                    onChange={e => setEditClassForm({ ...editClassForm, start_date: e.target.value })}
-                                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:ring-2 focus:ring-indigo-500"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-bold text-slate-700 mb-1">End Date</label>
-                                                <input
-                                                    type="date"
-                                                    value={editClassForm.end_date ? new Date(editClassForm.end_date).toISOString().split('T')[0] : ''}
-                                                    onChange={e => setEditClassForm({ ...editClassForm, end_date: e.target.value })}
-                                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:ring-2 focus:ring-indigo-500"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowEditClassModal(false)}
-                                            className="px-5 py-2.5 text-slate-500 font-bold text-sm hover:text-slate-700"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={savingClass}
-                                            className="px-6 py-2.5 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95 flex items-center gap-2"
-                                        >
-                                            {savingClass ? (
-                                                <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
-                                            ) : (
-                                                'Save Changes'
-                                            )}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )
-                }
-
-                <AIInsightsModal
-                    isOpen={showAIModal}
-                    onClose={() => setShowAIModal(false)}
-                    averageScore={avgAuthScore}
-                    assignments={assignments}
-                    submissions={submissions}
-                    enrollments={enrollments}
-                    onStudentClick={(studentId: string, studentName: string) => {
-                        setShowAIModal(false);
-                        setActiveTab('grades');
-                        setGradesSearch(studentName);
-                    }}
-                />
-            </div>
             {/* AI Loading Overlay */}
             {
                 isGeneratingRubric && (
