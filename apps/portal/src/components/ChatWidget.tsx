@@ -49,8 +49,14 @@ export default function ChatWidget() {
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to send message');
+                let errorDetails = '';
+                try {
+                    const errorData = await response.json();
+                    errorDetails = errorData.error || errorData.message || JSON.stringify(errorData);
+                } catch {
+                    errorDetails = `Server error ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorDetails);
             }
             if (!response.body) throw new Error('No response body');
 
@@ -79,11 +85,8 @@ export default function ChatWidget() {
             }
 
         } catch (error: any) {
-            console.error(error);
-            const errorMsg = error.message === 'Failed to send message'
-                ? "I encountered an error connecting to the AI service. Please check your connection or wait a moment."
-                : "I'm sorry, I encountered an error. Please try again later.";
-            setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
+            console.error('ChatWidget Error:', error);
+            setMessages(prev => [...prev, { role: 'assistant', content: `DEBUG ERROR: ${error.message}` }]);
         } finally {
             setIsLoading(false);
         }
