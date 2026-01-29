@@ -15,8 +15,9 @@ export default function DemoBanner() {
     useEffect(() => {
         const checkUser = async () => {
             const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user && (user.email?.toLowerCase().endsWith('@schologic.demo') || user.user_metadata?.is_demo)) {
+            const { data } = await supabase.auth.getUser();
+            const user = data?.user;
+            if (user?.user_metadata?.is_demo === true) {
                 setIsDemo(true);
             } else {
                 setIsDemo(false);

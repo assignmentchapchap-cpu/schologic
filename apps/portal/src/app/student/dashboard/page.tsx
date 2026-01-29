@@ -177,7 +177,7 @@ function DashboardContent() {
             // It's the CLASS OWNER.
 
             // To properly implement this securely, we should move Join Class to a Server Action.
-            // But for now, let's fetch the Owner's Profile and check if their email ends with @schologic.demo (Convention)
+            // But for now, let's fetch the Owner's Profile and check if they are a demo user.
 
             const { data: instructorUser } = await supabase
                 .from('profiles')
@@ -190,13 +190,11 @@ function DashboardContent() {
 
             const { data: owner } = await supabase.from('classes').select('instructor_id').eq('id', cls.id).single();
             if (owner) {
-                const { data: ownerProfile } = await supabase.from('profiles').select('email').eq('id', owner.instructor_id || '').single();
-                if (ownerProfile?.email?.endsWith('@schologic.demo')) {
-                    const currentCount = cls.enrollments?.[0]?.count || 0;
-                    if (currentCount >= 10) {
-                        throw new Error("Demo Class Full: This demo class is limited to 10 students.");
-                    }
-                }
+                const { data: ownerProfile } = await supabase.from('profiles').select('id').eq('id', owner.instructor_id || '').single();
+                // Note: is_demo check for instructors on the client for other users is limited by RLS.
+                // However, since we are moving away from convention-based checks, 
+                // we should ideally have a column in profiles or handle this server-side.
+                // For now, we remove the convention check to avoid false positives/negatives.
             }
 
             // 2. Ensure Profile Exists (Fix for FK Violation)

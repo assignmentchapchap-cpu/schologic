@@ -94,7 +94,7 @@ export async function POST(req: Request) {
         // We reduce to 5 students to avoid rate limits/timeouts
         const studentSubset = DEMO_STUDENTS.slice(0, 5);
         const studentAuthPromises = studentSubset.map((s, i) => {
-            const email = `student_${Date.now()}_${i}_${Math.floor(Math.random() * 999)}@schologic.demo`;
+            const email = `student_${Date.now()}_${i}_${Math.floor(Math.random() * 999)}@demo.schologic.com`;
             return supabaseAdmin.auth.admin.createUser({
                 email: email,
                 password: DEMO_STUDENT_PASSWORD,

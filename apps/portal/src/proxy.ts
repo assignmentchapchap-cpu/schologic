@@ -32,7 +32,8 @@ export async function proxy(request: NextRequest) {
         }
     )
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data } = await supabase.auth.getUser()
+    const user = data?.user;
 
     // 2. Route Protection
     const path = request.nextUrl.pathname;
@@ -44,7 +45,7 @@ export async function proxy(request: NextRequest) {
         }
 
         // Block Demo Users from /instructor/lab and /instructor/settings
-        const isDemoUser = user.email?.endsWith('@schologic.demo');
+        const isDemoUser = user?.user_metadata?.is_demo === true;
         const isRestrictedRoute = path.startsWith('/instructor/lab') || path.startsWith('/instructor/settings');
 
         if (isRestrictedRoute && isDemoUser) {
