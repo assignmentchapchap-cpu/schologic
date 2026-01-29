@@ -14,7 +14,7 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Database } from "@schologic/database";
-import { MODELS, MODEL_LABELS, ScoringMethod, Granularity } from '@schologic/ai-bridge/types';
+import { MODELS, MODEL_LABELS, ScoringMethod, Granularity } from '@schologic/ai-bridge';
 import { isDateBetween, isDateAfter } from '@/lib/date-utils';
 import jsPDF from 'jspdf';
 import { Card } from '@/components/ui/Card';
