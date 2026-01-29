@@ -4,23 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic'; // Prevent static optimization
-
-export async function OPTIONS() {
-    return new NextResponse(null, {
-        status: 200,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-        },
-    });
-}
-
-// Debug GET handler
-export async function GET() {
-    return NextResponse.json({ status: 'ok', message: 'Chat API is accessible' });
-}
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
     try {
