@@ -6,23 +6,31 @@ import { createClient } from "@schologic/database";
 import { Terminal } from 'lucide-react';
 
 export default function LabPage() {
+    const [isLoaded, setIsLoaded] = useState(false);
     const [isDemo, setIsDemo] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        setIsLoaded(true);
         const checkDemo = async () => {
-            const supabase = createClient();
-            const { data } = await supabase.auth.getUser();
-            const user = data?.user;
-            if (user?.user_metadata?.is_demo === true) {
-                setIsDemo(true);
+            try {
+                const supabase = createClient();
+                const { data } = await supabase.auth.getUser();
+                const user = data?.user;
+                if (user?.user_metadata?.is_demo === true) {
+                    setIsDemo(true);
+                }
+            } catch (err) {
+                console.error("Auth check failed", err);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         checkDemo();
     }, []);
 
-    if (loading) return null;
+    if (!isLoaded) return null;
+    if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Preparing Lab...</div>;
 
     if (isDemo) {
         return (

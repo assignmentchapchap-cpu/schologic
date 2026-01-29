@@ -9,8 +9,15 @@ import { ClassSettings, isClassSettings } from '@/types/json-schemas';
 import { claimDemoAccount } from '@/app/actions/account';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
+import { useMemo } from 'react';
+
 export default function InstructorSettingsPage() {
-    const supabase = createClient();
+    const supabase = useMemo(() => {
+        if (typeof window === 'undefined') return null as any;
+        return createClient();
+    }, []);
+
+    const [isLoaded, setIsLoaded] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<'ai' | 'submission' | 'security'>('ai');
@@ -34,7 +41,9 @@ export default function InstructorSettingsPage() {
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
     useEffect(() => {
+        setIsLoaded(true);
         const checkDemo = async () => {
+            if (!supabase) return;
             const { data } = await supabase.auth.getUser();
             const user = data?.user;
             if (user?.user_metadata?.is_demo === true) {
@@ -43,7 +52,7 @@ export default function InstructorSettingsPage() {
         };
         checkDemo();
         fetchSettings();
-    }, []);
+    }, [supabase]);
     const handleClaimAccount = async (e: React.FormEvent) => {
         e.preventDefault();
         if (claimForm.password !== claimForm.confirm) {
@@ -161,6 +170,7 @@ export default function InstructorSettingsPage() {
     }
 
     const fetchSettings = async () => {
+        if (!supabase) return;
         try {
             const { data: authData } = await supabase.auth.getUser();
             const user = authData?.user;
@@ -250,6 +260,7 @@ export default function InstructorSettingsPage() {
         });
     };
 
+    if (!isLoaded) return null;
     if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loading Configuration...</div>;
 
     return (
