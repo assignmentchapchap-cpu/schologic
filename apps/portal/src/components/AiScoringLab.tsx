@@ -22,7 +22,7 @@ export default function AiScoringLab() {
     const [rawResults, setRawResults] = useState<AnalysisSegment[]>([]);
     const [method, setMethod] = useState<ScoringMethod>(ScoringMethod.WEIGHTED);
     const [granularity, setGranularity] = useState<Granularity>(Granularity.PARAGRAPH);
-    const [selectedModel, setSelectedModel] = useState<string>(MODELS.ROBERTA_LARGE);
+    const [selectedModel, setSelectedModel] = useState<string>(MODELS?.ROBERTA_LARGE || "Hello-SimpleAI/chatgpt-detector-roberta");
     const [showSettings, setShowSettings] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
 

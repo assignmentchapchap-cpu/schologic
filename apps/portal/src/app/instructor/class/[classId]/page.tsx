@@ -160,7 +160,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     // Settings State
     const [globalSettings, setGlobalSettings] = useState<ClassSettings | null>(null);
     const [settingsForm, setSettingsForm] = useState({
-        model: MODELS.ROBERTA_LARGE,
+        model: MODELS?.ROBERTA_LARGE || "Hello-SimpleAI/chatgpt-detector-roberta",
         granularity: Granularity.PARAGRAPH,
         scoring_method: ScoringMethod.WEIGHTED,
         late_policy: 'strict',
@@ -268,7 +268,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 const settingsObj = s as unknown as ClassSettings;
                 setIsOverriding(true);
                 setSettingsForm({
-                    model: settingsObj.model || global.model || MODELS.AI_DETECTOR_PIRATE,
+                    model: settingsObj.model || global.model || MODELS?.AI_DETECTOR_PIRATE || 'PirateXX/AI-Content-Detector',
                     granularity: (settingsObj.granularity || global.granularity || Granularity.PARAGRAPH) as Granularity,
                     scoring_method: (settingsObj.scoring_method || global.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                     late_policy: settingsObj.late_policy || global.late_policy || 'strict',
@@ -277,7 +277,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             } else {
                 setIsOverriding(false);
                 setSettingsForm({
-                    model: global.model || MODELS.AI_DETECTOR_PIRATE,
+                    model: global.model || MODELS?.AI_DETECTOR_PIRATE || 'PirateXX/AI-Content-Detector',
                     granularity: (global.granularity || Granularity.PARAGRAPH) as Granularity,
                     scoring_method: (global.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                     late_policy: global.late_policy || 'strict',
@@ -371,7 +371,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 if (hasKeys) {
                     setIsOverriding(true);
                     setSettingsForm({
-                        model: s.model || global.model || MODELS.AI_DETECTOR_PIRATE,
+                        model: s.model || global.model || MODELS?.AI_DETECTOR_PIRATE || 'PirateXX/AI-Content-Detector',
                         granularity: (s.granularity || global.granularity || Granularity.PARAGRAPH) as Granularity,
                         scoring_method: (s.scoring_method || global.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                         late_policy: s.late_policy || global.late_policy || 'strict',
@@ -380,7 +380,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 } else {
                     setIsOverriding(false);
                     setSettingsForm({
-                        model: global.model || MODELS.AI_DETECTOR_PIRATE,
+                        model: global.model || MODELS?.AI_DETECTOR_PIRATE || 'PirateXX/AI-Content-Detector',
                         granularity: (global.granularity || Granularity.PARAGRAPH) as Granularity,
                         scoring_method: (global.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                         late_policy: global.late_policy || 'strict',
@@ -391,7 +391,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 // Inherit Globals (Data settings is null or not an object)
                 setIsOverriding(false);
                 setSettingsForm({
-                    model: global.model || MODELS.AI_DETECTOR_PIRATE,
+                    model: global.model || MODELS?.AI_DETECTOR_PIRATE || 'PirateXX/AI-Content-Detector',
                     granularity: (global.granularity || Granularity.PARAGRAPH) as Granularity,
                     scoring_method: (global.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                     late_policy: global.late_policy || 'strict',
@@ -669,7 +669,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             // Update local settings form to reflect inheritance if needed
             if (!isOverriding && globalSettings) {
                 setSettingsForm({
-                    model: globalSettings.model || MODELS.AI_DETECTOR_PIRATE,
+                    model: globalSettings.model || MODELS?.AI_DETECTOR_PIRATE || 'PirateXX/AI-Content-Detector',
                     granularity: (globalSettings.granularity || Granularity.PARAGRAPH) as Granularity,
                     scoring_method: (globalSettings.scoring_method || ScoringMethod.WEIGHTED) as ScoringMethod,
                     late_policy: globalSettings.late_policy || 'strict',
@@ -2308,8 +2308,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                                             onChange={(e) => setSettingsForm({ ...settingsForm, model: e.target.value })}
                                             className="w-full p-3 border border-slate-200 rounded-xl font-bold text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
                                         >
-                                            {Object.entries(MODELS).map(([key, value]) => (
-                                                <option key={value} value={value}>{MODEL_LABELS[value] || key}</option>
+                                            {MODELS && Object.entries(MODELS).map(([key, value]) => (
+                                                <option key={value} value={value}>{MODEL_LABELS?.[value] || key}</option>
                                             ))}
                                         </select>
                                     </div>

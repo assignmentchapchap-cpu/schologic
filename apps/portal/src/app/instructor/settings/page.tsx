@@ -25,7 +25,7 @@ export default function InstructorSettingsPage() {
 
     // Settings State
     const [settingsForm, setSettingsForm] = useState({
-        model: MODELS.ROBERTA_LARGE,
+        model: MODELS?.ROBERTA_LARGE || "Hello-SimpleAI/chatgpt-detector-roberta",
         granularity: Granularity.PARAGRAPH,
         scoring_method: ScoringMethod.WEIGHTED,
         late_policy: 'strict', // 'strict' | 'grace_48h' | 'class_end'
@@ -187,7 +187,7 @@ export default function InstructorSettingsPage() {
             if (data?.settings && isClassSettings(data.settings)) {
                 const s = data.settings;
                 setSettingsForm({
-                    model: s.model || MODELS.ROBERTA_LARGE,
+                    model: s.model || MODELS?.ROBERTA_LARGE || "Hello-SimpleAI/chatgpt-detector-roberta",
                     granularity: (s.granularity as Granularity) || Granularity.PARAGRAPH,
                     scoring_method: (s.scoring_method as ScoringMethod) || ScoringMethod.WEIGHTED,
                     late_policy: s.late_policy || 'strict',
