@@ -2,7 +2,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RagService } from '@schologic/rag';
 
-export const runtime = 'nodejs'; // Must be nodejs for transformers/fs
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+    return NextResponse.json({ status: "Chat API is operational" });
+}
 
 export async function POST(req: NextRequest) {
     try {
