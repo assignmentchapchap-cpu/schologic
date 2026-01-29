@@ -1,0 +1,22 @@
+{
+    "name": "@schologic/rag",
+    "version": "0.1.0",
+    "private": true,
+    "main": "src/index.ts",
+    "types": "src/index.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc -w"
+    },
+    "dependencies": {
+        "@google/generative-ai": "^0.24.1",
+        "@supabase/supabase-js": "^2.39.7",
+        "@xenova/transformers": "^2.16.0",
+        "langchain": "^0.1.28"
+    },
+    "devDependencies": {
+        "@schologic/config": "workspace:*",
+        "@types/node": "^20.11.24",
+        "typescript": "^5.3.3"
+    }
+}

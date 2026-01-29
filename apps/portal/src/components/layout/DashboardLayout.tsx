@@ -8,6 +8,8 @@ interface DashboardLayoutProps {
     role: 'instructor' | 'student';
 }
 
+import ChatWidget from '@/components/ChatWidget';
+
 export default function DashboardLayout({ children, role }: DashboardLayoutProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -37,6 +39,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
             >
                 {children}
             </div>
+            <ChatWidget />
         </div>
     );
 }
