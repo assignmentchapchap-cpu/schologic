@@ -151,7 +151,7 @@ export default function AiScoringLab() {
                             <div>
                                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-3">Model Selection</label>
                                 <div className="space-y-2">
-                                    {Object.entries(MODELS).map(([key, value]) => (
+                                    {MODELS && Object.entries(MODELS).map(([key, value]) => (
                                         <button
                                             key={key}
                                             onClick={() => setSelectedModel(value)}
@@ -163,7 +163,7 @@ export default function AiScoringLab() {
                                             )}
                                         >
                                             <div className="flex justify-between items-center mb-0.5">
-                                                <span className="font-medium">{MODEL_LABELS[value] || key}</span>
+                                                <span className="font-medium">{MODEL_LABELS?.[value] || key}</span>
                                                 {selectedModel === value && <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>}
                                             </div>
                                             <p className="text-xs text-slate-400 truncate">{value}</p>
@@ -212,7 +212,7 @@ export default function AiScoringLab() {
                     <div className="flex items-center gap-3">
                         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-md shadow-sm">
                             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                            <span className="text-xs font-medium text-slate-600">{selectedModel.split('/').pop()}</span>
+                            <span className="text-xs font-medium text-slate-600">{selectedModel?.split('/').pop() || 'Unknown Model'}</span>
                         </div>
                         <button
                             onClick={() => setShowSettings(true)}

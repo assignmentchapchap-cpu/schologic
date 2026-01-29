@@ -359,7 +359,7 @@ export default function InstructorSettingsPage() {
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Default AI Detection Model</label>
                                 <div className="grid gap-3">
-                                    {Object.entries(MODELS).map(([key, value]) => (
+                                    {MODELS && Object.entries(MODELS).map(([key, value]) => (
                                         <label key={key} className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${settingsForm.model === value
                                             ? 'border-indigo-600 bg-indigo-50/50 shadow-sm ring-1 ring-indigo-600'
                                             : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
@@ -370,7 +370,7 @@ export default function InstructorSettingsPage() {
                                                 </div>
                                                 <div>
                                                     <span className={`block text-sm font-bold ${settingsForm.model === value ? 'text-indigo-900' : 'text-slate-700'}`}>
-                                                        {MODEL_LABELS[value] || key}
+                                                        {MODEL_LABELS?.[value] || key}
                                                     </span>
                                                     <span className="text-xs text-slate-500 font-medium">{value.split('/').pop()}</span>
                                                 </div>

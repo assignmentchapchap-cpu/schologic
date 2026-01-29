@@ -6,20 +6,6 @@
     "scripts": {
         "build": "tsc"
     },
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "default": "./dist/index.js"
-        },
-        "./types": {
-            "types": "./dist/types.d.ts",
-            "default": "./dist/types.js"
-        },
-        "./rag": {
-            "types": "./dist/rag-service.d.ts",
-            "default": "./dist/rag-service.js"
-        }
-    },
     "dependencies": {
         "openai": "^4.24.1",
         "@google/generative-ai": "^0.24.1",
