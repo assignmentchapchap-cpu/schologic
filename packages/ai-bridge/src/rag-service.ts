@@ -1,4 +1,11 @@
+import { env } from "@xenova/transformers";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Configure cache for Vercel/Serverless
+env.cacheDir = '/tmp/.cache';
+env.allowLocalModels = false; // Force download in serverless
+env.useBrowserCache = false;
+
 // @ts-ignore - types might be missing or require specific setup
 import { pipeline } from "@xenova/transformers";
 
