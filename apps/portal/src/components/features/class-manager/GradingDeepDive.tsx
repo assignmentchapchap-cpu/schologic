@@ -1,6 +1,6 @@
 'use client';
 
-import { Download, Filter, BarChart2, Search } from 'lucide-react';
+import { Download, Filter, BarChart, Search } from 'lucide-react';
 
 export function GradingDeepDive() {
     return (
@@ -134,7 +134,7 @@ export function GradingDeepDive() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                     <div className="text-center">
                         <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto mb-4">
-                            <BarChart2 className="w-6 h-6 text-indigo-400" />
+                            <BarChart className="w-6 h-6 text-indigo-400" />
                         </div>
                         <h3 className="text-white font-bold mb-2">Class-Wide Analytics</h3>
                         <p className="text-slate-400 text-sm">Visualize integrity trends across the entire semester to spot outliers early.</p>

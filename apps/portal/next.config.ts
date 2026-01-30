@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '6mb',
     },
+    optimizePackageImports: ['lucide-react', 'recharts', 'date-fns', 'lodash'],
   },
   serverExternalPackages: ['pdf-parse', 'mammoth', 'xml2js'],
   transpilePackages: ['@schologic/ai-bridge', '@schologic/database', '@schologic/doc-engine'],

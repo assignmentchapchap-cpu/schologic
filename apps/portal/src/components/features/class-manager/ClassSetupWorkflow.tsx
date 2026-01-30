@@ -1,6 +1,6 @@
 'use client';
 
-import { UserPlus, BookOpen, Settings, Copy, Check } from 'lucide-react';
+import { Users, BookOpen, Settings, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 
 export function ClassSetupWorkflow() {
@@ -74,7 +74,7 @@ export function ClassSetupWorkflow() {
                         </div>
                         <div className="mb-8 pl-4">
                             <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                                <UserPlus className="w-5 h-5 text-emerald-400" />
+                                <Users className="w-5 h-5 text-emerald-400" />
                                 Invite Students
                             </h3>
                             <p className="text-slate-400 text-sm">
