@@ -32,19 +32,25 @@ Step 7: Report Generated
 
 ### Available Models
 
-| Model | Display Name | Best For | Accuracy Notes |
-|-------|--------------|----------|----------------|
-| `Hello-SimpleAI/chatgpt-detector-roberta` | **RoBERTa Large (Baseline)** | General academic writing | Best balance of accuracy |
-| `PirateXX/AI-Content-Detector` | **PirateXX Detector** | ChatGPT-style text | Optimized for ChatGPT outputs |
-| `fakespot-ai/roberta-base-ai-text-detection-v1` | **OpenAI RoBERTa Base** | Alternative detection | Different training data |
+| Model | Display Name | Training Data Impact | Best Use Case |
+|-------|--------------|----------------------|---------------|
+| `Hello-SimpleAI/chatgpt-detector-roberta` | **RoBERTa Large (Baseline)** | Trained on the **HC3 Corpus** (Human vs. ChatGPT), specifically fine-tuned on GPT-2 outputs. | **Academic Essays**: Excellent at detecting standard ChatGPT structure and formal academic tone. |
+| `PirateXX/AI-Content-Detector` | **AI Content Detector** | Trained on a broad mix of AI models (Claude, Gemini, GPT-4) and "humanized" text. | **Creative/Mixed Writing**: Better at handling diverse writing styles and content that attempts to bypass detection. |
+| `fakespot-ai/roberta-base-ai-text-detection-v1` | **OpenAI RoBERTa Base** | Originally developed for detecting fake reviews and synthetic short-form content (Apollo project). | **Short & Review Content**: Ideal for shorter submissions or validating results from other models. |
 
 ### Model Selection Tips
 
-1. **RoBERTa Large** - Use as your default. Works well for essays, research papers, and formal academic writing.
+1.  **RoBERTa Large (Default)**
+    *   **Why**: It's the academic standard, trained specifically on the contrast between human writing and large language model outputs.
+    *   **When to use**: For standard essays, research papers, and formal submissions.
 
-2. **PirateXX Detector** - Better for detecting ChatGPT-specific patterns. Good for informal assignments or creative writing.
+2.  **AI Content Detector**
+    *   **Why**: A more aggressive model trained to spot "humanized" or paraphrased AI content across multiple model families.
+    *   **When to use**: If you suspect a student used a paraphrasing tool or a newer model like Claude 3.5.
 
-3. **OpenAI RoBERTa Base** - Use when you want a second opinion or when other models show uncertain results.
+3.  **OpenAI RoBERTa Base**
+    *   **Why**: Provides a diffent perspective, often more sensitive to perplexity anomalies common in synthetic text.
+    *   **When to use**: As a "Second Opinion" if the first two models disagree.
 
 ### Testing Models
 Use the [AI Lab](./05-ai-lab.md) to test how different models perform on sample text before applying to your classes.
