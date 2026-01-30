@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, FileText, Library, Check, UploadCloud } from 'lucide-react';
+import { BookOpen, FileText, Bookmark, Check, Upload } from 'lucide-react';
 import Image from 'next/image';
 
 export default function UniversalReader() {
@@ -17,7 +17,7 @@ export default function UniversalReader() {
             <div className="container mx-auto px-6 relative z-10">
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-widest mb-6">
-                        <Library className="w-3 h-3" />
+                        <Bookmark className="w-3 h-3" />
                         Universal OER Ingestion
                     </div>
                     <h2 className="text-4xl md:text-5xl font-serif font-black text-slate-900 mb-6 leading-tight">
@@ -36,7 +36,7 @@ export default function UniversalReader() {
                         {/* Source 1: LibreTexts */}
                         <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 flex flex-col items-center text-center group hover:border-indigo-200 transition-all">
                             <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <Library className="w-8 h-8 text-blue-600" />
+                                <Bookmark className="w-8 h-8 text-blue-600" />
                             </div>
                             <h3 className="font-bold text-slate-900 text-lg">LibreTexts Integration</h3>
                             <p className="text-sm text-slate-500 mt-2">Direct API connection to 100,000+ peer-reviewed open educational resources.</p>
@@ -60,7 +60,7 @@ export default function UniversalReader() {
                         {/* Source 3: Common Cartridge */}
                         <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 flex flex-col items-center text-center group hover:border-indigo-200 transition-all">
                             <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <UploadCloud className="w-8 h-8 text-emerald-600" />
+                                <Upload className="w-8 h-8 text-emerald-600" />
                             </div>
                             <h3 className="font-bold text-slate-900 text-lg">IMS Common Cartridge</h3>
                             <p className="text-sm text-slate-500 mt-2">Migrate from Blackboard/Canvas instantly. We support full LTI 1.3 course imports.</p>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Shield, BarChart3, Fingerprint, Lock, Search } from 'lucide-react';
+import { Shield, BarChart, Eye, Lock, Search } from 'lucide-react';
 
 export default function IntegrityHub() {
     return (
@@ -36,7 +36,7 @@ export default function IntegrityHub() {
                                     <div>
                                         <div className="text-xs font-mono text-slate-500 uppercase tracking-widest mb-1">Target Document Analysis</div>
                                         <div className="text-lg font-bold text-white flex items-center gap-2">
-                                            <Fingerprint className="w-5 h-5 text-indigo-400" />
+                                            <Eye className="w-5 h-5 text-indigo-400" />
                                             Linguistic Fingerprint ID: #8X-292
                                         </div>
                                     </div>
@@ -99,7 +99,7 @@ export default function IntegrityHub() {
                         <div className="space-y-6">
                             <div className="flex gap-4">
                                 <div className="w-10 h-10 rounded-lg bg-indigo-600/20 flex items-center justify-center shrink-0 border border-indigo-500/30">
-                                    <BarChart3 className="w-5 h-5 text-indigo-400" />
+                                    <BarChart className="w-5 h-5 text-indigo-400" />
                                 </div>
                                 <div>
                                     <h4 className="text-white font-bold text-lg mb-1">Visual Evidence Heatmaps</h4>
