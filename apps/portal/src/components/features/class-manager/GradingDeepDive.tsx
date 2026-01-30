@@ -155,6 +155,51 @@ export function GradingDeepDive() {
                     </div>
                 </div>
 
+                {/* SEO Content Injection: AI Settings & Exports */}
+                <div className="mt-24 max-w-4xl mx-auto border-t border-slate-800/50 pt-16">
+                    <h3 className="text-2xl font-serif font-bold text-white mb-8 text-center">Advanced Configuration & Reporting</h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-slate-400 leading-relaxed mb-12">
+                        <div>
+                            <h4 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                                <span className="w-6 h-6 rounded bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xs">AI</span>
+                                AI Detection Settings
+                            </h4>
+                            <p className="mb-4">
+                                Schologic gives you granular control over integrity monitoring. Configure detection settings on a per-class basis:
+                            </p>
+                            <ul className="space-y-2 list-disc pl-5 text-sm">
+                                <li>
+                                    <strong className="text-slate-200">Model Selection:</strong> Choose between RoBERTa Large for broad academic writing or specialized models like PirateXX for detecting chat-based generation.
+                                </li>
+                                <li>
+                                    <strong className="text-slate-200">Scan Granularity:</strong> Toggle between sentence-level analysis for quizzes or paragraph-level scanning for long-form essays.
+                                </li>
+                                <li>
+                                    <strong className="text-slate-200">Scoring Method:</strong> Apply weighted scoring to prioritize high-confidence flags or strict binary scoring for zero-tolerance policies.
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                                <span className="w-6 h-6 rounded bg-blue-500/10 flex items-center justify-center text-blue-400 text-xs">EX</span>
+                                Flexible Data Export
+                            </h4>
+                            <p className="mb-4">
+                                Your data belongs to you. The grading grid supports instant export functionality for administrative reporting and archival purposes.
+                            </p>
+                            <ul className="space-y-2 list-disc pl-5 text-sm">
+                                <li>
+                                    <strong className="text-slate-200">PDF Reports:</strong> Generate formal class performance summaries suitable for departmental review.
+                                </li>
+                                <li>
+                                    <strong className="text-slate-200">CSV/Excel Export:</strong> Download raw grade data including Student IDs, assignment scores, and AI integrity metrics for offline analysis.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     );

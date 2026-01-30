@@ -101,6 +101,37 @@ export function AssessmentFeatures() {
                     </div>
 
                 </div>
+
+            </div>
+
+            {/* SEO Content Injection: Dashboard Overview */}
+            <div className="mt-24 max-w-4xl mx-auto border-t border-slate-800/50 pt-16">
+                <h3 className="text-2xl font-serif font-bold text-white mb-6 text-center">Comprehensive Assessment Dashboard</h3>
+                <div className="prose prose-invert max-w-none text-slate-400">
+                    <p className="text-center max-w-3xl mx-auto mb-8">
+                        The Class Manager dashboard is organized into four intuitive tabs designed to support the entire assessment lifecycle, from creation to final grading.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div>
+                            <h4 className="text-white font-bold mb-2 border-l-2 border-indigo-500 pl-3">Assignments Tab</h4>
+                            <p className="text-sm">
+                                Centralize your coursework. Create rich-text assignments with attached rubrics, set strict deadlines, and manage extensions. Supports all major file types including <span className="text-slate-200">DOCX, PDF, and plain text</span> submissions.
+                            </p>
+                        </div>
+                        <div>
+                            <h4 className="text-white font-bold mb-2 border-l-2 border-amber-500 pl-3">Resources Tab</h4>
+                            <p className="text-sm">
+                                A dedicated library for your course materials. Link external URLs, upload syllabus documents, or import zero-cost textbooks from our <span className="text-slate-200">OER Library</span> directly into your class stream.
+                            </p>
+                        </div>
+                        <div>
+                            <h4 className="text-white font-bold mb-2 border-l-2 border-emerald-500 pl-3">Grades Tab</h4>
+                            <p className="text-sm">
+                                A real-time view of student performance. Filter by submission status, sort by AI integrity scores, and export detailed reports. This tab serves as your primary hub for academic oversight.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

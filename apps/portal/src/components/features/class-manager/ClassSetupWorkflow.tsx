@@ -145,6 +145,34 @@ export function ClassSetupWorkflow() {
                         </div>
                     </div>
                 </div>
+
+                {/* SEO Content Injection: Class Creation Process */}
+                <div className="mt-24 max-w-4xl mx-auto border-t border-slate-800/50 pt-16">
+                    <h3 className="text-2xl font-serif font-bold text-white mb-6 text-center">Streamlined Class Administration</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-slate-400 leading-relaxed">
+                        <div>
+                            <h4 className="text-indigo-400 font-bold mb-2">Effortless Course Launch</h4>
+                            <p className="mb-4">
+                                Creating a class in Schologic is designed to be frictionless. Simply navigate to your dashboard, select "Create Class," and define your core parameters including
+                                <strong className="text-slate-200"> Class Name, Course Code (e.g., PSY101), and Academic Term.</strong>
+                            </p>
+                            <p>
+                                Once created, every class functions as an independent workspace where you can manage specific rosters, resources, and assignment policies without affecting your other courses.
+                            </p>
+                        </div>
+                        <div>
+                            <h4 className="text-emerald-400 font-bold mb-2">Secure Student Onboarding</h4>
+                            <p className="mb-4">
+                                Forget manual data entry. Schologic utilizes a
+                                <strong className="text-slate-200"> Secure Invite Code System</strong>. Upon creation, a unique 6-digit alphanumeric code is generated for your class.
+                            </p>
+                            <p>
+                                Distribute this code via your syllabus or email. Students simply click "Join Class" and enter the code to be instantly enrolled, granting them immediate access to all published materials.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     );

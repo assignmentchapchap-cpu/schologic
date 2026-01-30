@@ -3,6 +3,7 @@ import { ClassSetupWorkflow } from '@/components/features/class-manager/ClassSet
 import { AssessmentFeatures } from '@/components/features/class-manager/AssessmentFeatures';
 import { GradingDeepDive } from '@/components/features/class-manager/GradingDeepDive';
 import { EcosystemLinks } from '@/components/features/class-manager/EcosystemLinks';
+import { ClassManagerFAQ } from '@/components/features/class-manager/ClassManagerFAQ';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -22,25 +23,8 @@ export default function ClassManagerPage() {
                 description="The Class Manager is the heart of Schologic LMS. It brings your students, content, and grading into a single, intuitive dashboard designed to save you hours every week."
                 label="Cornerstone Feature"
                 align="center"
-                // Placeholder for actual dashboard visual - using a code block style div for now
-                visual={
-                    <div className="w-full aspect-[16/9] bg-slate-900 flex items-center justify-center relative group">
-                        <div className="text-slate-500 font-mono text-sm">Dashboard Preview Visualization</div>
-                        {/* Mock UI elements to verify layout w/o image asset */}
-                        <div className="absolute top-12 left-12 right-12 bottom-12 border border-slate-700 rounded-xl bg-slate-950/50 flex flex-col p-6 gap-4">
-                            <div className="h-8 w-1/3 bg-slate-800 rounded-lg animate-pulse"></div>
-                            <div className="flex gap-4">
-                                <div className="h-32 w-1/4 bg-slate-800 rounded-lg animate-pulse delay-75"></div>
-                                <div className="h-32 w-1/4 bg-slate-800 rounded-lg animate-pulse delay-150"></div>
-                                <div className="h-32 w-1/4 bg-slate-800 rounded-lg animate-pulse delay-200"></div>
-                                <div className="h-32 w-1/4 bg-slate-800 rounded-lg animate-pulse delay-300"></div>
-                            </div>
-                            <div className="h-full bg-slate-800/50 rounded-lg border border-slate-700 border-dashed flex items-center justify-center text-slate-600">
-                                Active Class Stream
-                            </div>
-                        </div>
-                    </div>
-                }
+            // Placeholder for actual dashboard visual - using a code block style div for now
+
             />
 
             {/* Intro Stat */}
@@ -56,6 +40,7 @@ export default function ClassManagerPage() {
             <AssessmentFeatures />
             <GradingDeepDive />
             <EcosystemLinks />
+            <ClassManagerFAQ />
         </div>
     );
 }
