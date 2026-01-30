@@ -27,15 +27,15 @@ export async function POST(req: NextRequest) {
         // 2. Stream Response
         const stream = await ragService.chatStream(message, history || [], contextChunks);
 
-        // Convert the GoogleGenerativeAI stream to a ReadableStream for Next.js response
+        // Convert the OpenAI stream to a ReadableStream for Next.js response
         const readableStream = new ReadableStream({
             async start(controller) {
                 const encoder = new TextEncoder();
                 try {
                     for await (const chunk of stream) {
-                        const chunkText = chunk.text();
-                        if (chunkText) {
-                            controller.enqueue(encoder.encode(chunkText));
+                        const content = chunk.choices[0]?.delta?.content;
+                        if (content) {
+                            controller.enqueue(encoder.encode(content));
                         }
                     }
                     controller.close();

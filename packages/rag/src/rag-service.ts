@@ -1,6 +1,6 @@
 import { pipeline, env } from '@xenova/transformers';
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
 // Configure transformers for Vercel (Read-only filesystem)
 env.allowLocalModels = false;
@@ -23,16 +23,16 @@ export interface SearchResult {
 // We assume they are available in the server environment
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY!;
+const OPEN_ROUTER_API_KEY = process.env.OPEN_ROUTER_API_KEY!;
 
 console.log("RagService: Initializing with Supabase URL:", SUPABASE_URL?.split('//')[1]?.split('.')[0] || 'MISSING');
-console.log("RagService: Gemini API Key configured:", !!GEMINI_API_KEY);
+console.log("RagService: OpenRouter API Key configured:", !!OPEN_ROUTER_API_KEY);
 
 export class RagService {
     private static instance: RagService;
     private extractor: any = null;
     private supabase;
-    private genAI;
+    private openai;
 
     private constructor() {
         if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
@@ -40,10 +40,17 @@ export class RagService {
         }
         this.supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-        if (!GEMINI_API_KEY) {
-            console.warn("RagService: Missing Gemini API Key");
+        if (!OPEN_ROUTER_API_KEY) {
+            console.warn("RagService: Missing OpenRouter API Key");
         }
-        this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        this.openai = new OpenAI({
+            apiKey: OPEN_ROUTER_API_KEY,
+            baseURL: 'https://openrouter.ai/api/v1',
+            defaultHeaders: {
+                'HTTP-Referer': 'https://schologic.com',
+                'X-Title': 'Schologic',
+            }
+        });
     }
 
     public static getInstance(): RagService {
@@ -143,40 +150,23 @@ CONTEXT:
 ${contextText}
 `;
 
-        // 3. Construct Gemini History
-        // Gemini expects { role: 'user' | 'model', parts: [{ text: ... }] }
-        // The history MUST start with a 'user' message. 
-        // We filter out any leading assistant/model messages.
+        const openaiHistory: any[] = history.map(msg => ({
+            role: msg.role === 'assistant' ? 'assistant' : msg.role,
+            content: msg.content
+        }));
 
-        const processedHistory = [];
-        let firstUserFound = false;
+        const modelName = process.env.CHAT_MODEL || "mistralai/mistral-small-3.1-24b-instruct:free";
 
-        for (const msg of history) {
-            if (msg.role === 'user') {
-                firstUserFound = true;
-            }
-            if (firstUserFound) {
-                processedHistory.push({
-                    role: msg.role === 'assistant' ? 'model' : 'user',
-                    parts: [{ text: msg.content }]
-                });
-            }
-        }
-
-        const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
-        const model = this.genAI.getGenerativeModel({
+        const response = await this.openai.chat.completions.create({
             model: modelName,
-            systemInstruction: systemPrompt
+            messages: [
+                { role: 'system', content: systemPrompt },
+                ...openaiHistory,
+                { role: 'user', content: message }
+            ],
+            stream: true,
         });
 
-        const chat = model.startChat({
-            history: processedHistory,
-            generationConfig: {
-                maxOutputTokens: 1000,
-            }
-        });
-
-        const result = await chat.sendMessageStream(message);
-        return result.stream;
+        return response;
     }
 }

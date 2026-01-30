@@ -9,7 +9,7 @@
         "dev": "tsc -w"
     },
     "dependencies": {
-        "@google/generative-ai": "^0.24.1",
+        "openai": "^4.24.1",
         "@supabase/supabase-js": "^2.39.7",
         "@xenova/transformers": "^2.16.0",
         "langchain": "^0.1.28"
