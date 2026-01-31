@@ -36,8 +36,8 @@ export default function AITeachingAssistantPage() {
         <div className="bg-slate-950 min-h-screen pb-0">
             <FeatureHero
                 title="Your 24/7 Grading Partner"
-                description="Reduce grading time by 75% without sacrificing quality. Apertus TA drafts feedback, generates rubrics, and guides you through the portal."
-                label="Apertus TA"
+                description="Reduce grading time by 75% without sacrificing quality. Schologic TA drafts feedback, generates rubrics, and guides you through the portal."
+                label="AI Teaching Assistant"
                 align="center"
                 visual={<ApertusTA />}
             />

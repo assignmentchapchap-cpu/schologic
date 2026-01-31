@@ -20,7 +20,7 @@ export default function ApertusTA() {
                         </h2>
                         <p className="text-xl text-slate-500 leading-relaxed font-light">
                             Burnout isn't caused by teaching; it's caused by grading.
-                            Give every instructor an <strong className="text-slate-900 font-medium">Apertus-70B Teaching Assistant</strong>.
+                            Give every instructor a <strong className="text-slate-900 font-medium">Schologic Teaching Assistant</strong>.
                         </p>
 
                         <div className="space-y-6 pt-4">
@@ -56,7 +56,7 @@ export default function ApertusTA() {
                                         <Sparkles className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <div className="text-sm font-bold text-slate-900">Apertus TA</div>
+                                        <div className="text-sm font-bold text-slate-900">Schologic TA</div>
                                         <div className="text-xs text-indigo-600 font-mono">Status: Reasoning...</div>
                                     </div>
                                 </div>
