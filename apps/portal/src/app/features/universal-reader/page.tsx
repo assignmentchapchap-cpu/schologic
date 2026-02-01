@@ -7,11 +7,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Universal Reader | Schologic LMS',
-    description: 'A single, unified interface for all course content. Read PDFs, DOCX, and IMSCC archives with built-in AI study tools.',
+    title: 'Open Learning Content Reader | Schologic LMS',
+    description: 'Enable open learning with a unified reader for PDFs, DOCX, and Common Cartridge. Built for universities and colleges in Kenya.',
+    keywords: ['open learning', 'content reader', 'PDF viewer', 'Common Cartridge', 'universities', 'Kenya'],
     openGraph: {
-        title: 'Universal Reader | Schologic LMS',
-        description: 'A single, unified interface for all course content. Read PDFs, DOCX, and IMSCC archives with built-in AI study tools.',
+        title: 'Open Learning Content Reader | Schologic LMS',
+        description: 'Enable open learning with a unified reader for PDFs, DOCX, and Common Cartridge. Built for universities and colleges in Kenya.',
     }
 };
 
@@ -66,7 +67,7 @@ export default function UniversalReaderPage() {
                                 In traditional LMS platforms, accessing content is a disjointed experience: Download a PDF, find it in the downloads folder, open it in Acrobat. Repeat for every syllabus and reading.
                             </p>
                             <p className="leading-relaxed">
-                                Schologic's <strong>Universal Reader</strong> acts as a unified operating system for course content. Whether an instructor uploads a syllabus or imports a full <Link href="/features/oer-library" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-4">Open Educational Resource</Link>, it opens instantly in our secure, streaming reader.
+                                Schologic's <strong>Universal Reader</strong> acts as a unified operating system for course content, facilitating true <strong>open learning</strong> by removing proprietary format barriers. Whether an instructor uploads a syllabus or imports a full <Link href="/features/oer-library" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-4">Open Educational Resource</Link>, it opens instantly in our secure, streaming reader.
                             </p>
                         </div>
                     </div>

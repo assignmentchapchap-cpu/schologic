@@ -6,11 +6,12 @@ import { Shield, Eye, Lock, Scale, CheckCircle, AlertTriangle, Github, Server, C
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'AI Detection & Integrity | Schologic LMS',
-    description: 'Evidence-based academic integrity analysis using multi-model AI detection (RoBERTa) with granular transparency.',
+    title: 'AI Content Detection for Academic Integrity | Schologic LMS',
+    description: 'AI content detection for online classes. Multi-model analysis with transparent reporting for universities in Kenya.',
+    keywords: ['AI content detection', 'academic integrity', 'online classes', 'Kenya', 'plagiarism detection'],
     openGraph: {
-        title: 'AI Detection & Integrity | Schologic LMS',
-        description: 'Evidence-based academic integrity analysis using multi-model AI detection (RoBERTa) with granular transparency.',
+        title: 'AI Content Detection for Academic Integrity | Schologic LMS',
+        description: 'AI content detection for online classes. Multi-model analysis with transparent reporting for universities in Kenya.',
     },
     other: {
         'application/ld+json': JSON.stringify({
@@ -117,7 +118,7 @@ export default function AIDetectionPage() {
                                 Protecting the Value of a Degree.
                             </h4>
                             <p className="text-slate-400 leading-relaxed mb-6">
-                                Academic integrity isn't just about catching cheaters—it's about preserving the value of education. In an era of instant answers, ensuring that students engage with the material, think critically, and produce original work is more crucial than ever.
+                                Academic integrity isn't just about catching cheaters—it's about preserving the value of education, especially in <strong>online classes</strong>. In an era of instant answers, ensuring that students engage with the material, think critically, and produce original work is more crucial than ever.
                             </p>
                             <p className="text-slate-400 leading-relaxed">
                                 AI detection helps maintain a level playing field, validates genuine student effort, and upholds the standards that give Schologic degrees their meaning.

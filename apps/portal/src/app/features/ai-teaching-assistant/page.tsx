@@ -7,11 +7,12 @@ import { AITeachingAssistantFAQ } from '@/components/features/ai-teaching-assist
 import { RelatedFeatures } from '@/components/features/RelatedFeatures';
 
 export const metadata: Metadata = {
-    title: 'AI Teaching Assistant & Grading | Schologic LMS',
-    description: 'Automate grading, generate rubrics, and get instant portal support with the Schologic AI Teaching Assistant. Your 24/7 co-pilot for academic management.',
+    title: 'AI Teacher Assistant for Grading | Schologic LMS',
+    description: 'AI teacher assistant for distance learning. Automate grading, generate rubrics, reduce instructor burnout in universities and colleges.',
+    keywords: ['AI assistant', 'teacher assistant', 'AI grading', 'distance learning', 'Kenya', 'rubric generator'],
     openGraph: {
-        title: 'AI Teaching Assistant & Grading | Schologic LMS',
-        description: 'Automate grading, generate rubrics, and get instant portal support with the Schologic AI Teaching Assistant. Your 24/7 co-pilot for academic management.',
+        title: 'AI Teacher Assistant for Grading | Schologic LMS',
+        description: 'AI teacher assistant for distance learning. Automate grading, generate rubrics, reduce instructor burnout in universities and colleges.',
     },
     other: {
         'application/ld+json': JSON.stringify({
@@ -36,7 +37,7 @@ export default function AITeachingAssistantPage() {
         <div className="bg-slate-950 min-h-screen pb-0">
             <FeatureHero
                 title="Your 24/7 Grading Partner"
-                description="Reduce grading time by 75% without sacrificing quality. Schologic TA drafts feedback, generates rubrics, and guides you through the portal."
+                description="Reduce grading time by 75% without sacrificing quality. Schologic TA drafts feedback, generates rubrics, and guides you through the portal—the ideal companion for distance learning environments."
                 label="AI Teaching Assistant"
                 align="center"
                 visual={<SchologicTA />}

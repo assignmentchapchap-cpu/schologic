@@ -63,12 +63,7 @@ export default function Hero({ onOpenDemo, onOpenPilot }: HeroProps) {
                     </div>
 
                     {/* Live Proof Widget */}
-                    <div className="mt-20 w-full max-w-2xl">
-                        <LiveRubricWidget />
-                        <p className="text-center text-xs text-slate-600 mt-4 font-mono">
-                            Evidence: Model inference on Schologic-70B. Based on EMNLP methodologies.
-                        </p>
-                    </div>
+
                 </div>
             </div>
 

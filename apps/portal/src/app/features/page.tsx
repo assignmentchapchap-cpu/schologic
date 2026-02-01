@@ -8,11 +8,28 @@ import { GraduationCap, Shield, Sparkles, BookOpen, Grid, Archive, Users, Zap, L
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Schologic Features | The Sovereign Integrity Layer',
-    description: 'Explore the Schologic LMS platform features: AI Detection, Class Management, Automated Grading, and Universal Content Reading.',
+    title: 'LMS for Universities & Colleges in Kenya | Schologic',
+    description: 'The dedicated LMS for universities and colleges. Explore AI content detection, academic integrity tools, and zero-textbook-cost resources.',
+    keywords: ['LMS', 'universities', 'colleges', 'Kenya', 'academic integrity', 'AI content detection', 'zero textbook cost'],
     openGraph: {
-        title: 'Schologic Features | The Sovereign Integrity Layer',
-        description: 'Explore the Schologic LMS platform features: AI Detection, Class Management, Automated Grading, and Universal Content Reading.',
+        title: 'LMS for Universities & Colleges in Kenya | Schologic',
+        description: 'The dedicated LMS for universities and colleges. Explore AI content detection, academic integrity tools, and zero-textbook-cost resources.',
+    },
+    other: {
+        'application/ld+json': JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            'name': 'Schologic LMS',
+            'applicationCategory': 'EducationalApplication',
+            'operatingSystem': 'Web',
+            'offers': { '@type': 'Offer', 'price': '0', 'priceCurrency': 'USD' },
+            'featureList': [
+                'AI Content Detection',
+                'Automated Grading',
+                'Zero Textbook Cost Resources',
+                'Class Management'
+            ]
+        })
     }
 };
 
@@ -21,7 +38,7 @@ export default function FeaturesPage() {
         <div className="bg-slate-950 min-h-screen">
             <FeatureHero
                 title="The Sovereign Integrity Layer"
-                description="Schologic LMS combines advanced AI detection, automated grading, and zero-textbook-cost resources into a single, sovereign platform."
+                description="Schologic is the dedicated LMS for universities and colleges, combining advanced AI detection, automated grading, and zero-textbook-cost resources into a single, sovereign platform."
                 label="Platform Features"
                 align="center"
                 ctaText="Start Your Pilot"

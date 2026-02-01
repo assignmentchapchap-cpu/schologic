@@ -7,11 +7,28 @@ import { ClassManagerFAQ } from '@/components/features/class-manager/ClassManage
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Class Manager | Schologic LMS',
-    description: 'The command center for your teaching workflow. Manage students, assignments, and grades in a single, intuitive dashboard.',
+    title: 'Online Class Manager for Universities | Schologic LMS',
+    description: 'Manage online classes for universities in Kenya. Single dashboard for hybrid, in-person, and distance learning courses.',
+    keywords: ['online classes', 'class management', 'LMS', 'universities', 'Kenya', 'distance learning'],
     openGraph: {
-        title: 'Class Manager | Schologic LMS',
-        description: 'The command center for your teaching workflow. Manage students, assignments, and grades in a single, intuitive dashboard.',
+        title: 'Online Class Manager for Universities | Schologic LMS',
+        description: 'Manage online classes for universities in Kenya. Single dashboard for hybrid, in-person, and distance learning courses.',
+    },
+    other: {
+        'application/ld+json': JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            'name': 'Schologic Class Manager',
+            'applicationCategory': 'EducationalApplication',
+            'operatingSystem': 'Web',
+            'offers': { '@type': 'Offer', 'price': '0', 'priceCurrency': 'USD' },
+            'featureList': [
+                'Online Class Management',
+                'Assignment Tracking',
+                'Student Roster Management',
+                'Gradebook Integration'
+            ]
+        })
     }
 };
 
@@ -32,7 +49,7 @@ export default function ClassManagerPage() {
             <div className="max-w-3xl mx-auto text-center mb-24 px-6 pt-12">
                 <h2 className="text-3xl md:text-4xl font-serif font-bold text-white mb-6">Built for the Modern Instructor</h2>
                 <p className="text-lg text-slate-400 leading-relaxed">
-                    Traditional LMS interfaces are cluttered and confusing. Schologic's Class Manager strips away the noise, focusing on the three things that matter most: <span className="text-white font-bold">Content, Engagement, and Assessment.</span>
+                    Traditional LMS interfaces are cluttered and confusing. Schologic's Class Manager strips away the noise, focusing on what matters most for in-person and <strong className="text-white">online classes</strong>: <span className="text-white font-bold">Content, Engagement, and Assessment.</span>
                 </p>
             </div>
 

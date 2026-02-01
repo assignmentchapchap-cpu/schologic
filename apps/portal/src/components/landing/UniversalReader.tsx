@@ -25,7 +25,7 @@ export default function UniversalReader() {
                         <span className="text-indigo-600">Zero-Textbook-Cost Engine.</span>
                     </h2>
                     <p className="text-xl text-slate-500 leading-relaxed font-light">
-                        The ZTC mandate is the #1 budget priority for mid-sized colleges.
+                        The ZTC mandate is the #1 budget priority for universities and colleges.
                         Schologic natively ingests <strong className="text-slate-900 font-medium">LibreTexts</strong>, <strong className="text-slate-900 font-medium">Common Cartridge</strong>, and <strong className="text-slate-900 font-medium">PDFs</strong> into one standardized, accessible reader.
                     </p>
                 </div>
