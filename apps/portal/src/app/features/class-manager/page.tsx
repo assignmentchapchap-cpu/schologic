@@ -23,8 +23,9 @@ export default function ClassManagerPage() {
                 description="The Class Manager is the heart of Schologic LMS. It brings your students, content, and grading into a single, intuitive dashboard designed to save you hours every week."
                 label="Cornerstone Feature"
                 align="center"
-            // Placeholder for actual dashboard visual - using a code block style div for now
-
+                // Placeholder for actual dashboard visual - using a code block style div for now
+                ctaText="Start Your Pilot"
+                ctaHref="/#request-pilot"
             />
 
             {/* Intro Stat */}

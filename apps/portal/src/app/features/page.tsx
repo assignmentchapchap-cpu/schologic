@@ -24,6 +24,8 @@ export default function FeaturesPage() {
                 description="Schologic LMS combines advanced AI detection, automated grading, and zero-textbook-cost resources into a single, sovereign platform."
                 label="Platform Features"
                 align="center"
+                ctaText="Start Your Pilot"
+                ctaHref="/#request-pilot"
             />
 
             <div className="container mx-auto px-6 pb-24">

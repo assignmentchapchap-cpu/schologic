@@ -39,6 +39,8 @@ export default function AIDetectionPage() {
                 label="Integrity Hub"
                 align="center"
                 visual={<IntegrityHub />}
+                ctaText="Start Your Pilot"
+                ctaHref="/#request-pilot"
             />
 
             <div className="container mx-auto px-6">

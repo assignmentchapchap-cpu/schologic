@@ -60,7 +60,7 @@ export default function Footer() {
                         <ul className="space-y-2 text-slate-500 text-sm">
                             <li><a href="#" className="hover:text-indigo-400 transition-colors">Linguistic Forensics</a></li>
                             <li><a href="#" className="hover:text-indigo-400 transition-colors">Universal Reader</a></li>
-                            <li><a href="#" className="hover:text-indigo-400 transition-colors">Apertus TA</a></li>
+                            <li><a href="/features/ai-teaching-assistant" className="hover:text-indigo-400 transition-colors">Schologic TA</a></li>
                             <li><a href="#" className="hover:text-indigo-400 transition-colors">LTI 1.3 Integrations</a></li>
                         </ul>
                     </div>

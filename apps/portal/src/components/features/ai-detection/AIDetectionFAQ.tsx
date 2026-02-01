@@ -42,7 +42,7 @@ const FAQS = [
     },
     {
         question: "Is student data used to train your models?",
-        answer: "No. Schologic relies on pre-trained open-weights models (like RoBERTa and Apertus). We do not use your students' submissions to train our models, ensuring full data sovereignty and compliance with educational privacy standards (FERPA/GDPR)."
+        answer: "No. Schologic relies on pre-trained open-weights models (like RoBERTa). We do not use your students' submissions to train our models, ensuring full data sovereignty and compliance with educational privacy standards (FERPA/GDPR)."
     }
 ];
 

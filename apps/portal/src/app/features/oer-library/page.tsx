@@ -84,6 +84,8 @@ export default function OERLibraryPage() {
                         </div>
                     </div>
                 }
+                ctaText="Start a Free Account"
+                ctaHref="/login?view=signup"
             />
 
             <div className="container mx-auto px-6">

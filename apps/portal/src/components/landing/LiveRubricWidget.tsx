@@ -54,7 +54,7 @@ export default function LiveRubricWidget() {
             <div className="bg-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-700">
                 <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Apertus-70B • Inference Ready</span>
+                    <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Schologic-70B • Inference Ready</span>
                 </div>
                 {rubric && (
                     <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono">
@@ -81,10 +81,10 @@ export default function LiveRubricWidget() {
                             onClick={handleGenerate}
                             disabled={!instruction || isGenerating}
                             className={`absolute bottom-3 right-3 px-4 py-2 rounded-md font-bold text-xs uppercase flex items-center gap-2 transition-all ${!instruction
-                                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                    : isGenerating
-                                        ? 'bg-indigo-600 text-white cursor-wait'
-                                        : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 focus:ring-offset-slate-900'
+                                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                : isGenerating
+                                    ? 'bg-indigo-600 text-white cursor-wait'
+                                    : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 focus:ring-offset-slate-900'
                                 }`}
                         >
                             {isGenerating ? (

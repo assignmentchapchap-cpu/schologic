@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/landing/Navbar';
 import Hero from '@/components/landing/Hero';
 import IntegrityHub from '@/components/landing/IntegrityHub';
@@ -14,6 +14,13 @@ import { Sparkles } from 'lucide-react';
 export default function Home() {
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [showPilotModal, setShowPilotModal] = useState(false);
+
+  useEffect(() => {
+    // Check for hash to open modals on initial load or navigation
+    if (typeof window !== 'undefined' && window.location.hash === '#request-pilot') {
+      setShowPilotModal(true);
+    }
+  }, []);
 
   return (
     <main className="min-h-screen bg-slate-900 selection:bg-indigo-500/30">
@@ -35,7 +42,7 @@ export default function Home() {
       <SchologicTA />
 
       {/* Final Institutional CTA */}
-      <section className="py-24 bg-indigo-900 relative overflow-hidden border-t border-indigo-800">
+      <section id="pilot" className="py-24 bg-indigo-900 relative overflow-hidden border-t border-indigo-800">
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -76,7 +83,7 @@ export default function Home() {
       <div className="hidden">
         Evidence-Based AI Detection based on the Human ChatGPT Comparison Corpus (HC3).
         Schologic LMS is the Sovereign Integrity Layer.
-        It uses Open-Weights Models (Apertus-70B) for Linguistic Forensic Analysis.
+        It uses Open-Weights Models for Linguistic Forensic Analysis.
         LTI 1.3 Compliant. IMS Global Common Cartridge 1.3.
       </div>
     </main>

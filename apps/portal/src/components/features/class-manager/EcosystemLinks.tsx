@@ -47,7 +47,7 @@ export function EcosystemLinks() {
                                 Connect assignments to our AI Teaching Assistant to generate rubrics and draft feedback instantly.
                             </p>
                             <div className="flex items-center gap-2 text-amber-400 text-sm font-bold group-hover:translate-x-1 transition-transform">
-                                Meet Apertus TA <ArrowRight className="w-4 h-4" />
+                                Meet Schologic TA <ArrowRight className="w-4 h-4" />
                             </div>
                         </div>
                     </Link>

@@ -51,10 +51,10 @@ export function FeatureHero({
                     </p>
 
                     <div className={`flex flex-col sm:flex-row items-center gap-4 ${isCenter ? 'justify-center' : ''}`}>
-                        <button className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-bold hover:bg-slate-50 transition-all flex items-center gap-2 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_40px_-5px_rgba(255,255,255,0.4)] hover:scale-105 active:scale-95 group">
+                        <Link href={ctaHref} className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-bold hover:bg-slate-50 transition-all flex items-center gap-2 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_40px_-5px_rgba(255,255,255,0.4)] hover:scale-105 active:scale-95 group">
                             {ctaText}
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </button>
+                        </Link>
                     </div>
                 </div>
 

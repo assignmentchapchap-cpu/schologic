@@ -48,6 +48,8 @@ export default function UniversalReaderPage() {
                 label="Universal Reader"
                 align="center"
                 visual={<ReaderInterfaceMock />}
+                ctaText="Start Your Pilot"
+                ctaHref="/#request-pilot"
             />
 
             <div className="container mx-auto px-6">

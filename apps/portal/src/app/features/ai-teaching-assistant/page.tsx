@@ -40,6 +40,8 @@ export default function AITeachingAssistantPage() {
                 label="AI Teaching Assistant"
                 align="center"
                 visual={<SchologicTA />}
+                ctaText="Start a Free Account"
+                ctaHref="/login?view=signup"
             />
 
             <div className="container mx-auto px-6">

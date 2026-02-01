@@ -24,7 +24,7 @@ export default function Hero({ onOpenDemo, onOpenPilot }: HeroProps) {
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-8 font-mono">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Powered by Apertus-70B
+                        Powered by Schologic AI
                     </div>
 
                     {/* Headline */}
@@ -66,7 +66,7 @@ export default function Hero({ onOpenDemo, onOpenPilot }: HeroProps) {
                     <div className="mt-20 w-full max-w-2xl">
                         <LiveRubricWidget />
                         <p className="text-center text-xs text-slate-600 mt-4 font-mono">
-                            Evidence: Model inference on Apertus-70B. Based on EMNLP methodologies.
+                            Evidence: Model inference on Schologic-70B. Based on EMNLP methodologies.
                         </p>
                     </div>
                 </div>
