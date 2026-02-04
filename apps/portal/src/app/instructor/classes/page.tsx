@@ -3,7 +3,7 @@
 
 import { useToast } from '@/context/ToastContext';
 import { createClient } from "@schologic/database";
-import { Plus, Users, Calendar, ArrowRight, X, GraduationCap, AlertCircle, FileText, Clock, Home } from 'lucide-react';
+import { Plus, Users, Calendar, ArrowRight, X, GraduationCap, AlertCircle, FileText, Clock, Home, ChevronDown } from 'lucide-react';
 import { useEffect, useState, Suspense } from 'react';
 import { isDateFuture, isDateAfter } from '@/lib/date-utils';
 import Link from 'next/link';
@@ -28,6 +28,7 @@ function ClassesContent() {
 
     // Modal State
     const [creating, setCreating] = useState(false);
+    const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [newClassName, setNewClassName] = useState('');
     const [classCode, setClassCode] = useState('');
@@ -174,30 +175,65 @@ function ClassesContent() {
         <div className="min-h-screen bg-slate-50 p-6 md:p-8">
             <div className="max-w-6xl mx-auto">
                 <header className="flex flex-row justify-between items-center mb-8 gap-4 animate-fade-in">
-                    {/* New Practicum Button - Left Side */}
-                    <button
-                        onClick={() => window.location.href = '/instructor/practicum/new'}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 md:px-5 md:py-3 rounded-xl font-bold hidden md:flex items-center gap-2 transition-all shadow-lg active:scale-95 text-xs md:text-sm"
-                        title="Create New Practicum"
-                    >
-                        <FileText className="w-5 h-5 md:w-4 md:h-4" />
-                        <span className="hidden md:inline uppercase tracking-wide">New Practicum</span>
-                    </button>
-
-                    <div className="text-center flex-1">
+                    <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">My Classes & Practicums</h1>
                         <p className="text-slate-500 font-bold text-sm mt-1">Manage classrooms and field attachments</p>
                     </div>
 
-                    {/* New Class Button - Right Side */}
-                    <button
-                        onClick={() => setCreating(true)}
-                        className="bg-slate-900 hover:bg-black text-white p-2.5 md:px-5 md:py-3 rounded-xl font-bold hidden md:flex items-center gap-2 transition-all shadow-lg active:scale-95 text-xs md:text-sm"
-                        title="Create New Class"
-                    >
-                        <Plus className="w-5 h-5 md:w-4 md:h-4" />
-                        <span className="hidden md:inline uppercase tracking-wide">New Class</span>
-                    </button>
+                    {/* Create New Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setCreateDropdownOpen(!createDropdownOpen)}
+                            className="bg-slate-900 hover:bg-black text-white px-5 py-3 rounded-xl font-bold hidden md:flex items-center gap-2 transition-all shadow-lg active:scale-95 text-sm"
+                            title="Create New"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span className="uppercase tracking-wide">Create New</span>
+                            <ChevronDown className={`w-4 h-4 transition-transform ${createDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {createDropdownOpen && (
+                            <>
+                                {/* Backdrop to close dropdown */}
+                                <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setCreateDropdownOpen(false)}
+                                />
+                                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-20 animate-fade-in">
+                                    <button
+                                        onClick={() => {
+                                            setCreating(true);
+                                            setCreateDropdownOpen(false);
+                                        }}
+                                        className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                                    >
+                                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                            <Users className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-slate-900">New Class</p>
+                                            <p className="text-xs text-slate-500">Standard classroom</p>
+                                        </div>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            window.location.href = '/instructor/practicum/new';
+                                        }}
+                                        className="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 transition-colors border-t border-slate-100"
+                                    >
+                                        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                                            <FileText className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-slate-900">New Practicum</p>
+                                            <p className="text-xs text-slate-500">Field attachment cohort</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </header>
 
                 {/* Combined List: Practicums First, then Classes */}
