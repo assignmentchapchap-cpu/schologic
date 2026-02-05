@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Home, Terminal, User, Upload, LogOut, GraduationCap, Calendar, Settings, FileText, Menu, X, Search, Plus, Bell, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, Terminal, User, Upload, LogOut, GraduationCap, Calendar, Settings, FileText, Menu, X, Search, Plus, Bell, BookOpen, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NotificationBell from './NotificationBell';
 import { createClient } from "@schologic/database";
@@ -29,17 +29,28 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
     const router = useRouter();
     const supabase = createClient();
     const [enablePracticums, setEnablePracticums] = useState(false);
+    const [hasPracticums, setHasPracticums] = useState(false);
     const { interceptLink } = useNavigationGuard();
 
     useEffect(() => {
         const checkPrefs = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
             if (role === 'instructor') {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const { data } = await supabase.from('profiles').select('preferences').eq('id', user.id).maybeSingle();
-                    if (data?.preferences && (data.preferences as any).enable_practicum_management) {
-                        setEnablePracticums(true);
-                    }
+                const { data } = await supabase.from('profiles').select('preferences').eq('id', user.id).maybeSingle();
+                if (data?.preferences && (data.preferences as any).enable_practicum_management) {
+                    setEnablePracticums(true);
+                }
+            } else {
+                // Check if student has any practicum enrollments
+                const { count } = await supabase
+                    .from('practicum_enrollments')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('student_id', user.id);
+
+                if (count && count > 0) {
+                    setHasPracticums(true);
                 }
             }
         };
@@ -63,7 +74,8 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
     ] : [
         { href: '/student/dashboard', label: 'Dashboard', icon: Home, color: 'text-indigo-400' },
         { href: '/student/classes', label: 'My Classes', icon: GraduationCap, color: 'text-amber-500' },
-        { href: '/student/grades', label: 'My Grades', icon: FileText, color: 'text-emerald-400' },
+        ...(hasPracticums ? [{ href: '/student/practicums', label: 'My Practicums', icon: FileText, color: 'text-emerald-500' }] : []),
+        { href: '/student/grades', label: 'My Grades', icon: Award, color: 'text-emerald-400' },
         { href: '/student/profile', label: 'Profile', icon: User, color: 'text-teal-400' },
     ];
 

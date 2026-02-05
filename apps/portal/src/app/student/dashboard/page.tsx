@@ -1,9 +1,8 @@
-
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
-import { BookOpen, Calendar, Clock, ArrowRight, Plus, Search, User as UserIcon, X, CheckCircle } from 'lucide-react';
+import { BookOpen, Calendar, Clock, ArrowRight, Plus, Search, User as UserIcon, X, CheckCircle, FileText, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Database } from "@schologic/database";
@@ -16,6 +15,7 @@ import StudentCalendar from '@/components/student/StudentCalendar';
 import GlobalAssignmentsCard from '@/components/student/GlobalAssignmentsCard';
 import { useToast } from '@/context/ToastContext';
 import { useUser } from '@/context/UserContext';
+import { cn } from '@/lib/utils';
 
 
 type EnrollmentWithClass = {
@@ -50,8 +50,22 @@ type ResourceWithClass = {
     } | null;
 };
 
+type PracticumEnrollmentWithData = {
+    practicum_id: string;
+    status: string;
+    practicums: {
+        id: string;
+        title: string;
+        instructor_id: string;
+        invite_code: string;
+        start_date: string;
+        end_date: string;
+    } | null;
+};
+
 function DashboardContent() {
     const [enrollments, setEnrollments] = useState<EnrollmentWithClass[]>([]);
+    const [practicumEnrollments, setPracticumEnrollments] = useState<PracticumEnrollmentWithData[]>([]);
     const [allAssignments, setAllAssignments] = useState<AssignmentWithClass[]>([]);
     const [resources, setResources] = useState<ResourceWithClass[]>([]);
     const [loading, setLoading] = useState(true);
@@ -85,7 +99,7 @@ function DashboardContent() {
             if (!user) return;
             // No need to set user locally, we use context user
 
-            // 1. Fetch Enrollments
+            // 1. Fetch Class Enrollments
             const { data: enrollData, error: enrollErr } = await supabase
                 .from('enrollments')
                 .select(`
@@ -97,11 +111,26 @@ function DashboardContent() {
                 .eq('student_id', user.id);
 
             if (enrollErr) throw enrollErr;
+            setEnrollments((enrollData as unknown as EnrollmentWithClass[]) || []);
 
-            const validEnrollments = (enrollData as unknown as EnrollmentWithClass[]) || [];
-            setEnrollments(validEnrollments);
+            // 1b. Fetch Practicum Enrollments
+            const { data: pracData, error: pracErr } = await supabase
+                .from('practicum_enrollments')
+                .select(`
+                    practicum_id,
+                    status,
+                    practicums (
+                        id, title, instructor_id, invite_code, start_date, end_date
+                    )
+                `)
+                .eq('student_id', user.id);
+
+            if (!pracErr) {
+                setPracticumEnrollments((pracData as unknown as PracticumEnrollmentWithData[]) || []);
+            }
 
             // 2. Fetch All Assignments for search (we'll filter for "Upcoming" view)
+            const validEnrollments = (enrollData as unknown as EnrollmentWithClass[]) || [];
             if (validEnrollments.length > 0) {
                 const classIds = validEnrollments.map(e => e.class_id);
 
@@ -145,91 +174,120 @@ function DashboardContent() {
         if (!joinCode) return;
         setJoining(true);
 
+        const cleanCode = joinCode.trim().toUpperCase();
+
         try {
             if (!user) {
                 router.push('/login?role=student');
                 return;
             }
 
-            // 1. Find class with instructor details
+            // 1. Try to find a CLASS first
             const { data: cls, error: clsErr } = await supabase
                 .from('classes')
-                .select('id, is_locked, instructor:profiles!instructor_id(settings), enrollments(count)')
-                .eq('invite_code', joinCode.trim().toUpperCase())
+                .select('id, is_locked, name, instructor_id, instructor:profiles!instructor_id(settings, email), enrollments(count)')
+                .eq('invite_code', cleanCode)
                 .single();
 
-            if (clsErr || !cls) throw new Error("Invalid code");
-            if (cls.is_locked) throw new Error("Class is locked");
+            if (!clsErr && cls) {
+                if (cls.is_locked) throw new Error("Class is locked");
 
-            // Demo Limit Check (10 Students)
-            // We need to check if the INSTRUCTOR is a demo user.
-            // Since we don't have is_demo on profile directly in types yet (it's in metadata), 
-            // we might need to check the auth user or rely on profile settings if we stored it there.
-            // Let's do a reliable check: Retrieve the instructor's Auth Metadata via RPC or just check Profile if we synced it.
-            // ALTERNATIVE: Use the profile scan. Logic: If instructor profile exists, let's assume valid.
-            // But we need to know if they are demo. 
-            // Workaround: Check if we can get user_metadata of the instructor from client? No.
-            // We'll check via a server action or simpler: 
-            // If the CLASS was created by a demo user (we don't track that on class).
-
-            // Re-think: We added `is_demo` to `user_metadata` in Auth. We can't query that easily from Client with RLS unless we expose it.
-            // Let's assume for now we check the *current* user (Student) isn't relevant. 
-            // It's the CLASS OWNER.
-
-            // To properly implement this securely, we should move Join Class to a Server Action.
-            // But for now, let's fetch the Owner's Profile and check if their email ends with @schologic.demo (Convention)
-
-            const { data: instructorUser } = await supabase
-                .from('profiles')
-                .select('email')
-                .eq('id', (cls as any).instructor_id || '') // Types might be tricky with join
-                .single();
-
-            // Actually, `cls` join above returns strict structure. 
-            // Let's do a separate fetch for simpler typing if needed, or refine query.
-
-            const { data: owner } = await supabase.from('classes').select('instructor_id').eq('id', cls.id).single();
-            if (owner) {
-                const { data: ownerProfile } = await supabase.from('profiles').select('email').eq('id', owner.instructor_id || '').single();
-                if (ownerProfile?.email?.endsWith('@schologic.demo')) {
+                // Demo Limit Check
+                if (cls.instructor?.email?.endsWith('@schologic.demo')) {
                     const currentCount = cls.enrollments?.[0]?.count || 0;
                     if (currentCount >= 10) {
                         throw new Error("Demo Class Full: This demo class is limited to 10 students.");
                     }
                 }
+
+                // Ensure Profile Exists
+                await supabase.from('profiles').upsert({
+                    id: user.id,
+                    email: user.email,
+                    role: 'student',
+                    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'
+                }, { onConflict: 'id', ignoreDuplicates: true });
+
+                // Insert Enrollment
+                const { error: enrollErr } = await supabase
+                    .from('enrollments')
+                    .insert([{ student_id: user.id, class_id: cls.id }]);
+
+                if (enrollErr) {
+                    if (enrollErr.code === '23505') throw new Error("Already joined this class");
+                    throw enrollErr;
+                }
+
+                showToast(`Joined ${cls.name}!`, 'success');
+                setJoinCode('');
+                fetchDashboardData();
+                return;
             }
 
-            // 2. Ensure Profile Exists (Fix for FK Violation)
-            const { error: profErr } = await supabase.from('profiles').upsert({
-                id: user.id,
-                email: user.email,
-                role: 'student',
-                full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'
-            }, { onConflict: 'id', ignoreDuplicates: true }); // Only create if missing to preserve existing bio/data
+            // 2. If no class, try to find a PRACTICUM
+            const { data: prac, error: pracErr } = await supabase
+                .from('practicums')
+                .select('id, title, instructor_id')
+                .eq('invite_code', cleanCode)
+                .single();
 
-            if (profErr) console.error("Profile check warning:", profErr);
+            if (!pracErr && prac) {
+                // Ensure Profile Exists
+                await supabase.from('profiles').upsert({
+                    id: user.id,
+                    email: user.email,
+                    role: 'student',
+                    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'
+                }, { onConflict: 'id', ignoreDuplicates: true });
 
-            // 3. Insert Enrollment
-            const { error: enrollErr } = await supabase
-                .from('enrollments')
-                .insert([{
-                    student_id: user.id,
-                    class_id: cls.id
-                }]);
+                // Create practicum enrollment
+                const { error: pEnrollErr } = await supabase
+                    .from('practicum_enrollments')
+                    .insert([{
+                        practicum_id: prac.id,
+                        student_id: user.id,
+                        status: 'draft' // Initial status is now DRAFT (Incomplete)
+                    }]);
 
-            if (enrollErr) {
-                if (enrollErr.code === '23505') throw new Error("Already joined this class");
-                throw enrollErr;
+                if (pEnrollErr) {
+                    if (pEnrollErr.code === '23505') throw new Error("Already joined this practicum");
+                    throw pEnrollErr;
+                }
+
+                showToast(`Cohort Joined! Please complete your registration.`, 'success');
+                setJoinCode('');
+                router.push(`/student/practicum/${prac.id}/setup`);
+                return;
             }
 
-            showToast("Successfully joined!", 'success');
-            setJoinCode('');
-            fetchDashboardData(); // Refresh
+            throw new Error("Invalid join code");
 
         } catch (err: unknown) {
             showToast(err instanceof Error ? err.message : 'An error occurred', 'error');
         } finally {
             setJoining(false);
+        }
+    };
+
+    const handleDeleteApplication = async (practicumId: string) => {
+        if (!confirm("Are you sure you want to delete this application? This cannot be undone.")) return;
+        if (!user) return; // Guard against missing user
+
+        try {
+            const { error } = await supabase
+                .from('practicum_enrollments')
+                .delete()
+                .eq('practicum_id', practicumId)
+                .eq('student_id', user?.id)
+                .neq('status', 'approved'); // Double check safety - DB RLS likely handles this too
+
+            if (error) throw error;
+
+            setPracticumEnrollments(prev => prev.filter(p => p.practicum_id !== practicumId));
+            showToast("Application deleted", "success");
+        } catch (err) {
+            console.error(err);
+            showToast("Failed to delete application", "error");
         }
     };
 
@@ -384,6 +442,71 @@ function DashboardContent() {
                         {/* Main Column: Global Workload */}
                         <div className="lg:col-span-2 space-y-8">
                             <GlobalAssignmentsCard />
+
+                            {/* Practicums List (Emerald Section) */}
+                            {practicumEnrollments.length > 0 && (
+                                <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <h2 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
+                                        <FileText className="w-6 h-6 text-emerald-600" />
+                                        My Practicums
+                                    </h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {practicumEnrollments.map((pe) => (
+                                            <Card
+                                                key={pe.practicum_id}
+                                                className="p-5 border-emerald-100 bg-emerald-50/20 hover:border-emerald-400 transition-all group relative"
+                                                hoverEffect
+                                            >
+                                                {/* Clickable Overlay */}
+                                                <Link
+                                                    href={pe.status === 'approved'
+                                                        ? `/student/practicum/${pe.practicum_id}`
+                                                        : `/student/practicum/${pe.practicum_id}/setup`
+                                                    }
+                                                    className="absolute inset-0 z-0 focus:outline-none rounded-2xl"
+                                                />
+
+                                                <div className="relative z-10 pointer-events-none">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <h3 className="font-bold text-slate-800 group-hover:text-emerald-700 transition-colors pr-8">{pe.practicums?.title}</h3>
+                                                        <span className={cn(
+                                                            "text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border shrink-0",
+                                                            pe.status === 'approved' ? "bg-emerald-100 text-emerald-700 border-emerald-200" :
+                                                                pe.status === 'pending' ? "bg-amber-100 text-amber-700 border-amber-200" :
+                                                                    pe.status === 'rejected' ? "bg-red-100 text-red-700 border-red-200" :
+                                                                        "bg-slate-100 text-slate-700 border-slate-200" // Draft/Incomplete
+                                                        )}>
+                                                            {pe.status === 'draft' ? 'Incomplete Application' : pe.status}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-4 mt-4">
+                                                        <div className="flex items-center gap-1 text-xs text-slate-500">
+                                                            <Calendar className="w-3.5 h-3.5" />
+                                                            {pe.practicums?.start_date ? new Date(pe.practicums.start_date).toLocaleDateString() : '-'}
+                                                        </div>
+                                                        <ArrowRight className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+                                                    </div>
+                                                </div>
+
+                                                {/* Delete Action (Top Level Z-Index) */}
+                                                {pe.status !== 'approved' && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleDeleteApplication(pe.practicum_id);
+                                                        }}
+                                                        className="absolute bottom-4 right-4 z-20 p-2 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg shadow-sm border border-slate-100 transition-all active:scale-95"
+                                                        title="Withdraw / Delete Application"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
                         </div>
 
                         {/* Sidebar: Upcoming Work */}

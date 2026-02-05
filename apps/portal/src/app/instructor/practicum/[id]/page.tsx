@@ -143,7 +143,8 @@ function PracticumDetailsContent({ id }: { id: string }) {
                 const { data: enrollDataRaw, error: enrollError } = await supabase
                     .from('practicum_enrollments')
                     .select('*')
-                    .eq('practicum_id', id);
+                    .eq('practicum_id', id)
+                    .neq('status', 'draft'); // Exclude incomplete applications
 
                 if (enrollError) throw enrollError;
 
