@@ -517,14 +517,20 @@ export type Database = {
         Row: {
           academic_data: Json
           approved_at: string | null
+          course_code: string | null
           final_grade: number | null
           id: string
+          instructor_notes: string | null
           joined_at: string
           location_coords: Json | null
           practicum_id: string
+          program_level: string | null
           schedule: Json | null
           status: string
+          student_email: string | null
           student_id: string
+          student_phone: string | null
+          student_registration_number: string | null
           student_report_grades: Json | null
           student_report_url: string | null
           supervisor_data: Json
@@ -534,14 +540,20 @@ export type Database = {
         Insert: {
           academic_data?: Json
           approved_at?: string | null
+          course_code?: string | null
           final_grade?: number | null
           id?: string
+          instructor_notes?: string | null
           joined_at?: string
           location_coords?: Json | null
           practicum_id: string
+          program_level?: string | null
           schedule?: Json | null
           status?: string
+          student_email?: string | null
           student_id: string
+          student_phone?: string | null
+          student_registration_number?: string | null
           student_report_grades?: Json | null
           student_report_url?: string | null
           supervisor_data?: Json
@@ -551,14 +563,20 @@ export type Database = {
         Update: {
           academic_data?: Json
           approved_at?: string | null
+          course_code?: string | null
           final_grade?: number | null
           id?: string
+          instructor_notes?: string | null
           joined_at?: string
           location_coords?: Json | null
           practicum_id?: string
+          program_level?: string | null
           schedule?: Json | null
           status?: string
+          student_email?: string | null
           student_id?: string
+          student_phone?: string | null
+          student_registration_number?: string | null
           student_report_grades?: Json | null
           student_report_url?: string | null
           supervisor_data?: Json

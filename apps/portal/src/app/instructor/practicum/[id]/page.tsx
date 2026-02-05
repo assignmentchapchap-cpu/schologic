@@ -23,6 +23,7 @@ import {
 } from "@schologic/practicum-core";
 import TimelineEditor from '@/components/instructor/TimelineEditor';
 import RubricsManager from '@/components/instructor/rubrics/RubricsManager';
+import EnrollmentsTab from '@/components/instructor/enrollments/EnrollmentsTab';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useNavigationGuard } from '@/context/NavigationGuardContext';
 
@@ -37,7 +38,7 @@ function PracticumDetailsContent({ id }: { id: string }) {
     const searchParams = useSearchParams();
     const { showToast } = useToast();
 
-    const initialTab = searchParams.get('tab') as 'overview' | 'rubrics' | 'resources' | 'submissions' | 'grades' || 'overview';
+    const initialTab = searchParams.get('tab') as 'overview' | 'enrollments' | 'rubrics' | 'resources' | 'submissions' | 'grades' || 'overview';
     const [activeTab, setActiveTabState] = useState(initialTab);
     const [isRubricDirty, setIsRubricDirty] = useState(false);
     const [isTimelineDirty, setIsTimelineDirty] = useState(false);
@@ -278,7 +279,7 @@ function PracticumDetailsContent({ id }: { id: string }) {
 
                 {/* Tabs Navigation */}
                 <div className="flex gap-1 bg-slate-200/50 p-0.5 rounded-xl mb-8 w-full md:w-fit overflow-x-auto no-scrollbar">
-                    {(['overview', 'rubrics', 'resources', 'submissions', 'grades'] as const).map(tab => (
+                    {(['overview', 'enrollments', 'rubrics', 'resources', 'submissions', 'grades'] as const).map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -297,7 +298,7 @@ function PracticumDetailsContent({ id }: { id: string }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
                         {/* Pending Approvals Card */}
                         <Card
-                            onClick={() => setActiveTab('submissions')} // Navigate to submissions for approval
+                            onClick={() => setActiveTab('enrollments')} // Navigate to students for approval
                             className="hover:border-emerald-400 group flex flex-col justify-between relative"
                             hoverEffect
                         >
@@ -347,6 +348,14 @@ function PracticumDetailsContent({ id }: { id: string }) {
                             />
                         </div>
                     </div>
+                )}
+
+                {/* Enrollments Tab */}
+                {activeTab === 'enrollments' && (
+                    <EnrollmentsTab
+                        practicumId={id}
+                        initialEnrollments={enrollments}
+                    />
                 )}
 
                 {/* Rubrics Tab */}

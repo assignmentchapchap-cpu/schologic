@@ -276,6 +276,7 @@ export default function NewPracticumPage() {
                                     {[
                                         { id: 'daily', name: 'Daily' },
                                         { id: 'weekly', name: 'Weekly' },
+                                        { id: 'monthly', name: 'Monthly' },
                                     ].map((freq) => (
                                         <button
                                             key={freq.id}

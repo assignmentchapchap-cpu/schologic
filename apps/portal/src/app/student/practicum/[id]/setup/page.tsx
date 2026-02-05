@@ -36,6 +36,7 @@ interface SetupStep {
 }
 
 const ALL_STEPS: SetupStep[] = [
+    { id: 'profile', title: 'Profile', icon: UserIcon },
     { id: 'academic', title: 'Academic', icon: GraduationCap },
     { id: 'workplace', title: 'Workplace', icon: Home },
     { id: 'supervisor', title: 'Supervisor', icon: UserIcon },
@@ -57,7 +58,7 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
     const [isDirty, setIsDirty] = useState(false);
 
     // We treat sections as steps for the progress bar
-    const [activeSection, setActiveSection] = useState('academic');
+    const [activeSection, setActiveSection] = useState('profile');
     const [status, setStatus] = useState<string | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -70,11 +71,20 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
 
     // Form State
     const [formData, setFormData] = useState({
+        // Profile Data (Read-only/Pre-filled or Input)
+        student_email: '',
+        student_registration_number: '',
+        student_phone: '',
+
+        // Academic Data
+        program_level: '', // 'postgrad', 'degree', 'diploma', 'artisan'
+        course_code: '',
+
         academic_data: {
             institution: '',
             course: '',
             year_of_study: '',
-            student_id_number: ''
+            // student_id_number removed/deprecated in favor of top-level student_registration_number
         },
         workplace_data: {
             company_name: '',
@@ -123,7 +133,23 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
         try {
             setLoading(true);
 
-            // 1. Fetch Practicum Meta
+            // 1. Fetch User Profile for Pre-filling
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('email, registration_number')
+                .eq('id', user!.id)
+                .single();
+
+            // Pre-fill read only fields
+            setFormData(prev => ({
+                ...prev,
+                student_email: user!.email || '',
+                student_registration_number: profile?.registration_number || '',
+                // If they have a phone in profile (custom field I assumed), use it, else empty
+                // student_phone: profile?.phone || '' 
+            }));
+
+            // 2. Fetch Practicum Meta
             const { data: prac, error: pracErr } = await supabase
                 .from('practicums')
                 .select('title, auto_approve, geolocation_required')
@@ -137,7 +163,7 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
                 geolocation_required: !!prac.geolocation_required
             });
 
-            // 2. Fetch Enrollment Data
+            // 3. Fetch Enrollment Data
             const studentId = user?.id; // Guarded above in useEffect, but safe check here
             if (studentId) {
                 const { data: enroll, error: enrollErr } = await supabase
@@ -160,6 +186,13 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
 
                     setFormData(prev => ({
                         ...prev,
+                        // Top level fields
+                        student_email: enroll.student_email || prev.student_email,
+                        student_phone: enroll.student_phone || '',
+                        student_registration_number: enroll.student_registration_number || prev.student_registration_number,
+                        course_code: enroll.course_code || '',
+                        program_level: enroll.program_level || '',
+
                         academic_data: { ...prev.academic_data, ...(enroll.academic_data as any) },
                         workplace_data: { ...prev.workplace_data, ...(enroll.workplace_data as any) },
                         supervisor_data: { ...prev.supervisor_data, ...(enroll.supervisor_data as any) },
@@ -202,12 +235,28 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
         const newErrors: Record<string, string> = {};
         let isValid = true;
 
+        if (sectionId === 'profile') {
+            if (!formData.student_phone.trim()) newErrors['student_phone'] = 'Phone number is required';
+            else if (!/^\d{9}$/.test(formData.student_phone.trim())) newErrors['student_phone'] = 'Phone must be exactly 9 digits';
+
+            if (!formData.student_registration_number.trim()) {
+                // If it's missing from profile, we might warn or block. 
+                // For now, let's block and tell them to contact admin/update profile? 
+                // User said "uneditable field though so that they initiate the update process if necessary"
+                // So if it's empty, they are stuck? Or can we assume it might be empty safely?
+                // Let's assume it's valuable.
+                if (!formData.student_registration_number) newErrors['student_registration_number'] = 'Registration number missing from profile';
+            }
+        }
+
         if (sectionId === 'academic') {
             const data = formData.academic_data;
+            if (!formData.program_level) newErrors['program_level'] = 'Program level is required';
+            if (!formData.course_code.trim()) newErrors['course_code'] = 'Course code is required';
+
             if (!data.institution.trim()) newErrors['academic_data.institution'] = 'Institution is required';
-            if (!data.course.trim()) newErrors['academic_data.course'] = 'Course is required';
+            if (!data.course.trim()) newErrors['academic_data.course'] = 'Course name is required';
             if (!data.year_of_study.trim()) newErrors['academic_data.year_of_study'] = 'Year of study is required';
-            if (!data.student_id_number.trim()) newErrors['academic_data.student_id_number'] = 'Student ID is required';
         }
 
         if (sectionId === 'workplace') {
@@ -222,7 +271,11 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
             if (!data.name.trim()) newErrors['supervisor_data.name'] = 'Supervisor name is required';
             if (!data.designation.trim()) newErrors['supervisor_data.designation'] = 'Designation is required';
             if (!data.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) newErrors['supervisor_data.email'] = 'Valid email is required';
-            if (!data.phone.trim()) newErrors['supervisor_data.phone'] = 'Phone number is required';
+            if (data.phone.trim()) {
+                if (!/^\d{9}$/.test(data.phone.trim())) newErrors['supervisor_data.phone'] = 'Phone must be exactly 9 digits';
+            } else {
+                newErrors['supervisor_data.phone'] = 'Phone number is required';
+            }
         }
 
         if (sectionId === 'schedule') {
@@ -248,6 +301,13 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
             const { error } = await supabase
                 .from('practicum_enrollments')
                 .update({
+                    // Top level fields
+                    student_email: formData.student_email,
+                    student_phone: formData.student_phone,
+                    student_registration_number: formData.student_registration_number,
+                    course_code: formData.course_code,
+                    program_level: formData.program_level,
+
                     academic_data: formData.academic_data,
                     workplace_data: formData.workplace_data,
                     supervisor_data: formData.supervisor_data,
@@ -273,7 +333,7 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
         setSubmitting(true);
         try {
             // Validate all sections before final SUBMIT (not save)
-            const sectionsStart = ['academic', 'workplace', 'supervisor', 'schedule'];
+            const sectionsStart = ['profile', 'academic', 'workplace', 'supervisor', 'schedule'];
             for (const section of sectionsStart) {
                 if (!validateSection(section)) {
                     setActiveSection(section);
@@ -292,6 +352,13 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
             const { error } = await supabase
                 .from('practicum_enrollments')
                 .update({
+                    // Top level fields
+                    student_email: formData.student_email,
+                    student_phone: formData.student_phone,
+                    student_registration_number: formData.student_registration_number,
+                    course_code: formData.course_code,
+                    program_level: formData.program_level,
+
                     academic_data: formData.academic_data,
                     workplace_data: formData.workplace_data,
                     supervisor_data: formData.supervisor_data,
@@ -490,11 +557,91 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
 
                 {/* Form Card */}
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 min-h-[400px]">
+
+                    {/* Profile Section */}
+                    {activeSection === 'profile' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-2">
+                            <h2 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-2">Student Profile</h2>
+                            <p className="text-sm text-slate-500">Please confirm your personal details. Some fields are read-only.</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <InputGroup label="Email Address" error={undefined}>
+                                    <input
+                                        className="form-input-clean bg-slate-100 text-slate-500 cursor-not-allowed"
+                                        value={formData.student_email}
+                                        readOnly
+                                    />
+                                    <p className="text-xs text-slate-400 mt-1">Sourced from your account</p>
+                                </InputGroup>
+
+                                <InputGroup label="Registration Number" error={errors['student_registration_number']}>
+                                    <input
+                                        className="form-input-clean bg-slate-100 text-slate-500 cursor-not-allowed"
+                                        value={formData.student_registration_number || 'Not Set in Profile'}
+                                        readOnly
+                                    />
+                                    {/* Link to profile settings if missing? */}
+                                    {!formData.student_registration_number && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            Missing! Please update your <a href="/student/settings" className="underline">Profile Settings</a>.
+                                        </p>
+                                    )}
+                                </InputGroup>
+
+                                <div className="md:col-span-2">
+                                    <InputGroup label="Phone Number" error={errors['student_phone']}>
+                                        <div className="flex items-center">
+                                            <span className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-lg px-3 py-3 text-slate-500 font-bold text-sm select-none">
+                                                +254
+                                            </span>
+                                            <input
+                                                className="form-input-clean rounded-l-none pl-3"
+                                                placeholder="7XX XXX XXX (9 digits)"
+                                                value={formData.student_phone}
+                                                onChange={(e) => {
+                                                    // Allow only numbers
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    if (val.length <= 9) handleFieldChange('', 'student_phone', val);
+                                                }}
+                                            />
+                                        </div>
+                                        <p className="text-xs text-slate-400 mt-1">Enter the 9 digits after the country code (e.g., 712345678)</p>
+                                    </InputGroup>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Academic Section */}
                     {activeSection === 'academic' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-right-2">
                             <h2 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-2">Academic Information</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <InputGroup label="Program Level" error={errors['program_level']}>
+                                    <select
+                                        className="form-input-clean"
+                                        value={formData.program_level}
+                                        onChange={(e) => handleFieldChange('', 'program_level', e.target.value)}
+                                    >
+                                        <option value="">Select Level...</option>
+                                        <option value="postgrad">Postgraduate / Masters</option>
+                                        <option value="degree">Undergraduate Degree</option>
+                                        <option value="diploma">Diploma</option>
+                                        <option value="artisan">Certificate / Artisan</option>
+                                    </select>
+                                </InputGroup>
+
+                                <InputGroup label="Course Code" error={errors['course_code']}>
+                                    <input
+                                        className="form-input-clean"
+                                        placeholder="e.g. COMP 400"
+                                        value={formData.course_code}
+                                        onChange={(e) => handleFieldChange('', 'course_code', e.target.value)}
+                                    />
+                                </InputGroup>
+
+                                <div className="md:col-span-2 border-t border-slate-100 my-2"></div>
+
                                 <InputGroup label="Institution / University" error={errors['academic_data.institution']}>
                                     <input
                                         className="form-input-clean"
@@ -503,7 +650,7 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
                                         onChange={(e) => handleFieldChange('academic_data', 'institution', e.target.value)}
                                     />
                                 </InputGroup>
-                                <InputGroup label="Course / Program" error={errors['academic_data.course']}>
+                                <InputGroup label="Course Name" error={errors['academic_data.course']}>
                                     <input
                                         className="form-input-clean"
                                         placeholder="e.g. BSc Computer Science"
@@ -517,14 +664,6 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
                                         placeholder="e.g. 3rd Year"
                                         value={formData.academic_data.year_of_study}
                                         onChange={(e) => handleFieldChange('academic_data', 'year_of_study', e.target.value)}
-                                    />
-                                </InputGroup>
-                                <InputGroup label="Student ID / Reg Number" error={errors['academic_data.student_id_number']}>
-                                    <input
-                                        className="form-input-clean"
-                                        placeholder="e.g. BIT/123/2021"
-                                        value={formData.academic_data.student_id_number}
-                                        onChange={(e) => handleFieldChange('academic_data', 'student_id_number', e.target.value)}
                                     />
                                 </InputGroup>
                             </div>
@@ -597,12 +736,21 @@ export default function PracticumSetupPage({ params }: { params: Promise<{ id: s
                                     />
                                 </InputGroup>
                                 <InputGroup label="Phone Number" error={errors['supervisor_data.phone']}>
-                                    <input
-                                        className="form-input-clean"
-                                        placeholder="+254 7XX XXX XXX"
-                                        value={formData.supervisor_data.phone}
-                                        onChange={(e) => handleFieldChange('supervisor_data', 'phone', e.target.value)}
-                                    />
+                                    <div className="flex items-center">
+                                        <span className="bg-slate-100 border border-r-0 border-slate-200 rounded-l-lg px-3 py-3 text-slate-500 font-bold text-sm select-none">
+                                            +254
+                                        </span>
+                                        <input
+                                            className="form-input-clean rounded-l-none pl-3"
+                                            placeholder="7XX XXX XXX (9 digits)"
+                                            value={formData.supervisor_data.phone}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                if (val.length <= 9) handleFieldChange('supervisor_data', 'phone', val);
+                                            }}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-slate-400 mt-1">Enter the 9 digits after the country code</p>
                                 </InputGroup>
                             </div>
                         </div>
