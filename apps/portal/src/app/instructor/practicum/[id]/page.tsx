@@ -24,6 +24,7 @@ import {
 import TimelineEditor from '@/components/instructor/TimelineEditor';
 import RubricsManager from '@/components/instructor/rubrics/RubricsManager';
 import EnrollmentsTab from '@/components/instructor/enrollments/EnrollmentsTab';
+import SubmissionsManager from '@/components/instructor/submissions/SubmissionsManager';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useNavigationGuard } from '@/context/NavigationGuardContext';
 
@@ -390,16 +391,12 @@ function PracticumDetailsContent({ id }: { id: string }) {
                     </div>
                 )}
 
-                {/* Submissions Tab Stub */}
+                {/* Submissions Tab */}
                 {activeTab === 'submissions' && (
-                    <div className="bg-white p-12 rounded-3xl border border-slate-200 border-dashed text-center animate-fade-in">
-                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Clock className="w-8 h-8 text-slate-300" />
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-800 mb-2">Student Submissions</h3>
-                        <p className="text-slate-500 max-w-md mx-auto">View and grade student logs, supervisor verifications, and enrollments.</p>
-                        <p className="mt-4 text-xs font-mono bg-slate-100 inline-block px-2 py-1 rounded text-slate-500">Coming Soon</p>
-                    </div>
+                    <SubmissionsManager
+                        practicumId={id}
+                        practicum={practicum}
+                    />
                 )}
 
                 {/* Grades Tab Stub */}
