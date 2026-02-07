@@ -144,6 +144,50 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
 
     const [creatingLog, setCreatingLog] = useState(false);
 
+    // Report Upload State
+    const [uploadingReport, setUploadingReport] = useState(false);
+
+    const handleReportUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+        const file = e.target.files[0];
+
+        // Validate file type
+        const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+        if (!validTypes.includes(file.type)) {
+            showToast("Please upload a PDF or Word document", "error");
+            return;
+        }
+
+        // Validate size (e.g. 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            showToast("File size must be less than 10MB", "error");
+            return;
+        }
+
+        setUploadingReport(true);
+
+        try {
+            const res = await fetch(`/api/upload/report?filename=${encodeURIComponent(file.name)}&practicumId=${id}`, {
+                method: 'POST',
+                body: file,
+            });
+
+            if (!res.ok) throw new Error("Upload failed");
+
+            const blob = await res.json();
+
+            // Update local state
+            setEnrollment(prev => prev ? ({ ...prev, student_report_url: blob.url }) : null);
+            showToast("Report submitted successfully!", "success");
+
+        } catch (error) {
+            console.error(error);
+            showToast("Failed to upload report", "error");
+        } finally {
+            setUploadingReport(false);
+        }
+    };
+
     const handleCreateLog = async () => {
         if (!practicum) return;
 
@@ -592,6 +636,90 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
                                 </div>
                             </div>
                         )}
+
+                        {activeTab === 'report' && (
+                            <div className="bg-white rounded-3xl border border-slate-200 p-8 min-h-[400px] animate-fade-in flex flex-col items-center justify-center text-center">
+                                <div className="max-w-xl w-full">
+                                    <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-6 shadow-sm border border-emerald-100">
+                                        <FileText className="w-8 h-8" />
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Final Practicum Report</h2>
+                                    <p className="text-slate-500 mb-8 leading-relaxed">
+                                        This is the final submission for your practicum. Ensure your report covers all required sections as per the rubric before uploading.
+                                    </p>
+
+                                    {enrollment?.student_report_url ? (
+                                        <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 mb-8">
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <div className="p-3 bg-white rounded-xl shadow-sm text-emerald-600">
+                                                    <CheckCircle2 className="w-6 h-6" />
+                                                </div>
+                                                <div className="text-left">
+                                                    <h3 className="font-bold text-emerald-900">Report Submitted</h3>
+                                                    <p className="text-xs text-emerald-600 font-medium">Ready for grading</p>
+                                                </div>
+                                                <div className="flex-grow" />
+                                                <a
+                                                    href={enrollment.student_report_url}
+                                                    target="_blank"
+                                                    className="px-4 py-2 bg-white text-emerald-700 text-sm font-bold rounded-xl border border-emerald-200 hover:bg-emerald-50 transition-colors flex items-center gap-2"
+                                                >
+                                                    <Eye className="w-4 h-4" /> View
+                                                </a>
+                                            </div>
+
+                                            <p className="text-xs text-emerald-600/70 text-left px-1">
+                                                Need to make changes? You can upload a new version below to replace the current file.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 mb-8">
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-3 bg-white rounded-xl shadow-sm text-slate-400">
+                                                    <AlertCircle className="w-6 h-6" />
+                                                </div>
+                                                <div className="text-left">
+                                                    <h3 className="font-bold text-slate-700">Not Submitted</h3>
+                                                    <p className="text-xs text-slate-500 font-medium">Upload your report to complete the practicum</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="relative group cursor-pointer">
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.doc,.docx"
+                                            onChange={handleReportUpload}
+                                            disabled={uploadingReport}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
+                                        />
+                                        <div className={cn(
+                                            "border-2 border-dashed rounded-3xl p-10 transition-all duration-200 flex flex-col items-center justify-center gap-4",
+                                            uploadingReport ? "bg-slate-50 border-slate-300" : "bg-white border-slate-300 group-hover:border-emerald-500 group-hover:bg-emerald-50/10"
+                                        )}>
+                                            {uploadingReport ? (
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+                                                    <p className="text-sm font-bold text-emerald-600">Uploading...</p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="w-12 h-12 rounded-full bg-emerald-600/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                        <Upload className="w-6 h-6" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-700 mb-1 group-hover:text-emerald-700">Click to upload or drag and drop</p>
+                                                        <p className="text-xs text-slate-400">PDF or Word Documents (Max 10MB)</p>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
 
                         {activeTab === 'logs' && (
                             <div className="h-[calc(100vh-200px)] min-h-[600px] flex flex-col md:flex-row gap-6 bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">

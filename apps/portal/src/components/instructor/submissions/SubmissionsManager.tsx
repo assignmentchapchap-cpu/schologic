@@ -86,18 +86,38 @@ export default function SubmissionsManager({ practicumId, practicum }: Submissio
                     .order('log_date', { ascending: false });
 
                 if (logError) throw logError;
-                logData = fetchedLogs || [];
+                logData = (fetchedLogs || []).map(l => ({ ...l, type: 'log' }));
             }
 
-            // 4. Combine Data
+            // 4. Generate Report Items from Enrollments
+            const reportItems = enrollDataRaw
+                .filter(e => e.student_report_url)
+                .map(e => ({
+                    id: `report-${e.student_id}`,
+                    type: 'report',
+                    student_id: e.student_id,
+                    log_date: e.joined_at, // Use joined_at as fallback since updated_at is missing
+                    submission_status: 'submitted',
+                    supervisor_status: e.final_grade ? 'verified' : 'pending', // Use final_grade as proxy for verification
+                    instructor_status: e.student_report_grades ? 'read' : 'unread', // Simple logic for now
+                    student_report_url: e.student_report_url,
+                    entries: { subject_taught: 'Final Report' } // Mock for title display
+                }));
+
+            // 5. Combine and Sort
+            const allSubmissions = [...logData, ...reportItems].sort((a, b) =>
+                new Date(b.log_date).getTime() - new Date(a.log_date).getTime()
+            );
+
+            // 6. Combine Data for Sidebar
             const studentsWithLogs = enrollDataRaw.map(student => ({
                 ...student,
                 profiles: profilesMap.get(student.student_id) || null,
-                logs: logData.filter(l => l.student_id === student.student_id)
+                logs: allSubmissions.filter(l => l.student_id === student.student_id)
             })) as Enrollment[];
 
             setStudents(studentsWithLogs);
-            setLogs(logData);
+            setLogs(allSubmissions);
 
             // Auto-select first student if none selected
             if (!selectedStudentId && studentsWithLogs.length > 0) {
