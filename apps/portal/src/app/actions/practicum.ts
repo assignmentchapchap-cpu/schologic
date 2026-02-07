@@ -33,16 +33,12 @@ export async function sendSupervisorVerificationEmail(logId: string) {
     try {
         const headerStore = await headers();
 
-        // 1. Fetch Log & Student Info
+        // 1. Fetch Log Details (Raw)
         // We use admin client to ensure we can read even if RLS somehow restricts
         const supabaseAdmin = getAdminClient();
         const { data: log, error: logError } = await supabaseAdmin
             .from('practicum_logs')
-            .select(`
-                *,
-                profiles:student_id ( id, first_name, last_name, full_name, email ),
-                practicums:practicum_id ( title )
-            `)
+            .select('*')
             .eq('id', logId)
             .single();
 
@@ -51,10 +47,24 @@ export async function sendSupervisorVerificationEmail(logId: string) {
             throw new Error(`Could not fetch log details for ID: ${logId}. DB Error: ${logError?.message}`);
         }
 
-        const studentName = log.profiles?.full_name || log.profiles?.first_name || 'Student';
-        const practicumTitle = log.practicums?.title || 'Practicum';
+        // 2. Fetch Student Profile
+        const { data: studentProfile, error: studentError } = await supabaseAdmin
+            .from('profiles')
+            .select('full_name, first_name, email')
+            .eq('id', log.student_id)
+            .single();
 
-        // 2. Fetch Enrollment to get Supervisor Data
+        // 3. Fetch Practicum Details
+        const { data: practicumData, error: practicumError } = await supabaseAdmin
+            .from('practicums')
+            .select('title')
+            .eq('id', log.practicum_id)
+            .single();
+
+        const studentName = studentProfile?.full_name || studentProfile?.first_name || 'Student';
+        const practicumTitle = practicumData?.title || 'Practicum';
+
+        // 4. Fetch Enrollment to get Supervisor Data
         const { data: enrollment, error: enrollError } = await supabaseAdmin
             .from('practicum_enrollments')
             .select('supervisor_data')
