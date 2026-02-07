@@ -215,7 +215,7 @@ export default function SubmissionsManager({ practicumId, practicum }: Submissio
 
     // Prepare View Data
     const selectedStudentLogs = selectedStudentId
-        ? logs.filter(l => l.student_id === selectedStudentId).map(l => ({ ...l, type: 'log' as const }))
+        ? logs.filter(l => l.student_id === selectedStudentId)
         : [];
 
     const selectedLog = selectedLogId

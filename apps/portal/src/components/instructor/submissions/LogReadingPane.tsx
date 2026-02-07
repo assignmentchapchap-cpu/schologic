@@ -21,6 +21,7 @@ export default function LogReadingPane({ log, practicum, onVerify, onReject, ver
     const entries = log.entries as any;
     const isComposite = practicum.log_interval !== 'daily';
     const isDraft = (log as any).submission_status === 'draft';
+    const isReport = (log as any).type === 'report';
 
     // Status badges logic
     const getStatusColor = (status: string) => {
@@ -31,6 +32,59 @@ export default function LogReadingPane({ log, practicum, onVerify, onReject, ver
             default: return 'bg-slate-100 text-slate-700 border-slate-200';
         }
     };
+
+    if (isReport) {
+        return (
+            <div className="h-full flex flex-col bg-white">
+                <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-start">
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                                <FileText className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-2xl font-black text-slate-900">Final Report Submission</h2>
+                        </div>
+                        <p className="text-slate-500 font-medium">
+                            Submitted on {log.log_date ? format(new Date(log.log_date), 'MMM d, yyyy') : 'Unknown Date'}
+                        </p>
+                    </div>
+                    <div className={cn("px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider border", getStatusColor(log.supervisor_status))}>
+                        {log.supervisor_status === 'verified' ? 'Graded' : log.supervisor_status}
+                    </div>
+                </div>
+
+                <div className="flex-grow flex flex-col items-center justify-center p-10 bg-slate-50/10">
+                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 max-w-md w-full text-center">
+                        <FileText className="w-16 h-16 text-emerald-500 mx-auto mb-6" />
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">Student Report</h3>
+                        <p className="text-slate-500 mb-8">This document contains the final practicum report submitted by the student.</p>
+
+                        {(log as any).student_report_url ? (
+                            <a
+                                href={(log as any).student_report_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block w-full py-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95"
+                            >
+                                View / Download Report
+                            </a>
+                        ) : (
+                            <div className="p-4 bg-red-50 text-red-600 rounded-xl font-bold text-sm">
+                                Error: File URL not found.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Placeholder for Grading Pane (Deferred) */}
+                <div className="p-6 border-t border-slate-100 bg-slate-50">
+                    <div className="p-4 border border-dashed border-slate-300 rounded-xl text-center text-slate-400 text-sm">
+                        Grading functionality coming soon.
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="h-full flex flex-col bg-white">

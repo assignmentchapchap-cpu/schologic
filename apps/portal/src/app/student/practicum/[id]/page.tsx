@@ -172,7 +172,11 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
                 body: file,
             });
 
-            if (!res.ok) throw new Error("Upload failed");
+            if (!res.ok) {
+                const errorText = await res.text();
+                console.error("Upload failed response:", errorText);
+                throw new Error(`Upload failed: ${errorText}`);
+            }
 
             const blob = await res.json();
 
@@ -180,9 +184,9 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
             setEnrollment(prev => prev ? ({ ...prev, student_report_url: blob.url }) : null);
             showToast("Report submitted successfully!", "success");
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            showToast("Failed to upload report", "error");
+            showToast(error.message || "Failed to upload report", "error");
         } finally {
             setUploadingReport(false);
         }
@@ -1022,15 +1026,7 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
                             </div>
                         )}
 
-                        {activeTab === 'report' && (
-                            <div className="bg-white rounded-3xl border border-slate-200 p-8 md:p-12 text-center">
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">Final Practicum Report</h2>
-                                <p className="text-slate-500 max-w-lg mx-auto mb-8">Upload your final comprehensive report here.</p>
-                                <div className="max-w-xl mx-auto border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:border-emerald-400 hover:bg-emerald-50/10 transition-all cursor-pointer group">
-                                    <p className="font-bold text-slate-700 group-hover:text-emerald-700">Drag and drop your report (PDF)</p>
-                                </div>
-                            </div>
-                        )}
+
                     </div>
                 </div>
 

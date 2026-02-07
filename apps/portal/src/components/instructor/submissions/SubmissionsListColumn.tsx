@@ -6,7 +6,7 @@ import { Database } from "@schologic/database";
 type LogEntry = Database['public']['Tables']['practicum_logs']['Row'];
 
 // Polymorphic item types
-type SubmissionItem = LogEntry & { type: 'log' };
+type SubmissionItem = (LogEntry & { type: 'log' }) | (LogEntry & { type: 'report' });
 
 interface SubmissionsListColumnProps {
     items: SubmissionItem[];
@@ -21,14 +21,9 @@ export default function SubmissionsListColumn({ items, selectedId, onSelect, fil
     // Filter logic
     const filteredItems = items.filter(item => {
         if (filter === 'all') return true;
-
-        // Phase 1: Only Logs
-        if (filter === 'logs') return true; // Since we only have logs
-        if (filter === 'reports') return false; // Phase 2
-
-        if (filter === 'unread') {
-            return (item as any).instructor_status === 'unread';
-        }
+        if (filter === 'logs') return item.type === 'log';
+        if (filter === 'reports') return item.type === 'report';
+        if (filter === 'unread') return (item as any).instructor_status === 'unread';
         return true;
     });
 
@@ -38,7 +33,7 @@ export default function SubmissionsListColumn({ items, selectedId, onSelect, fil
             <div className="p-3 border-b border-slate-200 flex flex-col gap-2 bg-white">
                 <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider px-1">Submissions</h3>
                 <div className="flex p-1 bg-slate-100 rounded-lg">
-                    {(['all', 'unread'] as const).map(f => (
+                    {(['all', 'unread', 'logs', 'reports'] as const).map(f => (
                         <button
                             key={f}
                             onClick={() => setFilter(f as any)}

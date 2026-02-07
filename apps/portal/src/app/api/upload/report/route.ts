@@ -1,6 +1,7 @@
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
-import { createClient } from '@schologic/database';
+import { createSessionClient } from '@schologic/database';
+import { cookies } from 'next/headers';
 
 export async function POST(request: Request): Promise<NextResponse> {
     const { searchParams } = new URL(request.url);
@@ -11,7 +12,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         return NextResponse.json({ error: 'Filename and practicumId are required' }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const cookieStore = await cookies();
+    const supabase = createSessionClient(cookieStore);
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -27,29 +29,31 @@ export async function POST(request: Request): Promise<NextResponse> {
         .single();
 
     if (enrollError || !enrollment) {
+        console.error("Enrollment check failed:", enrollError);
         return NextResponse.json({ error: 'Enrollment not found' }, { status: 403 });
     }
 
-    const blob = await put(filename, request.body as ReadableStream, {
-        access: 'public',
-    });
+    try {
+        const blob = await put(filename, request.body as ReadableStream, {
+            access: 'public',
+        });
 
-    // Update Enrollment Record
-    const { error: updateError } = await supabase
-        .from('practicum_enrollments')
-        .update({
-            student_report_url: blob.url,
-            // We might want to store submission date too if there's a specific column, 
-            // checking schema showed 'updated_at' but maybe not a specific submission date?
-            // existing 'joined_at' and 'approved_at'. 
-            // We'll rely on the presence of the URL or maybe we should abuse 'instructor_notes' or similar? 
-            // No, let's just stick to the URL for now.
-        })
-        .eq('id', enrollment.id);
+        // Update Enrollment Record
+        const { error: updateError } = await supabase
+            .from('practicum_enrollments')
+            .update({
+                student_report_url: blob.url,
+            })
+            .eq('id', enrollment.id);
 
-    if (updateError) {
-        return NextResponse.json({ error: 'Failed to update record' }, { status: 500 });
+        if (updateError) {
+            console.error("Database update failed:", updateError);
+            return NextResponse.json({ error: 'Failed to update record' }, { status: 500 });
+        }
+
+        return NextResponse.json(blob);
+    } catch (error) {
+        console.error("Blob upload failed:", error);
+        return NextResponse.json({ error: 'Blob upload failed' }, { status: 500 });
     }
-
-    return NextResponse.json(blob);
 }
