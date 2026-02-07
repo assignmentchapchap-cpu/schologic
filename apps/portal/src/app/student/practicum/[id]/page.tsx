@@ -305,7 +305,18 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
 
             if (error) throw error;
 
-            showToast("Log submitted successfully!", "success");
+            // Trigger Supervisor Verification Email (Fire & Forget or Await?)
+            // We await it to show error if email fails, or at least log it.
+            const { sendSupervisorVerificationEmail } = await import('@/app/actions/practicum');
+            const emailResult = await sendSupervisorVerificationEmail(logId);
+
+            if (!emailResult.success) {
+                console.error("Email trigger warning:", emailResult.error);
+                showToast("Log submitted, but failed to email supervisor. Please contact support.", "error");
+            } else {
+                showToast("Log submitted & sent for verification!", "success");
+            }
+
             fetchDashboardData();
         } catch (e: any) {
             showToast(e.message, "error");

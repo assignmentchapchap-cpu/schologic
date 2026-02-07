@@ -36,6 +36,41 @@ export interface CompositeLogData {
 export type LogFrequency = 'daily' | 'weekly' | 'monthly';
 export type LogTemplateType = 'teaching_practice' | 'industrial_attachment' | 'custom';
 
+export type SupervisorStatus = 'pending' | 'verified' | 'rejected';
+
+// Represents the full DB row + JSONB entries
+export interface PracticumLog {
+    id: string;
+    created_at: string;
+    updated_at: string;
+    student_id: string;
+    practicum_id: string;
+
+    // Core Fields
+    log_date: string;
+    week_number?: number;
+    clock_in?: string;
+    clock_out?: string;
+
+    // Data
+    entries: PracticumLogEntry | CompositeLogData;
+    weekly_reflection?: string;
+    file_urls?: string[];
+    location_data?: PracticumLocation;
+
+    // Status & Verification
+    submission_status: 'draft' | 'submitted';
+    supervisor_status: SupervisorStatus;
+    supervisor_comment?: string;
+    verification_token?: string;
+    supervisor_verified_at?: string;
+    instructor_status: 'read' | 'unread';
+
+    // Grading
+    grade?: number;
+    feedback?: string;
+}
+
 export interface PracticumSchedule {
     days: string[];
     start_time: string;

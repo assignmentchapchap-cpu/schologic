@@ -49,6 +49,7 @@ Welcome to the Schologic LMS instructor knowledge base. This documentation cover
 | 11 | Calendar | Events, due dates |
 | 12 | Student Workflows | Student perspective for instructors |
 | 13 | Troubleshooting | FAQ, common issues |
+| 14 | Practicum Management | Logbooks, reports, verification |
 
 ---
 
