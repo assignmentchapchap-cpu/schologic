@@ -27,23 +27,42 @@ export const revalidate = 0;
 export default async function VerifyLogPage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = await params;
 
-    // 1. Fetch Log by Token
-    const { data: log, error } = await supabaseAdmin
+    // 1. Fetch Log by Token (Raw, no joins)
+    const { data: logRaw, error } = await supabaseAdmin
         .from('practicum_logs')
-        .select(`
-            *,
-            profiles:student_id ( full_name, email, avatar_url ),
-            practicums:practicum_id ( title, code, organization_name, log_template )
-        `)
+        .select('*')
         .eq('verification_token', token)
         .single();
+
+    if (error || !logRaw) {
+        console.error("Verify Page Error:", error);
+        return notFound();
+    }
+
+    // 2. Fetch Related Data Sequentially
+    const { data: student } = await supabaseAdmin
+        .from('profiles')
+        .select('full_name, email, avatar_url')
+        .eq('id', logRaw.student_id)
+        .single();
+
+    const { data: practicum } = await supabaseAdmin
+        .from('practicums')
+        .select('title, code, organization_name, log_template')
+        .eq('id', logRaw.practicum_id)
+        .single();
+
+    // 3. Construct the object structure expected by the UI
+    const log = {
+        ...logRaw,
+        profiles: student,
+        practicums: practicum
+    };
 
     if (error || !log) {
         return notFound();
     }
 
-    const student = log.profiles;
-    const practicum = log.practicums;
     const templateType = practicum?.log_template || 'teaching_practice'; // Default fallback
 
     const isPending = log.supervisor_status === 'pending';

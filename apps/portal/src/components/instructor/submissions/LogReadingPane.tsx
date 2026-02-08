@@ -24,12 +24,22 @@ export default function LogReadingPane({ log, practicum, onVerify, onReject, ver
     const isReport = (log as any).type === 'report';
 
     // Status badges logic
+    // Status badges logic
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'verified': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
             case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
             case 'pending': return 'bg-blue-100 text-blue-700 border-blue-200';
             default: return 'bg-slate-100 text-slate-700 border-slate-200';
+        }
+    };
+
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case 'verified': return 'Supervisor Verified';
+            case 'rejected': return 'Supervisor Rejected';
+            case 'pending': return 'Pending Supervisor';
+            default: return status;
         }
     };
 
@@ -110,7 +120,7 @@ export default function LogReadingPane({ log, practicum, onVerify, onReject, ver
 
                 <div className="flex flex-col items-end gap-3">
                     <div className={cn("px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border", getStatusColor(log.supervisor_status))}>
-                        {log.supervisor_status}
+                        {getStatusLabel(log.supervisor_status)}
                     </div>
                     {/* Verification Actions */}
                     {log.supervisor_status === 'pending' && !isDraft && (
@@ -136,6 +146,23 @@ export default function LogReadingPane({ log, practicum, onVerify, onReject, ver
 
             {/* Content Scrollable Area */}
             <div className="flex-grow overflow-y-auto p-6 space-y-8">
+
+                {/* 0. Supervisor Feedback (If verified/rejected) */}
+                {log.supervisor_comment && (
+                    <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100">
+                        <h4 className="font-bold text-blue-900 text-sm mb-2 flex items-center gap-2">
+                            <User className="w-4 h-4" /> Supervisor Feedback
+                        </h4>
+                        <p className="text-blue-800 text-sm leading-relaxed italic">
+                            "{log.supervisor_comment}"
+                        </p>
+                        {log.supervisor_verified_at && (
+                            <p className="text-xs text-blue-400 mt-2 font-medium">
+                                Verified on {format(new Date(log.supervisor_verified_at), 'MMM d, yyyy HH:mm')}
+                            </p>
+                        )}
+                    </div>
+                )}
 
                 {/* 1. Weekly Reflection / Summary (Composite Only) */}
                 {isComposite && (
