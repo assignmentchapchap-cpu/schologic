@@ -52,7 +52,9 @@ export async function updatePracticumGrades(enrollmentId: string, grades: {
 
 // Optionally: Auto-calc helper if we want to run it from UI
 export async function syncSupervisorGrades(practicumId: string) {
-    const supabase = createClient();
+    const cookieStore = await cookies();
+    const supabase = createSessionClient(cookieStore);
+
     try {
         // Fetch all enrollments with supervisor reports
         const { data: enrollments, error } = await supabase
