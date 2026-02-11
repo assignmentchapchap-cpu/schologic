@@ -97,7 +97,12 @@ export async function sendDemoRecoveryOTP(email: string) {
       return { error: 'User not found' };
     }
 
-    // 2. Send OTP (Standard Supabase Auth)
+    // 2. Verify Demo Status
+    if (user.user_metadata?.is_demo !== true) {
+      return { error: 'This email belongs to a standard account. Please log in normally.' };
+    }
+
+    // 3. Send OTP (Standard Supabase Auth)
     // We use signInWithOtp which sends a code to the email
     const { error: otpError } = await supabaseAdmin.auth.signInWithOtp({
       email: email,
