@@ -1,0 +1,15 @@
+{
+    "extends": "@schologic/config/tsconfig.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "src",
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "noEmit": false,
+        "declaration": true
+    },
+    "include": [
+        "src"
+    ]
+}

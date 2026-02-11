@@ -1,0 +1,22 @@
+{
+    "name": "@schologic/practicum-core",
+    "version": "0.0.0",
+    "main": "./src/index.ts",
+    "types": "./src/index.ts",
+    "scripts": {
+        "lint": "eslint .",
+        "check-types": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "@schologic/database": "workspace:*",
+        "@types/node": "^20.0.0",
+        "eslint": "^8.0.0",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@types/uuid": "^11.0.0",
+        "date-fns": "^4.1.0",
+        "uuid": "^13.0.0",
+        "zod": "^4.2.1"
+    }
+}

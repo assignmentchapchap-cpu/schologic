@@ -1,0 +1,48 @@
+{
+  "name": "@schologic/portal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@schologic/ai-bridge": "workspace:*",
+    "@schologic/database": "workspace:*",
+    "@schologic/doc-engine": "workspace:*",
+    "@schologic/practicum-core": "workspace:*",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.89.0",
+    "@vercel/blob": "^2.0.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "docx-preview": "^0.3.7",
+    "jspdf": "^3.0.4",
+    "lucide-react": "^0.562.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-confetti": "^6.4.0",
+    "react-dom": "19.2.3",
+    "react-hook-form": "^7.69.0",
+    "react-pdf": "^10.3.0",
+    "recharts": "^3.6.0",
+    "resend": "^6.8.0",
+    "styled-jsx": "^5.1.6",
+    "tailwind-merge": "^3.4.0",
+    "uuid": "^13.0.0",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

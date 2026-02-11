@@ -1,0 +1,23 @@
+{
+    "name": "@schologic/doc-engine",
+    "version": "0.1.0",
+    "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "jszip": "^3.10.1",
+        "mammoth": "^1.11.0",
+        "pdf-parse": "^2.4.5",
+        "xml2js": "^0.6.2"
+    },
+    "devDependencies": {
+        "@schologic/config": "workspace:*",
+        "@types/node": "^22.19.6",
+        "@types/pdf-parse": "^1.1.4",
+        "@types/xml2js": "^0.4.14",
+        "typescript": "^5"
+    }
+}

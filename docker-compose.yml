@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/portal/node_modules
+    env_file:
+      - apps/portal/.env.local
+    environment:
+      - NODE_ENV=development
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    # Build dependencies and run in dev mode
+    command: sh -c "pnpm turbo run build --filter='@schologic/portal^...' && pnpm dev"

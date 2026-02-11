@@ -1,0 +1,25 @@
+{
+    "name": "@schologic/database",
+    "version": "0.1.0",
+    "private": true,
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@supabase/ssr": "^0.8.0",
+        "@supabase/supabase-js": "^2.89.0"
+    },
+    "devDependencies": {
+        "@schologic/config": "workspace:*",
+        "@types/node": "^25.0.8",
+        "typescript": "^5"
+    }
+}
