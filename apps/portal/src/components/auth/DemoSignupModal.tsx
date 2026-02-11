@@ -2,11 +2,12 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Loader2, Sparkles, User, School } from 'lucide-react';
+import { X, Loader2, Sparkles, User, School, Lock, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@schologic/database";
 import { useToast } from '@/context/ToastContext';
-import { sendDemoRecoveryEmail } from '@/app/actions/account';
+import { sendDemoRecoveryOTP, verifyDemoRecoveryOTP } from '@/app/actions/account';
+import { OTPInput } from '@/components/ui/OTPInput';
 
 interface DemoSignupModalProps {
     onClose: () => void;
@@ -14,7 +15,8 @@ interface DemoSignupModalProps {
 
 export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
     const [loading, setLoading] = useState(false);
-    const [step, setStep] = useState<'form' | 'creating' | 'exists'>('form');
+    const [step, setStep] = useState<'form' | 'creating' | 'exists' | 'recovery-otp'>('form');
+    const [otp, setOtp] = useState('');
     const [formData, setFormData] = useState({
         title: 'Dr.',
         firstName: '',
@@ -26,6 +28,7 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
     const supabase = createClient();
     const { showToast } = useToast();
 
+    // ... existing handleSubmit ...
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -41,7 +44,6 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
 
         try {
             // 1. Create Demo Account via API
-            // Capitalize names
             const payload = {
                 ...formData,
                 firstName: formData.firstName.charAt(0).toUpperCase() + formData.firstName.slice(1).toLowerCase(),
@@ -59,8 +61,6 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
             try {
                 data = JSON.parse(rawText);
             } catch (e) {
-                // If parsing fails, it's likely an HTML error page.
-                // Try to extract the error message from title or just use the whole text if short
                 if (rawText.includes('<!DOCTYPE html>')) {
                     const match = rawText.match(/<h1[^>]*>(.*?)<\/h1>/i) || rawText.match(/<title>(.*?)<\/title>/i);
                     const serverError = match ? match[1] : 'Server returned an HTML error page';
@@ -70,9 +70,6 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
             }
 
             if (!res.ok) {
-                console.error("Demo Signup Error Status:", res.status);
-                console.error("Demo Signup Error Data:", data);
-
                 // Enhanced check for existing user
                 if (res.status === 409 || res.status === 422 || data?.error?.toLowerCase().includes('already registered')) {
                     console.log("User exists (detected via status/message), switching to exists step");
@@ -83,10 +80,8 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
                 throw new Error(data.error || `Failed to create demo account (Status: ${res.status})`);
             }
 
-            const { email, password } = data;
-
-            if (data.success !== false) { // Handle implicit success
-                // Save demo student email if present
+            // Success handling...
+            if (data.success !== false) {
                 if (data.demo_student_email) {
                     localStorage.setItem('demo_student_email', data.demo_student_email);
                 }
@@ -100,18 +95,13 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
 
                 if (signInError) throw signInError;
 
-                // Trigger tour start
                 localStorage.setItem('scholar_demo_tour_active', 'true');
                 localStorage.setItem('scholar_demo_tour_step', '0');
-                console.log('Demo Signup Success. Tour Activated in LocalStorage.');
 
                 showToast('Welcome to the Demo!', 'success');
                 router.push(data.redirect || '/instructor/dashboard');
                 onClose();
             } else {
-                // This else block was malformed in the instruction, assuming it should handle a specific error case
-                // or simply fall through to the general error handling if `data.success` is explicitly false.
-                // For now, if `data.success` is explicitly false, we'll treat it as an error.
                 throw new Error(data.error || 'Failed to create demo account');
             }
 
@@ -124,6 +114,38 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
         }
     };
 
+    const handleRecoveryRequest = async () => {
+        setLoading(true);
+        try {
+            const res = await sendDemoRecoveryOTP(formData.email);
+            if (res.error) throw new Error(res.error);
+
+            setStep('recovery-otp');
+            showToast('Recovery code sent to your email', 'success');
+        } catch (error: any) {
+            showToast(error.message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRecoveryVerify = async () => {
+        setLoading(true);
+        try {
+            const res = await verifyDemoRecoveryOTP(formData.email, otp);
+            if (res.error) throw new Error(res.error);
+
+            showToast('Session restored!', 'success');
+            // Refresh to ensure session is active
+            router.refresh();
+            router.push('/instructor/dashboard');
+            onClose();
+        } catch (error: any) {
+            showToast(error.message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
     return (
@@ -158,18 +180,17 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
                         </div>
                         <h3 className="text-xl font-bold text-slate-800 mb-2">Welcome Back!</h3>
                         <p className="text-slate-500 text-sm mb-6">
-                            It looks like <strong>{formData.email}</strong> already has an account.
+                            It looks like <strong>{formData.email}</strong> already has a demo account.
                         </p>
 
 
                         <button
-                            onClick={() => {
-                                onClose();
-                                router.push('/login?view=reset'); // Redirect to manual reset
-                            }}
+                            onClick={handleRecoveryRequest}
+                            disabled={loading}
                             className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-black transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 mb-3"
                         >
-                            <span>Go to Password Reset</span>
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                            <span>Recover Session</span>
                         </button>
 
                         <button
@@ -177,6 +198,39 @@ export default function DemoSignupModal({ onClose }: DemoSignupModalProps) {
                             className="text-slate-400 font-bold text-xs hover:text-slate-600"
                         >
                             Use a different email
+                        </button>
+                    </div>
+                ) : step === 'recovery-otp' ? (
+                    <div className="p-8 text-center animate-in fade-in slide-in-from-right-4">
+                        <div className="mb-6">
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">Enter Verification Code</h3>
+                            <p className="text-slate-500 text-sm">
+                                We sent a code to <strong>{formData.email}</strong>
+                            </p>
+                        </div>
+
+                        <div className="flex justify-center mb-6">
+                            <OTPInput
+                                value={otp}
+                                onChange={setOtp}
+                                length={6}
+                            />
+                        </div>
+
+                        <button
+                            onClick={handleRecoveryVerify}
+                            disabled={loading || otp.length !== 6}
+                            className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-black transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 mb-3"
+                        >
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                            <span>Verify & Enter</span>
+                        </button>
+
+                        <button
+                            onClick={() => setStep('exists')}
+                            className="text-slate-400 font-bold text-xs hover:text-slate-600"
+                        >
+                            Back
                         </button>
                     </div>
                 ) : (
