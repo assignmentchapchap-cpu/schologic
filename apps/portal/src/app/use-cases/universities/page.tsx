@@ -7,6 +7,7 @@ import { Metadata } from "next";
 import { UniversitiesPilotCTA } from "@/components/use-cases/universities/UniversitiesPilotCTA";
 import { UniversitiesHeroVisual } from "@/components/use-cases/universities/UniversitiesHeroVisual";
 import { PracticumProcessVisual } from "@/components/use-cases/universities/PracticumProcessVisual";
+import { TAInsightsVisual } from "@/components/use-cases/TAInsightsVisual";
 
 export const metadata: Metadata = {
     title: 'University LMS Kenya | Academic Integrity & Multi-Campus Management | Schologic',
@@ -114,14 +115,9 @@ export default function UniversitiesPage() {
             {/* 4. Faculty Empowerment (AI TA) - Light Purple Theme */}
             <div className="bg-purple-50 py-24">
                 <SectionGrid>
-                    <GridColumn span={6} className="order-2 md:order-1">
-                        <div className="bg-white p-8 rounded-2xl border border-purple-100 shadow-sm h-full relative overflow-hidden group">
-                            {/* Visual Placeholder: AI Grading Interface */}
-                            <div className="absolute inset-0 bg-slate-50 flex items-center justify-center">
-                                <div className="text-slate-400 font-medium font-mono text-sm px-4 text-center">
-                                    Visual Placeholder: <br /> AI Grading Interface
-                                </div>
-                            </div>
+                    <GridColumn span={6} className="order-2 md:order-1 flex items-center justify-center">
+                        <div className="w-full flex justify-center transform hover:scale-[1.02] transition-transform duration-500">
+                            <TAInsightsVisual />
                         </div>
                     </GridColumn>
                     <GridColumn span={6} className="order-1 md:order-2 flex items-center">
