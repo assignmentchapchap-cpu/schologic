@@ -236,11 +236,8 @@ export default function UniversitiesPage() {
                         </div>
                     </GridColumn>
                     <GridColumn span={6}>
-                        <div className="bg-slate-50 p-8 rounded-3xl border border-slate-200 h-full relative group flex items-center justify-center">
-                            {/* Visual: Dean Analytics Dashboard Drill-down */}
-                            <div className="w-full transform scale-95 group-hover:scale-100 transition-transform duration-700 ease-out">
-                                <DeanDashboardVisual />
-                            </div>
+                        <div className="h-full flex items-center justify-center">
+                            <DeanDashboardVisual />
                         </div>
                     </GridColumn>
                 </SectionGrid>

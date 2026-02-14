@@ -39,6 +39,7 @@ export default function CollegesPage() {
                             fill
                             className="object-contain"
                             priority
+                            sizes="(max-width: 768px) 100vw, 400px"
                         />
                     </div>
                 }
@@ -76,6 +77,7 @@ export default function CollegesPage() {
                                     alt="Schologic Hybrid Learning Platform - Students studying in physical classrooms and participating via distance education in Kenya"
                                     fill
                                     className="object-cover object-top"
+                                    sizes="(max-width: 768px) 100vw, 50vw"
                                 />
                             </div>
                         </div>
@@ -224,6 +226,7 @@ export default function CollegesPage() {
                                         alt="Schologic Instructor Dashboard - AI grading interface and unified attendance tracking for hybrid college classes"
                                         fill
                                         className="object-cover object-top"
+                                        sizes="(max-width: 768px) 100vw, 500px"
                                     />
                                 </div>
                             </div>

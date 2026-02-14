@@ -1,103 +1,184 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { ArrowUpRight, AlertCircle, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+const slides = [
+    { src: '/images/updated screenshots/dashboard.webp', alt: 'Dean\'s Institutional Dashboard - Real-time overview of enrollment, retention, and campus integrity metrics across all departments.' },
+    { src: '/images/updated screenshots/class page.webp', alt: 'Class Management Page - Course materials, student roster, and assignment tracking for a specific class.' },
+    { src: '/images/updated screenshots/aubmissions.webp', alt: 'Student Submissions View - Assignment submissions with AI integrity scores and grading status.' },
+    { src: '/images/updated screenshots/ai report.webp', alt: 'AI Integrity Report - Detailed linguistic forensic analysis showing probability of AI authorship.' },
+    { src: '/images/updated screenshots/ta insights.webp', alt: 'Teaching Assistant Insights - AI-powered analysis of student performance patterns and recommendations.' },
+    { src: '/images/updated screenshots/rubric.webp', alt: 'Assessment Rubric Builder - Structured rubric with criteria, performance levels, and point allocations.' },
+    { src: '/images/updated screenshots/practicum logs.webp', alt: 'Practicum Logs Management - Supervisor view of student clinical hours and field experience documentation.' },
+    { src: '/images/updated screenshots/univeral reader.webp', alt: 'Universal Document Reader - Multi-format document viewer with annotation and highlighting tools.' },
+];
+
+const AUTOPLAY_INTERVAL = 4000;
 
 export const DeanDashboardVisual = () => {
+    const [current, setCurrent] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const touchStartX = useRef<number | null>(null);
+
+    // --- Navigation (resets autoplay timer) ---
+    const resetTimer = useCallback(() => {
+        if (timerRef.current) clearInterval(timerRef.current);
+    }, []);
+
+    const next = useCallback(() => {
+        setCurrent((prev) => (prev + 1) % slides.length);
+        resetTimer();
+    }, [resetTimer]);
+
+    const prev = useCallback(() => {
+        setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+        resetTimer();
+    }, [resetTimer]);
+
+    const goTo = useCallback((index: number) => {
+        setCurrent(index);
+        resetTimer();
+    }, [resetTimer]);
+
+    // --- Autoplay ---
+    useEffect(() => {
+        if (isPaused) return;
+        timerRef.current = setInterval(() => {
+            setCurrent((prev) => (prev + 1) % slides.length);
+        }, AUTOPLAY_INTERVAL);
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [isPaused, current]);
+
+    // --- Keyboard Navigation ---
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key === 'ArrowLeft') { prev(); e.preventDefault(); }
+        if (e.key === 'ArrowRight') { next(); e.preventDefault(); }
+    }, [prev, next]);
+
+    // --- Touch / Swipe Support ---
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+    }, []);
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        if (touchStartX.current === null) return;
+        const diff = e.changedTouches[0].clientX - touchStartX.current;
+        if (Math.abs(diff) > 50) {
+            diff > 0 ? prev() : next();
+        }
+        touchStartX.current = null;
+    }, [prev, next]);
+
+    // --- Conditional Rendering: only mount current ± 1 ---
+    const shouldRender = (index: number) => {
+        if (index === current) return true;
+        if (index === (current + 1) % slides.length) return true;
+        if (index === (current - 1 + slides.length) % slides.length) return true;
+        return false;
+    };
+
     return (
-        <div className="w-full relative isolate font-sans py-[10%]">
-            {/* 
-              Composition Strategy: 
-              We use a defined aspect ratio container to hold the base dashboard,
-              then absolute position the 'drill-down' elements on top.
-              py-[10%] provides vertical breathing room for overlapping cards.
-            */}
+        <div
+            className="relative flex flex-col items-center justify-center group/carousel"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            onKeyDown={handleKeyDown}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            tabIndex={0}
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Dean's Dashboard feature screenshots"
+        >
+            {/* Navigation Arrows + Monitor Container */}
+            <div className="relative flex items-center justify-center w-full">
+                {/* Left Arrow */}
+                <button
+                    onClick={prev}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/90 backdrop-blur shadow-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:text-rose-600 hover:border-rose-200 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-400"
+                    aria-label="Previous screenshot"
+                >
+                    <ChevronLeft className="w-5 h-5" />
+                </button>
 
-            {/* 1. Base Layer: The Institutional Dashboard */}
-            <div className="relative w-full aspect-[16/10] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-200 group">
-                <Image
-                    src="/images/updated screenshots/dashboard.webp"
-                    alt="Dean's Institutional Dashboard Overview - Showing real-time enrollment, retention, and campus integrity metrics across all departments."
-                    fill
-                    loading="lazy"
-                    className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.02]"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                />
+                {/* Desktop Monitor Frame */}
+                <div className="relative w-full max-w-[520px] mx-10 transition-shadow duration-500 group-hover/carousel:drop-shadow-2xl">
+                    {/* Monitor Bezel */}
+                    <div className="relative bg-gradient-to-b from-slate-700 to-slate-800 rounded-xl p-3 shadow-2xl border border-slate-600">
+                        {/* Webcam Dot */}
+                        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-500 rounded-full z-10 ring-1 ring-slate-400/30"></div>
 
-                <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-2xl pointer-events-none"></div>
+                        {/* Screen */}
+                        <div className="relative w-full aspect-[16/10] rounded-lg overflow-hidden bg-slate-900" aria-live="polite">
+                            {slides.map((slide, index) => (
+                                shouldRender(index) && (
+                                    <div
+                                        key={slide.src}
+                                        className="absolute inset-0 transition-opacity duration-500 ease-in-out"
+                                        style={{
+                                            opacity: index === current ? 1 : 0,
+                                            pointerEvents: index === current ? 'auto' : 'none',
+                                        }}
+                                        aria-hidden={index !== current}
+                                    >
+                                        <Image
+                                            src={slide.src}
+                                            alt={slide.alt}
+                                            fill
+                                            loading="lazy"
+                                            className="object-cover object-top"
+                                            sizes="(max-width: 768px) 100vw, 520px"
+                                        />
+                                    </div>
+                                )
+                            ))}
+
+                            {/* Screen Gloss Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-transparent pointer-events-none z-10"></div>
+                        </div>
+                    </div>
+
+                    {/* Monitor Stand - Tapered Neck + Base */}
+                    <div className="flex flex-col items-center">
+                        <div className="w-14 h-6 bg-gradient-to-b from-slate-700 to-slate-600" style={{ clipPath: 'polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)' }}></div>
+                        <div className="w-32 h-2 bg-gradient-to-b from-slate-600 to-slate-500 rounded-b-lg shadow-md"></div>
+                    </div>
+                </div>
+
+                {/* Right Arrow */}
+                <button
+                    onClick={next}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/90 backdrop-blur shadow-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:text-rose-600 hover:border-rose-200 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-400"
+                    aria-label="Next screenshot"
+                >
+                    <ChevronRight className="w-5 h-5" />
+                </button>
             </div>
 
-            {/* 2. Overlay Layer: The "Exception" (Grade Table) 
-                Positioned: Center Right, floating 
-            */}
-            <div className="absolute top-[8%] right-0 w-[55%] aspect-[16/10] rounded-xl overflow-hidden shadow-2xl border border-red-200 bg-white transform rotate-[-2deg] hover:rotate-0 hover:z-20 transition-all duration-500 hover:scale-105 group/table">
-                {/* Header Bar Simulation */}
-                <div className="h-6 bg-red-50 border-b border-red-100 flex items-center px-3 gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-400"></div>
-                    <span className="text-[10px] font-bold text-red-800 uppercase tracking-wider">Retention Alert: Nursing Dept</span>
-                </div>
-                <div className="relative w-full h-full">
-                    <Image
-                        src="/images/updated screenshots/grade table.webp"
-                        alt="Course Performance Drill-down - Highlighting specific courses with anomalous grade distributions or attendance drops."
-                        fill
-                        loading="lazy"
-                        className="object-cover object-top"
-                        sizes="(max-width: 768px) 50vw, 33vw"
+            {/* Dot Indicators */}
+            <div className="flex justify-center gap-1.5 mt-4" role="tablist" aria-label="Slide indicators">
+                {slides.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => goTo(index)}
+                        className={`h-2 rounded-full transition-all duration-300 ${index === current
+                            ? 'bg-rose-500 w-5'
+                            : 'bg-slate-300 hover:bg-slate-400 w-2'
+                            }`}
+                        role="tab"
+                        aria-selected={index === current}
+                        aria-label={`Go to slide ${index + 1}`}
                     />
-                </div>
-
-                {/* Connection Cursor */}
-                <div className="absolute -left-3 top-1/2 bg-white rounded-full p-1.5 shadow-lg border border-red-100 text-red-500">
-                    <AlertCircle className="w-4 h-4" />
-                </div>
+                ))}
             </div>
 
-            {/* 3. Focus Layer: The "Root Cause" (AI Report) 
-                Positioned: Bottom Left, overlapping
-            */}
-            <div className="absolute bottom-0 left-0 w-[40%] aspect-[4/5] rounded-xl overflow-hidden shadow-2xl border border-indigo-200 bg-white transform rotate-[3deg] hover:rotate-0 hover:z-30 transition-all duration-500 hover:scale-105 group/report">
-                <div className="h-6 bg-indigo-50 border-b border-indigo-100 flex items-center px-3 gap-2">
-                    <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
-                    <span className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">Student Integrity Audit</span>
-                </div>
-                <div className="relative w-full h-full">
-                    <Image
-                        src="/images/updated screenshots/ai report.webp"
-                        alt="Individual Student AI Integrity Report - Detailed linguistic forensic analysis showing probability of AI authorship."
-                        fill
-                        loading="lazy"
-                        className="object-cover object-top"
-                        sizes="(max-width: 768px) 40vw, 25vw"
-                    />
-                </div>
-            </div>
-
-            {/* 4. Control Layer: The "Settings" (AI Settings)
-                Positioned: Bottom Right, smaller
-            */}
-            <div className="absolute bottom-[12%] right-[5%] w-[30%] aspect-square rounded-xl overflow-hidden shadow-xl border border-slate-200 bg-white transform rotate-[-3deg] hover:rotate-0 hover:z-30 transition-all duration-500 hover:scale-105 group/settings">
-                <div className="h-6 bg-slate-50 border-b border-slate-100 flex items-center px-3 gap-2">
-                    <Settings className="w-3 h-3 text-slate-500" />
-                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Policy Config</span>
-                </div>
-                <div className="relative w-full h-full">
-                    <Image
-                        src="/images/updated screenshots/ai settings.webp"
-                        alt="System Configuration - Adjusting institutional AI detection sensitivity thresholds and policy settings."
-                        fill
-                        loading="lazy"
-                        className="object-cover object-left-top"
-                        sizes="(max-width: 768px) 30vw, 20vw"
-                    />
-                </div>
-                {/* Interactive Element */}
-                <div className="absolute bottom-2 right-2 bg-indigo-600 text-white p-1.5 rounded-lg shadow-lg opacity-0 group-hover/settings:opacity-100 transition-opacity">
-                    <ArrowUpRight className="w-3 h-3" />
-                </div>
-            </div>
-
+            {/* Slide counter */}
+            <p className="text-xs text-slate-400 mt-2 font-mono">{current + 1} / {slides.length}</p>
         </div>
     );
 };
