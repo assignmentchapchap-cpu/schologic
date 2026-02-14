@@ -1,6 +1,7 @@
 import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
 import { CollegesPilotCTA } from "@/components/use-cases/colleges/CollegesPilotCTA";
+import { StudentMobileCarousel } from "@/components/use-cases/colleges/StudentMobileCarousel";
 import { Maximize2, Layers, Users, TrendingUp, Shield, ArrowRight, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -235,8 +236,11 @@ export default function CollegesPage() {
             {/* Section 4: Student Retention - White Background */}
             <div className="bg-white py-24">
                 <SectionGrid>
-                    <GridColumn span={6} className="flex items-center">
-                        <div className="prose prose-lg prose-slate pr-6">
+                    <GridColumn span={6} className="flex items-center justify-center">
+                        <StudentMobileCarousel />
+                    </GridColumn>
+                    <GridColumn span={6} className="flex flex-col gap-8">
+                        <div className="prose prose-lg prose-slate">
                             <h2 className="text-3xl font-serif font-bold text-slate-900 mb-4">Keep Every Student Connected</h2>
                             <div className="text-slate-600 space-y-4">
                                 <p>
@@ -250,42 +254,44 @@ export default function CollegesPage() {
                                 </p>
                             </div>
                         </div>
-                    </GridColumn>
-                    <GridColumn span={6}>
-                        <div className="bg-amber-50 p-8 rounded-3xl border border-amber-100 h-full">
-                            <div className="w-14 h-14 bg-white shadow-sm rounded-2xl flex items-center justify-center mb-8">
-                                <TrendingUp className="w-7 h-7 text-amber-600" />
+
+                        {/* Condensed Retention Features */}
+                        <div className="bg-amber-50 p-6 rounded-2xl border border-amber-100">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 bg-white shadow-sm rounded-xl flex items-center justify-center">
+                                    <TrendingUp className="w-5 h-5 text-amber-600" />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900">Retention & Success</h3>
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-900 mb-6">Retention & Success</h3>
-                            <ul className="space-y-5">
-                                <li className="bg-white p-4 rounded-xl border border-amber-100 shadow-sm flex items-start gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-                                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div className="bg-white p-3 rounded-xl border border-amber-100 shadow-sm flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center shrink-0 mt-0.5">
+                                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                                     </div>
                                     <div>
-                                        <strong className="block text-slate-900">At-Risk Alerts</strong>
-                                        <p className="text-sm text-slate-600">Automated notifications when engagement drops below thresholds.</p>
+                                        <strong className="block text-slate-900 text-sm">At-Risk Alerts</strong>
+                                        <p className="text-xs text-slate-600">Auto-notifications on engagement drops.</p>
                                     </div>
-                                </li>
-                                <li className="bg-white p-4 rounded-xl border border-amber-100 shadow-sm flex items-start gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                                        <CheckCircle className="w-4 h-4 text-amber-600" />
-                                    </div>
-                                    <div>
-                                        <strong className="block text-slate-900">Mobile-Responsive</strong>
-                                        <p className="text-sm text-slate-600">Students access coursework from any device, anywhere.</p>
-                                    </div>
-                                </li>
-                                <li className="bg-white p-4 rounded-xl border border-amber-100 shadow-sm flex items-start gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                                        <CheckCircle className="w-4 h-4 text-amber-600" />
+                                </div>
+                                <div className="bg-white p-3 rounded-xl border border-amber-100 shadow-sm flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+                                        <CheckCircle className="w-3 h-3 text-amber-600" />
                                     </div>
                                     <div>
-                                        <strong className="block text-slate-900">Clear Progress Tracking</strong>
-                                        <p className="text-sm text-slate-600">Visual dashboards show exactly where students stand.</p>
+                                        <strong className="block text-slate-900 text-sm">Mobile-First</strong>
+                                        <p className="text-xs text-slate-600">Access from any device, anywhere.</p>
                                     </div>
-                                </li>
-                            </ul>
+                                </div>
+                                <div className="bg-white p-3 rounded-xl border border-amber-100 shadow-sm flex items-start gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+                                        <CheckCircle className="w-3 h-3 text-amber-600" />
+                                    </div>
+                                    <div>
+                                        <strong className="block text-slate-900 text-sm">Progress Tracking</strong>
+                                        <p className="text-xs text-slate-600">Visual dashboards for clarity.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </GridColumn>
                 </SectionGrid>
