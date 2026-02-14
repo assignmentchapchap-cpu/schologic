@@ -71,7 +71,7 @@ export default function CollegesPage() {
                             </p>
                             <div className="relative aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200">
                                 <Image
-                                    src="/images/colleges/hybrid-campus.jpg"
+                                    src="/images/colleges/hybrid-campus.webp"
                                     alt="Schologic Hybrid Learning Platform - Students studying in physical classrooms and participating via distance education in Kenya"
                                     fill
                                     className="object-cover object-top"
@@ -219,7 +219,7 @@ export default function CollegesPage() {
                             <div className="relative mx-auto border-gray-800 bg-gray-800 border-[8px] rounded-t-xl h-[250px] md:h-[300px] w-full max-w-[500px] shadow-2xl">
                                 <div className="rounded-lg overflow-hidden h-full w-full bg-slate-900 relative">
                                     <Image
-                                        src="/images/colleges/instructor-dashboard.png"
+                                        src="/images/colleges/instructor-dashboard.webp"
                                         alt="Schologic Instructor Dashboard - AI grading interface and unified attendance tracking for hybrid college classes"
                                         fill
                                         className="object-cover object-top"

@@ -24,7 +24,7 @@ export const ZTCIngestionVisual = () => {
     }, [activeSource]);
 
     return (
-        <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans flex flex-col h-full min-h-[800px]">
+        <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans flex flex-col h-full">
             {/* Header */}
             <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
@@ -39,11 +39,11 @@ export const ZTCIngestionVisual = () => {
                 </div>
             </div>
 
-            <div className="p-8 bg-slate-50/50 flex-1 flex flex-col">
+            <div className="p-6 bg-slate-50/50 flex-1 flex flex-col">
 
                 {/* PHASE 1: SEARCH / SOURCE SELECTION */}
-                <div className="mb-8">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <div className="mb-4">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-mono text-[10px]">1</div>
                         Select Source Repository
                     </div>
@@ -97,15 +97,15 @@ export const ZTCIngestionVisual = () => {
                 </div>
 
                 {/* Connector from Sources to Pipeline */}
-                <div className="relative h-12 w-full">
+                <div className="relative h-6 w-full">
                     <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
-                        <path d="M 300 0 C 300 20, 32 20, 32 48" stroke="#cbd5e1" strokeWidth="2" fill="none" strokeDasharray="4 4" />
+                        <path d="M 300 0 C 300 10, 48 10, 48 24" stroke="#cbd5e1" strokeWidth="2" fill="none" strokeDasharray="4 4" />
                     </svg>
-                    <div className="absolute left-[23px] bottom-0 w-4 h-4 rounded-full bg-slate-200 border-2 border-white z-10"></div>
+                    <div className="absolute left-[39px] bottom-0 w-4 h-4 rounded-full bg-slate-200 border-2 border-white z-10"></div>
                 </div>
 
                 {/* PHASE 2-4: THE PIPELINE */}
-                <div className="flex-1 relative pl-12 border-l-2 border-slate-200 ml-8 space-y-12 pb-12 pt-2">
+                <div className="flex-1 relative pl-12 border-l-2 border-slate-200 ml-8 space-y-3 pb-2 pt-1">
 
                     {/* Step 2: Download */}
                     <div className="relative group">
@@ -116,7 +116,7 @@ export const ZTCIngestionVisual = () => {
                             <div className={cn("w-2 h-2 rounded-full transition-colors duration-500", progress >= 1 ? "bg-indigo-500" : "bg-slate-200")}></div>
                         </div>
                         <div className={cn("transition-all duration-500", progress >= 1 ? "opacity-100 translate-x-0" : "opacity-30 translate-x-4")}>
-                            <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <div className="h-10 w-10 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-500 shrink-0">
                                     <Download className="w-5 h-5" />
                                 </div>
@@ -142,7 +142,7 @@ export const ZTCIngestionVisual = () => {
                             <div className={cn("w-2 h-2 rounded-full transition-colors duration-500", progress >= 2 ? "bg-indigo-500" : "bg-slate-200")}></div>
                         </div>
                         <div className={cn("transition-all duration-500 delay-100", progress >= 2 ? "opacity-100 translate-x-0" : "opacity-30 translate-x-4")}>
-                            <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <div className="h-10 w-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-500 shrink-0">
                                     <FileText className="w-5 h-5" />
                                 </div>
@@ -168,7 +168,7 @@ export const ZTCIngestionVisual = () => {
                             <div className={cn("w-2 h-2 rounded-full transition-colors duration-500", progress >= 3 ? "bg-indigo-500" : "bg-slate-200")}></div>
                         </div>
                         <div className={cn("transition-all duration-500 delay-200", progress >= 3 ? "opacity-100 translate-x-0" : "opacity-30 translate-x-4")}>
-                            <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <div className="h-10 w-10 bg-pink-50 rounded-lg flex items-center justify-center text-pink-500 shrink-0">
                                     <Plus className="w-5 h-5" />
                                 </div>
@@ -204,7 +204,7 @@ export const ZTCIngestionVisual = () => {
                     "transition-all duration-700 delay-300 transform",
                     progress >= 4 ? "opacity-100 translate-y-0" : "opacity-50 translate-y-8 blur-sm grayscale"
                 )}>
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-mono text-[10px]">5</div>
                         Universal Reader Output
                     </div>
@@ -228,7 +228,7 @@ export const ZTCIngestionVisual = () => {
                         </div>
 
                         {/* Reader Body */}
-                        <div className="flex h-56">
+                        <div className="flex h-28">
                             {/* Sidebar */}
                             <div className="w-16 bg-slate-50 border-r border-slate-100 flex flex-col items-center py-4 gap-4">
                                 <Menu className="w-4 h-4 text-slate-400" />
@@ -238,13 +238,13 @@ export const ZTCIngestionVisual = () => {
                             </div>
 
                             {/* Content */}
-                            <div className="flex-1 p-6 relative">
-                                <h4 className="font-serif font-bold text-slate-800 text-lg mb-4 transition-all duration-300">
+                            <div className="flex-1 p-4 relative">
+                                <h4 className="font-serif font-bold text-slate-800 text-sm mb-2 transition-all duration-300">
                                     {activeSource === 'libretexts' ? "4.2: Atomic Structure" : "3.1: Derivatives"}
                                 </h4>
-                                <div className="space-y-3">
-                                    <div className="h-2 w-full bg-slate-100 rounded-full"></div>
-                                    <div className="h-2 w-5/6 bg-slate-100 rounded-full relative">
+                                <div className="space-y-2">
+                                    <div className="h-1.5 w-full bg-slate-100 rounded-full"></div>
+                                    <div className="h-1.5 w-5/6 bg-slate-100 rounded-full relative">
                                         <div className={cn(
                                             "absolute inset-0 -mx-1 px-1 rounded flex items-center group cursor-pointer transition-colors duration-300",
                                             activeSource === 'libretexts' ? "bg-yellow-100/80" : "bg-green-100/80"
@@ -253,15 +253,10 @@ export const ZTCIngestionVisual = () => {
                                                 "h-full w-full rounded transition-colors",
                                                 activeSource === 'libretexts' ? "bg-yellow-200/50" : "bg-green-200/50"
                                             )}></div>
-                                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] px-2 py-1 rounded shadow-lg hidden group-hover:block whitespace-nowrap">
-                                                Highlight & Annotate
-                                            </div>
                                         </div>
                                     </div>
-                                    <div className="h-2 w-full bg-slate-100 rounded-full"></div>
-                                    <div className="h-2 w-4/6 bg-slate-100 rounded-full"></div>
-                                    <div className="h-2 w-full bg-slate-100 rounded-full opacity-50"></div>
-                                    <div className="h-2 w-1/2 bg-slate-100 rounded-full opacity-50"></div>
+                                    <div className="h-1.5 w-full bg-slate-100 rounded-full"></div>
+                                    <div className="h-1.5 w-4/6 bg-slate-100 rounded-full"></div>
                                 </div>
 
                                 {/* Floating Toolbar Mock */}

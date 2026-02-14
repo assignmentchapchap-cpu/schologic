@@ -74,7 +74,7 @@ export default function TvetPage() {
                             </p>
                             <div className="relative aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200">
                                 <Image
-                                    src="/images/colleges/tvet learners schologic lms.svg"
+                                    src="/images/colleges/tvet learners schologic lms.webp"
                                     alt="TVET Hybrid Learning - Students using Schologic LMS for theory lessons before practical workshops"
                                     fill
                                     className="object-cover object-top"
