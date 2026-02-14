@@ -84,7 +84,7 @@ export const DeanDashboardVisual = () => {
 
     return (
         <div
-            className="relative flex flex-col items-center justify-center group/carousel"
+            className="relative flex flex-col items-center justify-center group/carousel w-full max-w-4xl mx-auto h-full"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
             onKeyDown={handleKeyDown}
@@ -145,8 +145,8 @@ export const DeanDashboardVisual = () => {
 
                     {/* Monitor Stand - Tapered Neck + Base */}
                     <div className="flex flex-col items-center">
-                        <div className="w-14 h-6 bg-gradient-to-b from-slate-700 to-slate-600" style={{ clipPath: 'polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)' }}></div>
-                        <div className="w-32 h-2 bg-gradient-to-b from-slate-600 to-slate-500 rounded-b-lg shadow-md"></div>
+                        <div className="w-32 h-14 bg-gradient-to-b from-slate-700 to-slate-600" style={{ clipPath: 'polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)' }}></div>
+                        <div className="w-80 h-4 bg-gradient-to-b from-slate-600 to-slate-500 rounded-b-lg shadow-md"></div>
                     </div>
                 </div>
 

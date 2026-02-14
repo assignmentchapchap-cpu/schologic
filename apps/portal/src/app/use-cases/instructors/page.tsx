@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
 import { InstructorVisualPlaceholder } from "@/components/use-cases/InstructorVisualPlaceholder";
+import { TAInsightsVisual } from "@/components/use-cases/TAInsightsVisual";
+import { PracticumProcessVisual } from "@/components/use-cases/universities/PracticumProcessVisual";
+import { ZTCIngestionVisual } from "@/components/use-cases/ZTCIngestionVisual";
+import { DeanDashboardVisual } from "@/components/use-cases/universities/DeanDashboardVisual";
 import {
     Zap,
     Shield,
@@ -11,6 +15,7 @@ import {
     ArrowRight
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -33,17 +38,22 @@ export default function InstructorsPage() {
                 secondaryCtaText="View Demo Video"
                 secondaryCtaHref="/demo"
                 visual={
-                    <InstructorVisualPlaceholder
-                        label="Hero: Grading Dashboard Time Saved"
-                        minHeight="min-h-[400px]"
-                    />
+                    <div className="relative w-full max-w-[400px] aspect-square">
+                        <Image
+                            src="/images/instructors/abstract-hero.svg"
+                            alt=""
+                            fill
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
                 }
                 visualPosition="right"
             />
 
             {/* 2. AI-Powered Grading (Text Left, Visual Right) */}
             <SectionGrid className="bg-rose-50" id="grading">
-                <GridColumn span={5} className="flex flex-col justify-center order-2 md:order-1">
+                <GridColumn span={6} className="flex flex-col justify-center order-2 md:order-1">
                     <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center mb-6 text-rose-600">
                         <Zap className="w-6 h-6" />
                     </div>
@@ -62,8 +72,10 @@ export default function InstructorsPage() {
                         Explore Grading Tools <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                 </GridColumn>
-                <GridColumn span={7} className="order-1 md:order-2">
-                    <InstructorVisualPlaceholder label="Split Screen: Student vs AI Draft" minHeight="min-h-[500px]" />
+                <GridColumn span={6} className="order-1 md:order-2">
+                    <div className="w-full flex justify-center transform hover:scale-[1.02] transition-transform duration-500">
+                        <TAInsightsVisual />
+                    </div>
                 </GridColumn>
             </SectionGrid>
 
@@ -95,7 +107,7 @@ export default function InstructorsPage() {
 
             {/* 4. Practicum Supervision (Text Left, Visual Right) */}
             <SectionGrid className="bg-slate-50" id="practicum">
-                <GridColumn span={5} className="flex flex-col justify-center order-2 md:order-1">
+                <GridColumn span={6} className="flex flex-col justify-center order-2 md:order-1">
                     <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-6 text-blue-600">
                         <MapPin className="w-6 h-6" />
                     </div>
@@ -114,17 +126,21 @@ export default function InstructorsPage() {
                         Automate Practicums <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                 </GridColumn>
-                <GridColumn span={7} className="order-1 md:order-2">
-                    <InstructorVisualPlaceholder label="Map View: Verified Student Locations" minHeight="min-h-[500px]" />
+                <GridColumn span={6} className="order-1 md:order-2">
+                    <div className="bg-white p-4 rounded-3xl border border-slate-200 h-full relative overflow-hidden group flex items-center justify-center">
+                        <PracticumProcessVisual />
+                    </div>
                 </GridColumn>
             </SectionGrid>
 
             {/* 5. Retention & Analytics (Visual Left, Text Right) */}
             <SectionGrid className="bg-white" id="retention">
-                <GridColumn span={7} className="order-1">
-                    <InstructorVisualPlaceholder label="Risk Radar Chart: Late Assignments" minHeight="min-h-[500px]" />
+                <GridColumn span={6} className="order-1">
+                    <div className="h-full flex items-center justify-center">
+                        <DeanDashboardVisual />
+                    </div>
                 </GridColumn>
-                <GridColumn span={5} className="flex flex-col justify-center order-2">
+                <GridColumn span={6} className="flex flex-col justify-center order-2">
                     <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mb-6 text-amber-600">
                         <TrendingUp className="w-6 h-6" />
                     </div>
@@ -167,29 +183,53 @@ export default function InstructorsPage() {
                     </Link>
                 </GridColumn>
                 <GridColumn span={6} className="order-1 md:order-2">
-                    <InstructorVisualPlaceholder label="Reader Interface with Engagement Heatmap" minHeight="min-h-[500px]" />
+                    <div className="w-full transform hover:scale-[1.02] transition-transform duration-500">
+                        <ZTCIngestionVisual />
+                    </div>
                 </GridColumn>
             </SectionGrid>
 
             {/* 7. Final CTA */}
-            <section className="py-24 px-6">
-                <div className="container mx-auto">
-                    <div className="bg-rose-50 rounded-3xl p-12 md:p-24 text-center">
-                        <h2 className="text-4xl md:text-5xl font-serif font-black text-slate-900 mb-6 max-w-3xl mx-auto">
+            <div className="bg-gradient-to-b from-rose-50 to-white py-24 text-center bg-grid-rose-500/10">
+                <SectionGrid>
+                    <GridColumn span={8} className="mx-auto">
+                        <div className="w-20 h-20 bg-white rounded-3xl shadow-xl shadow-rose-900/5 flex items-center justify-center mx-auto mb-8 transform rotate-3">
+                            <Zap className="w-10 h-10 text-rose-600" />
+                        </div>
+                        <h2 className="text-4xl md:text-5xl font-serif font-black text-slate-900 mb-6">
                             Join the Faculty of the Future.
                         </h2>
-                        <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
+                        <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
                             Start your free pilot today. No credit card required for individual instructor accounts.
                         </p>
-                        <Link
-                            href="/#pilot"
-                            className="inline-flex items-center justify-center px-8 py-4 rounded-full font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-lg hover:shadow-xl min-w-[240px] text-lg"
-                        >
-                            Start Free Pilot
-                        </Link>
-                    </div>
-                </div>
-            </section>
+                        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                            <Link
+                                href="/#pilot"
+                                className="inline-flex items-center justify-center px-8 py-4 rounded-full font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-lg hover:shadow-xl min-w-[240px] text-lg"
+                            >
+                                Start Free Pilot
+                            </Link>
+                            <Link
+                                href="/demo"
+                                className="text-slate-600 font-bold hover:text-rose-600 transition-colors flex items-center gap-2 text-lg"
+                            >
+                                View Live Demo <ArrowRight className="w-5 h-5" />
+                            </Link>
+                        </div>
+                        <div className="mt-12 flex justify-center gap-8 text-rose-600/80 text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                                <Zap className="w-4 h-4" /> Instant Grading
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Shield className="w-4 h-4" /> AI Detection
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <TrendingUp className="w-4 h-4" /> Retention Analytics
+                            </div>
+                        </div>
+                    </GridColumn>
+                </SectionGrid>
+            </div>
         </main>
     );
 }
