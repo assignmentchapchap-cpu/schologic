@@ -113,3 +113,70 @@ export function JsonLdSoftwareApplication() {
         />
     );
 }
+
+/**
+ * Renders Pricing schema for Schologic LMS tiers.
+ */
+export function JsonLdPricing() {
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        name: "Schologic LMS",
+        description: "Comprehensive LMS for African institutions with AI grading and integrity tools.",
+        offers: [
+            {
+                "@type": "Offer",
+                name: "Instructor Plan",
+                description: "Free for individual instructors. Includes AI grading, integrity detection, and class management.",
+                price: "0",
+                "priceCurrency": "USD",
+                availability: "https://schema.org/InStock",
+            },
+            {
+                "@type": "Offer",
+                name: "NGO / Non-Profit Plan",
+                description: "Free full platform access for qualifying non-profit institutions.",
+                price: "0",
+                "priceCurrency": "USD",
+                availability: "https://schema.org/InStock",
+            },
+            {
+                "@type": "Offer",
+                name: "Institution Plan",
+                description: "Custom deployment for universities and colleges. Includes branding, custom domain, and multiple admins. Free pilot available.",
+                availability: "https://schema.org/InStock",
+                url: "https://schologic.com/pricing"
+            }
+        ]
+    };
+
+    return (
+        <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+    );
+}
+
+/**
+ * Renders WebPage schema for generic pages.
+ */
+export function JsonLdWebPage({ name, description }: { name: string; description: string }) {
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: name,
+        description: description,
+        publisher: {
+            "@type": "Organization",
+            "@id": "https://schologic.com/#organization",
+        },
+    };
+
+    return (
+        <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+    );
+}

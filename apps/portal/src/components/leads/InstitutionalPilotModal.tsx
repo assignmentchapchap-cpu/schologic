@@ -242,7 +242,7 @@ export default function InstitutionalPilotModal({ onClose }: Props) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between z-20 shrink-0">

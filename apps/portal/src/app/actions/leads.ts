@@ -350,3 +350,95 @@ export async function submitDemoInvite(data: ShareDemoData) {
   }
 }
 
+export interface ContactFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export async function submitContactForm(data: ContactFormData) {
+  try {
+    // 1. Send notification to admin
+    await resend.emails.send({
+      from: 'Schologic Contact <onboarding@schologic.com>',
+      to: 'info@schologic.com',
+      subject: `[CONTACT] ${data.subject}`,
+      html: `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.6; color: #1e293b; background: white; border: 1px solid #e2e8f0; border-top: 4px solid #4f46e5;">
+  <div style="padding: 30px;">
+    <h2 style="margin: 0 0 20px 0; font-size: 20px; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">New Contact Form Submission</h2>
+    
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+      <tr>
+        <td style="padding: 10px 0; font-size: 14px; color: #64748b; width: 100px;">Name</td>
+        <td style="padding: 10px 0; font-size: 14px; font-weight: 600;">${data.name}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 0; font-size: 14px; color: #64748b;">Email</td>
+        <td style="padding: 10px 0; font-size: 14px;"><a href="mailto:${data.email}" style="color: #4f46e5; text-decoration: none;">${data.email}</a></td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 0; font-size: 14px; color: #64748b;">Subject</td>
+        <td style="padding: 10px 0; font-size: 14px; font-weight: 600;">${data.subject}</td>
+      </tr>
+    </table>
+
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold; color: #475569;">MESSAGE</p>
+      <p style="margin: 0; font-size: 14px; color: #1e293b; white-space: pre-wrap;">${data.message}</p>
+    </div>
+
+    <div style="border-top: 1px solid #f1f5f9; padding-top: 20px; font-size: 11px; color: #94a3b8; text-align: center;">
+      <p>Submitted via the Schologic Contact Form.</p>
+    </div>
+  </div>
+</div>
+      `
+    });
+
+    // 2. Send acknowledgement to sender
+    await resend.emails.send({
+      from: 'Schologic Team <onboarding@schologic.com>',
+      to: data.email,
+      subject: 'We received your message - Schologic',
+      html: `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; max-width: 600px; margin: 0 auto; line-height: 1.6; color: #334155;">
+  <div style="background: #f8fafc; padding: 30px; text-align: center; border-bottom: 1px solid #e2e8f0;">
+    <h1 style="color: #0f172a; margin: 0; font-size: 20px; font-weight: 700;">SCHOLOGIC LMS</h1>
+    <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 12px;">Smart, Credible, and Flexible Higher Education</p>
+  </div>
+
+  <div style="padding: 40px 30px;">
+    <p style="font-size: 16px; margin-top: 0;">Hello ${data.name},</p>
+    
+    <p style="font-size: 15px;">Thank you for reaching out. We've received your message regarding "<strong>${data.subject}</strong>" and our team will get back to you within 2 business days.</p>
+    
+    <div style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 20px; margin: 25px 0;">
+      <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Your Message</p>
+      <p style="margin: 0; font-size: 13px; color: #475569; white-space: pre-wrap;">${data.message}</p>
+    </div>
+
+    <p style="font-size: 14px; margin-top: 30px;">Sincerely,<br/><span style="font-weight: bold; color: #0f172a;">The Schologic Team</span></p>
+  </div>
+
+  <div style="background: #f8fafc; padding: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
+    <div style="color: #94a3b8; font-size: 11px;">
+      <p style="margin-bottom: 5px;"><strong>Schologic LMS</strong></p>
+      <p style="margin-bottom: 5px;">For Queries Contact +254 108289977</p>
+      <p>Smart, Credible, and Flexible Higher Education, with AI</p>
+    </div>
+  </div>
+</div>
+      `
+    });
+
+    return { success: true };
+
+  } catch (error: unknown) {
+    console.error('Contact Form Error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to send message';
+    return { error: message };
+  }
+}
+

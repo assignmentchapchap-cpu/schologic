@@ -125,7 +125,8 @@ export default function Navbar({ onOpenDemo, solid = false }: NavbarProps) {
                         )}
                     </div>
 
-                    <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+                    <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
+                    <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
                 </div>
 
                 {/* Desktop Actions */}
@@ -250,13 +251,20 @@ export default function Navbar({ onOpenDemo, solid = false }: NavbarProps) {
                             </div>
 
                             {/* Direct Links */}
-                            <a
-                                href="#pricing"
+                            <Link
+                                href="/pricing"
                                 className="block px-2 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors font-medium text-sm"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 Pricing
-                            </a>
+                            </Link>
+                            <Link
+                                href="/contact"
+                                className="block px-2 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors font-medium text-sm"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                Contact
+                            </Link>
                         </div>
 
                         <div className="border-t border-slate-800 pt-6">

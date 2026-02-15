@@ -68,23 +68,23 @@ function HomeContent() {
             Academic Excellence?
           </h2>
           <p className="text-xl text-indigo-200 mb-10 max-w-2xl mx-auto font-light">
-            Join forward-thinking institutions using AI to grade smarter, teach honestly, and spend less.
+            Join forward-thinking institutions using AI to offer smart, credible, and flexible higher education.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center sm:justify-center sm:gap-4 w-full px-1 sm:px-0">
             <button
               onClick={() => setShowPilotModal(true)}
-              className="px-8 py-4 bg-white text-indigo-900 rounded-lg font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl shadow-indigo-900/40 active:scale-95 font-sans min-w-[280px]"
+              className="px-2 py-3 sm:px-8 sm:py-4 bg-white text-indigo-900 rounded-lg font-bold text-base sm:text-lg hover:bg-indigo-50 transition-all shadow-xl shadow-indigo-900/40 active:scale-95 font-sans w-full sm:w-auto sm:min-w-[280px] whitespace-nowrap"
             >
-              Start Your Institutional Pilot
+              Start <span className="hidden sm:inline">Your Institutional</span> Pilot
             </button>
 
             <button
               onClick={() => setShowInviteModal(true)}
-              className="px-8 py-4 bg-transparent border-2 border-indigo-400/30 text-indigo-100 rounded-lg font-bold text-lg hover:bg-indigo-800/50 hover:border-indigo-400/60 transition-all active:scale-95 font-sans flex items-center justify-center gap-2 min-w-[280px]"
+              className="px-2 py-3 sm:px-8 sm:py-4 bg-transparent border-2 border-indigo-400/30 text-indigo-100 rounded-lg font-bold text-base sm:text-lg hover:bg-indigo-800/50 hover:border-indigo-400/60 transition-all active:scale-95 font-sans flex items-center justify-center gap-1 sm:gap-2 w-full sm:w-auto sm:min-w-[280px] whitespace-nowrap"
             >
-              <Share2 className="w-5 h-5" />
-              Invite an Instructor
+              <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+              Invite <span className="hidden sm:inline">an</span> Instructor
             </button>
           </div>
         </div>
