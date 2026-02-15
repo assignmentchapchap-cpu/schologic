@@ -85,15 +85,14 @@ export const DeanDashboardVisual = () => {
     return (
         <div
             className="relative flex flex-col items-center justify-center group/carousel w-full max-w-4xl mx-auto h-full"
+            role="img"
+            aria-label="Dean Dashboard showing retention analytics and student risk factors"
+            data-nosnippet
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
             onKeyDown={handleKeyDown}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
-            tabIndex={0}
-            role="region"
-            aria-roledescription="carousel"
-            aria-label="Dean's Dashboard feature screenshots"
         >
             {/* Navigation Arrows + Monitor Container */}
             <div className="relative flex items-center justify-center w-full">
@@ -107,7 +106,7 @@ export const DeanDashboardVisual = () => {
                 </button>
 
                 {/* Desktop Monitor Frame */}
-                <div className="relative w-full mx-4 transition-shadow duration-500 group-hover/carousel:drop-shadow-2xl">
+                <div className="relative w-full mx-1 md:mx-4 transition-shadow duration-500 group-hover/carousel:drop-shadow-2xl">
                     {/* Monitor Bezel */}
                     <div className="relative bg-gradient-to-b from-slate-700 to-slate-800 rounded-xl p-1.5 shadow-2xl border border-slate-600">
                         {/* Webcam Dot */}

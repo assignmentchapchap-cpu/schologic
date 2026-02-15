@@ -90,9 +90,9 @@ export const StudentMobileCarousel = () => {
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             tabIndex={0}
-            role="region"
-            aria-roledescription="carousel"
-            aria-label="Student mobile app screenshots"
+            role="img"
+            aria-label="Student Mobile App Screenshots showing dashboard and grades"
+            data-nosnippet
         >
             {/* Left Arrow */}
             <button
@@ -104,7 +104,7 @@ export const StudentMobileCarousel = () => {
             </button>
 
             {/* Phone Frame - 280px for better legibility */}
-            <div className="relative mx-12 w-[280px] shrink-0">
+            <div className="relative mx-2 md:mx-12 w-[280px] shrink-0">
                 {/* Phone Body */}
                 <div className="relative bg-slate-900 rounded-[2.5rem] p-2 shadow-2xl border border-slate-700">
                     {/* Notch */}

@@ -112,7 +112,12 @@ export const SystemEcosystemVisual = () => {
     const activeRoleData = roles.find(r => r.id === activeRole);
 
     return (
-        <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans">
+        <div
+            className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans"
+            role="img"
+            aria-label="Interactive Diagram showing Role-Based Access Control permissions for VCs, Admins, and Instructors"
+            data-nosnippet
+        >
             {/* Header */}
             <div className="bg-slate-50 px-6 py-3 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -127,7 +132,7 @@ export const SystemEcosystemVisual = () => {
                 </div>
             </div>
 
-            <div className="p-10 relative">
+            <div className="p-4 md:p-10 relative">
                 {/* SVG Connection Lines */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" preserveAspectRatio="none">
                     {/* VC to Core */}

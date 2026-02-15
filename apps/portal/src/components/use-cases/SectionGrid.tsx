@@ -10,7 +10,7 @@ interface SectionGridProps {
 
 export function SectionGrid({ children, className, id }: SectionGridProps) {
     return (
-        <section id={id} className={cn("container mx-auto px-6 py-24", className)}>
+        <section id={id} className={cn("container mx-auto px-6", className)}>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
                 {children}
             </div>

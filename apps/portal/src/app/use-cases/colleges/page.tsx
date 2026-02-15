@@ -32,7 +32,7 @@ export default function CollegesPage() {
                 accentColor="amber"
                 visualPosition="left"
                 visual={
-                    <div className="relative w-full max-w-[400px] aspect-square">
+                    <div className="hidden md:block relative w-full max-w-[400px] aspect-square">
                         <Image
                             src="/images/colleges/abstract-hero.svg"
                             alt=""
@@ -46,7 +46,7 @@ export default function CollegesPage() {
             />
 
             {/* Section 1: The Capacity Challenge - Amber Background */}
-            <div className="bg-amber-50 py-24">
+            <div className="bg-amber-50 py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="order-2 md:order-1">
                         <div className="bg-white p-8 rounded-2xl border border-amber-100 shadow-sm h-full relative overflow-hidden group">
@@ -86,7 +86,7 @@ export default function CollegesPage() {
             </div>
 
             {/* Section 2: Unified Platform - White Background */}
-            <div className="bg-white py-24">
+            <div className="bg-white py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="flex items-center">
                         <div className="prose prose-lg prose-slate pr-6">
@@ -153,7 +153,7 @@ export default function CollegesPage() {
             </div>
 
             {/* Section 3: Instructor Empowerment - Dark Theme for Contrast */}
-            <div className="bg-slate-900 py-24 relative overflow-hidden bg-dot-white/20">
+            <div className="bg-slate-900 py-12 md:py-20 relative overflow-hidden bg-dot-white/20">
                 {/* Background Glow */}
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
 
@@ -237,7 +237,7 @@ export default function CollegesPage() {
             </div>
 
             {/* Section 4: Student Retention - White Background */}
-            <div className="bg-white py-24">
+            <div className="bg-white py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="flex items-center justify-center">
                         <StudentMobileCarousel />

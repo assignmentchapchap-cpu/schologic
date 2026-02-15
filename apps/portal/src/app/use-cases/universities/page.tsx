@@ -33,14 +33,14 @@ export default function UniversitiesPage() {
                 secondaryCtaHref="/demo"
                 visualPosition="right"
                 visual={
-                    <div className="relative w-full max-w-[400px] aspect-square">
+                    <div className="hidden md:block relative w-full max-w-[400px] aspect-square">
                         <UniversitiesHeroVisual />
                     </div>
                 }
             />
 
             {/* 2. Institutional Integrity (AI Detection) - Indigo Theme */}
-            <div className="bg-indigo-50 py-24">
+            <div className="bg-indigo-50 py-12 md:py-20">
                 <SectionGrid id="integrity">
                     <GridColumn span={6} className="order-2 md:order-1 flex items-center">
                         <div className="prose prose-lg prose-slate pr-6">
@@ -79,7 +79,7 @@ export default function UniversitiesPage() {
             </div>
 
             {/* 3. Employability & Verification (Practicum) - White Background */}
-            <div className="bg-white py-24">
+            <div className="bg-white py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="flex items-center">
                         <div className="prose prose-lg prose-slate pr-6">
@@ -116,7 +116,7 @@ export default function UniversitiesPage() {
             </div>
 
             {/* 4. Faculty Empowerment (AI TA) - Light Purple Theme */}
-            <div className="bg-purple-50 py-24">
+            <div className="bg-purple-50 py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="order-2 md:order-1 flex items-center justify-center">
                         <div className="w-full flex justify-center transform hover:scale-[1.02] transition-transform duration-500">
@@ -148,7 +148,7 @@ export default function UniversitiesPage() {
             </div>
 
             {/* 5. Sovereign Content Strategy (OER) - White Background */}
-            <div className="bg-white py-24">
+            <div className="bg-white py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="flex items-center">
                         <div className="prose prose-lg prose-slate pr-6">
@@ -180,7 +180,7 @@ export default function UniversitiesPage() {
             </div>
 
             {/* 6. Multi-Campus Management - Light Amber Theme */}
-            <div className="bg-amber-50 py-24">
+            <div className="bg-amber-50 py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="order-2 md:order-1 flex items-center justify-center">
                         <div className="w-full transform hover:scale-[1.02] transition-transform duration-500">
@@ -212,7 +212,7 @@ export default function UniversitiesPage() {
             </div>
 
             {/* 7. Dean's Dashboard - White Background */}
-            <div className="bg-white py-24">
+            <div className="bg-white py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="flex items-center">
                         <div className="prose prose-lg prose-slate pr-6">
@@ -244,7 +244,7 @@ export default function UniversitiesPage() {
             </div>
 
             {/* 8. Final CTA */}
-            <div className="bg-gradient-to-b from-indigo-50 to-white py-24 text-center bg-grid-indigo-500/10">
+            <div className="bg-gradient-to-b from-indigo-50 to-white py-12 md:py-20 text-center bg-grid-indigo-500/10">
                 <SectionGrid>
                     <GridColumn span={8} className="mx-auto">
                         <div className="w-20 h-20 bg-white rounded-3xl shadow-xl shadow-indigo-900/5 flex items-center justify-center mx-auto mb-8 transform rotate-3">

@@ -47,13 +47,18 @@ export const PracticumProcessVisual = () => {
     const [activeStep, setActiveStep] = useState(1);
 
     return (
-        <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-emerald-100 overflow-hidden">
+        <div
+            className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-emerald-100 overflow-hidden overflow-x-auto"
+            role="img"
+            aria-label="Diagram of the digital practicum supervision workflow and stages"
+            data-nosnippet
+        >
             <div className="bg-emerald-50 p-4 border-b border-emerald-100 text-center">
                 <h3 className="text-emerald-800 font-bold mb-1">Practicum Workflow</h3>
                 <p className="text-emerald-600 text-xs uppercase tracking-wider font-semibold">Interactive Process</p>
             </div>
 
-            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-24">
+            <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-12 md:gap-y-24 min-w-[300px]">
                 {/* Reorder steps for visual snake flow: 1, 2, 4, 3, 5, 6 */}
                 {/* Row 1: 1(L), 2(R) */}
                 {/* Row 2: 4(L), 3(R) -> Swapped to force standard L-to-R DOMan order */}

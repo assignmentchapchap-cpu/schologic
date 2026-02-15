@@ -6,6 +6,7 @@ import { TAInsightsVisual } from "@/components/use-cases/TAInsightsVisual";
 import { PracticumProcessVisual } from "@/components/use-cases/universities/PracticumProcessVisual";
 import { ZTCIngestionVisual } from "@/components/use-cases/ZTCIngestionVisual";
 import { DeanDashboardVisual } from "@/components/use-cases/universities/DeanDashboardVisual";
+import { IntegrityCheckVisual } from "@/components/use-cases/IntegrityCheckVisual";
 import {
     Zap,
     Shield,
@@ -38,7 +39,7 @@ export default function InstructorsPage() {
                 secondaryCtaText="View Demo Video"
                 secondaryCtaHref="/demo"
                 visual={
-                    <div className="relative w-full max-w-[400px] aspect-square">
+                    <div className="hidden md:block relative w-full max-w-[400px] aspect-square">
                         <Image
                             src="/images/instructors/abstract-hero.svg"
                             alt=""
@@ -52,7 +53,7 @@ export default function InstructorsPage() {
             />
 
             {/* 2. AI-Powered Grading (Text Left, Visual Right) */}
-            <SectionGrid className="bg-rose-50" id="grading">
+            <SectionGrid className="bg-rose-50 py-12 md:py-20" id="grading">
                 <GridColumn span={6} className="flex flex-col justify-center order-2 md:order-1">
                     <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center mb-6 text-rose-600">
                         <Zap className="w-6 h-6" />
@@ -80,9 +81,11 @@ export default function InstructorsPage() {
             </SectionGrid>
 
             {/* 3. Academic Integrity (Visual Left, Text Right) */}
-            <SectionGrid className="bg-white" id="integrity">
+            <SectionGrid className="bg-white py-12 md:py-20" id="integrity">
                 <GridColumn span={6} className="order-1">
-                    <InstructorVisualPlaceholder label="AI Detection Report & Granular Analysis" minHeight="min-h-[500px]" />
+                    <div className="h-full flex items-center justify-center py-8">
+                        <IntegrityCheckVisual />
+                    </div>
                 </GridColumn>
                 <GridColumn span={6} className="flex flex-col justify-center order-2">
                     <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mb-6 text-emerald-600">
@@ -106,7 +109,7 @@ export default function InstructorsPage() {
             </SectionGrid>
 
             {/* 4. Practicum Supervision (Text Left, Visual Right) */}
-            <SectionGrid className="bg-slate-50" id="practicum">
+            <SectionGrid className="bg-slate-50 py-12 md:py-20" id="practicum">
                 <GridColumn span={6} className="flex flex-col justify-center order-2 md:order-1">
                     <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-6 text-blue-600">
                         <MapPin className="w-6 h-6" />
@@ -134,7 +137,7 @@ export default function InstructorsPage() {
             </SectionGrid>
 
             {/* 5. Retention & Analytics (Visual Left, Text Right) */}
-            <SectionGrid className="bg-white" id="retention">
+            <SectionGrid className="bg-white py-12 md:py-20" id="retention">
                 <GridColumn span={6} className="order-1">
                     <div className="h-full flex items-center justify-center">
                         <DeanDashboardVisual />
@@ -162,7 +165,7 @@ export default function InstructorsPage() {
             </SectionGrid>
 
             {/* 6. Universal Reader (Text Left, Visual Right) */}
-            <SectionGrid className="bg-indigo-50" id="materials">
+            <SectionGrid className="bg-indigo-50 py-12 md:py-20" id="materials">
                 <GridColumn span={6} className="flex flex-col justify-center order-2 md:order-1">
                     <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center mb-6 text-indigo-600">
                         <BookOpen className="w-6 h-6" />
@@ -190,7 +193,7 @@ export default function InstructorsPage() {
             </SectionGrid>
 
             {/* 7. Final CTA */}
-            <div className="bg-gradient-to-b from-rose-50 to-white py-24 text-center bg-grid-rose-500/10">
+            <div className="bg-gradient-to-b from-rose-50 to-white py-12 md:py-20 text-center bg-grid-rose-500/10">
                 <SectionGrid>
                     <GridColumn span={8} className="mx-auto">
                         <div className="w-20 h-20 bg-white rounded-3xl shadow-xl shadow-rose-900/5 flex items-center justify-center mx-auto mb-8 transform rotate-3">

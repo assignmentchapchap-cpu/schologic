@@ -24,7 +24,12 @@ export const ZTCIngestionVisual = () => {
     }, [activeSource]);
 
     return (
-        <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans flex flex-col h-full">
+        <div
+            className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans flex flex-col h-full overflow-x-auto"
+            role="img"
+            aria-label="Universal OER Ingestion animation showing import process from LibreTexts and OpenStax"
+            data-nosnippet
+        >
             {/* Header */}
             <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
@@ -39,7 +44,7 @@ export const ZTCIngestionVisual = () => {
                 </div>
             </div>
 
-            <div className="p-6 bg-slate-50/50 flex-1 flex flex-col">
+            <div className="p-4 md:p-6 bg-slate-50/50 flex-1 flex flex-col min-w-[500px]">
 
                 {/* PHASE 1: SEARCH / SOURCE SELECTION */}
                 <div className="mb-4">
@@ -105,7 +110,7 @@ export const ZTCIngestionVisual = () => {
                 </div>
 
                 {/* PHASE 2-4: THE PIPELINE */}
-                <div className="flex-1 relative pl-12 border-l-2 border-slate-200 ml-8 space-y-3 pb-2 pt-1">
+                <div className="flex-1 relative pl-8 md:pl-12 border-l-2 border-slate-200 ml-8 space-y-3 pb-2 pt-1">
 
                     {/* Step 2: Download */}
                     <div className="relative group">

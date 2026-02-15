@@ -5,7 +5,12 @@ import { Sparkles } from 'lucide-react';
 
 export const TAInsightsVisual = () => {
     return (
-        <div className="w-full max-w-2xl mx-auto relative bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden font-sans">
+        <div
+            className="w-full max-w-2xl mx-auto relative bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden font-sans overflow-x-auto"
+            role="img"
+            aria-label="Example AI Grading Report showing strengths and weaknesses analysis"
+            data-nosnippet
+        >
             {/* Header */}
             <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -25,9 +30,9 @@ export const TAInsightsVisual = () => {
                 </div>
             </div>
 
-            <div className="p-6 space-y-8">
+            <div className="p-4 md:p-6 space-y-8 min-w-[500px]">
                 {/* Strengths / Weaknesses Split */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
                     {/* Strengths */}
                     <div className="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100">
                         <div className="flex items-center gap-2 mb-3 text-emerald-700 font-bold text-xs uppercase tracking-wider">

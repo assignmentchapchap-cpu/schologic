@@ -7,6 +7,9 @@ export const UniversitiesHeroVisual = () => {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className="w-full h-full"
+            role="img"
+            aria-label="Abstract ecosystem visualization connecting universities, students, and industry"
+            data-nosnippet
         >
             {/* Connective Lines (Slate/Structure) */}
             <path d="M50 50 L350 350" stroke="#0f172a" strokeWidth="2" strokeOpacity="0.1" />

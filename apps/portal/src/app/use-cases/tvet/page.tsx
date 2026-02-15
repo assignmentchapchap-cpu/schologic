@@ -31,7 +31,7 @@ export default function TvetPage() {
                 accentColor="emerald"
                 visualPosition="left"
                 visual={
-                    <div className="relative w-full max-w-[400px] aspect-square">
+                    <div className="hidden md:block relative w-full max-w-[400px] aspect-square">
                         <Image
                             src="/images/colleges/abstract-hero.svg"
                             alt=""
@@ -44,7 +44,7 @@ export default function TvetPage() {
             />
 
             {/* Section 1: Hybrid Mastery - Emerald Background */}
-            <div className="bg-emerald-50 py-24">
+            <div className="bg-emerald-50 py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="order-2 md:order-1">
                         <div className="bg-white p-8 rounded-2xl border border-emerald-100 shadow-sm h-full relative overflow-hidden group">
@@ -91,7 +91,7 @@ export default function TvetPage() {
             </div>
 
             {/* Section 2: Faculty Force Multiplier - White Background */}
-            <div className="bg-white py-24">
+            <div className="bg-white py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="flex items-center">
                         <div className="prose prose-lg prose-slate pr-6">
@@ -158,7 +158,7 @@ export default function TvetPage() {
             </div>
 
             {/* Section 3: Institutional Nerve Center - Dark Theme */}
-            <div className="bg-slate-900 py-24 relative overflow-hidden bg-dot-white/20">
+            <div className="bg-slate-900 py-12 md:py-20 relative overflow-hidden bg-dot-white/20">
                 {/* Background Glow */}
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
 
@@ -199,7 +199,7 @@ export default function TvetPage() {
             </div>
 
             {/* Section 4: Economy of Excellence / ZTC - White Background */}
-            <div className="bg-white py-24">
+            <div className="bg-white py-12 md:py-20">
                 <SectionGrid>
                     <GridColumn span={6} className="flex items-center">
                         <div className="prose prose-lg prose-slate pr-6">
