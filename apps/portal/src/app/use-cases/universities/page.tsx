@@ -1,35 +1,46 @@
 import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
+import { UseCaseCTA } from "@/components/use-cases/UseCaseCTA";
 import { Shield, Brain, BookOpen, Share2, TrendingUp, CheckCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Metadata } from "next";
-import { UniversitiesPilotCTA } from "@/components/use-cases/universities/UniversitiesPilotCTA";
+
 import { UniversitiesHeroVisual } from "@/components/use-cases/universities/UniversitiesHeroVisual";
 import { PracticumProcessVisual } from "@/components/use-cases/universities/PracticumProcessVisual";
 import { SystemEcosystemVisual } from "@/components/use-cases/universities/SystemEcosystemVisual";
 import { TAInsightsVisual } from "@/components/use-cases/TAInsightsVisual";
 import { ZTCIngestionVisual } from "@/components/use-cases/ZTCIngestionVisual";
 import { DeanDashboardVisual } from "@/components/use-cases/universities/DeanDashboardVisual";
+import { JsonLdFAQPage } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
     title: 'University LMS Kenya | Academic Integrity & Multi-Campus Management | Schologic',
     description: 'Eliminate campus silos, automate TVET practicum tracking, and secure academic integrity with AI detection. The unified platform for Kenya\'s leading universities with CUE compliance built-in.',
-    keywords: ['university lms kenya', 'academic integrity software', 'practicum management', 'multi-campus platform', 'student retention analytics', 'OER integration', 'TVET compliance', 'open and distance learning', 'online classes', 'virtual learning'],
+    keywords: ['university lms kenya', 'academic integrity software', 'practicum management', 'multi-campus platform', 'student retention analytics', 'OER integration', 'TVET compliance', 'open and distance learning', 'online classes', 'virtual learning', 'CUE accreditation', 'data sovereignty'],
 };
+
+const faqItems = [
+    { question: "How does Schologic handle multi-campus deployments?", answer: "Our architecture supports granular Role-Based Access Control. A Head of Department sees their courses across campuses, while Deans get an institution-wide view. Curriculum updates propagate instantly to all campuses." },
+    { question: "Is data hosted locally in compliance with the Data Protection Act?", answer: "Yes. All student and institutional data is processed and stored on sovereign infrastructure within Kenya, fully aligned with the Data Protection Act 2019." },
+    { question: "Can we integrate with our existing Student Information System?", answer: "Schologic is designed to complement your SIS, not replace it. We provide APIs and export formats that allow seamless data exchange with existing systems like KUCCPS portals." },
+    { question: "What does the institutional pilot include?", answer: "A full-featured deployment for your chosen departments, onboarding support, faculty training sessions, and a dedicated success manager. No cost during the pilot period." },
+    { question: "How does the AI detection work at scale?", answer: "Our integrity engine processes submissions in bulk, flagging AI-generated content, paraphrased text, and potential plagiarism. Results are aggregated on the Dean's Dashboard for institutional oversight." },
+];
 
 export default function UniversitiesPage() {
     return (
         <div>
+            <JsonLdFAQPage items={faqItems} />
             {/* 1. Hero Section */}
             <UseCasesHero
                 title="The Operating System for the Modern University."
                 subtitle="Unify campuses. Automate practicums. Secure degrees. One sovereign platform for leading institutions in Kenya and beyond."
                 label="For Universities"
                 accentColor="indigo"
-                ctaText="Request Institutional Pilot"
+                ctaText="Request a Pilot"
                 ctaHref="/#request-pilot"
-                secondaryCtaText="View Live Instructor Demo"
+                secondaryCtaText="View Live Demo"
                 secondaryCtaHref="/demo"
                 visualPosition="right"
                 visual={
@@ -230,8 +241,13 @@ export default function UniversitiesPage() {
                                     The Schologic <strong>Dean's Dashboard</strong> is designed for "Management by Exception." It surfaces anomalies requiring executive intervention: a department where grading turnaround is slow, a course where <strong>student retention</strong> risk has spiked, or a rise in academic integrity flags.
                                 </p>
                                 <p>
-                                    By aggregating data from the <a href="/instructor/dashboard" className="text-rose-600 hover:text-rose-700 underline decoration-rose-200 underline-offset-4 font-medium">Instructor Dashboard</a> across all campuses, we provide a live pulse of your institution's health, enabling proactive resource deployment.
+                                    By aggregating data from the <a href="/features/class-manager" className="text-rose-600 hover:text-rose-700 underline decoration-rose-200 underline-offset-4 font-medium">Class Manager</a> across all campuses, we provide a live pulse of your institution's health, enabling proactive resource deployment.
                                 </p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-4 mt-6">
+                                <Link href="/?mode=invite" className="inline-flex items-center gap-2 text-rose-600 font-bold hover:text-rose-700 transition-colors">
+                                    <Share2 className="w-4 h-4" /> Invite an Instructor
+                                </Link>
                             </div>
                         </div>
                     </GridColumn>
@@ -244,41 +260,26 @@ export default function UniversitiesPage() {
             </div>
 
             {/* 8. Final CTA */}
-            <div className="bg-gradient-to-b from-indigo-50 to-white py-12 md:py-20 text-center bg-grid-indigo-500/10">
-                <SectionGrid>
-                    <GridColumn span={8} className="mx-auto">
-                        <div className="w-20 h-20 bg-white rounded-3xl shadow-xl shadow-indigo-900/5 flex items-center justify-center mx-auto mb-8 transform rotate-3">
-                            <Shield className="w-10 h-10 text-indigo-600" />
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-6">
-                            Transform Your Institution. Start Today.
-                        </h2>
-                        <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                            Join the leading universities in Kenya who are unifying their academic operations with Schologic. Whether you manage one campus or ten, whether you deliver traditional lectures or <strong>open and distance learning</strong>, we provide the sovereign infrastructure to ensure quality, compliance, and student success.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                            <UniversitiesPilotCTA />
-                            <Link
-                                href="/demo"
-                                className="text-slate-600 font-bold hover:text-indigo-600 transition-colors flex items-center gap-2 text-lg"
-                            >
-                                View Live Instructor Demo <ArrowRight className="w-5 h-5" />
-                            </Link>
-                        </div>
-                        <div className="mt-12 flex justify-center gap-8 text-indigo-600/80 text-sm font-medium">
-                            <div className="flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4" /> CUE & TVETA Compliant
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4" /> Data Protection Act Aligned
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4" /> 99.99% Uptime SLA
-                            </div>
-                        </div>
-                    </GridColumn>
-                </SectionGrid>
-            </div>
+            <UseCaseCTA
+                accentColor="indigo"
+                icon={<Shield className="w-8 h-8 text-indigo-600" />}
+                heading="Transform Your Institution."
+                subtitle="Unify campuses, automate assessment, and ensure regulatory compliance with one sovereign platform. Whether you manage one campus or ten, Schologic provides the infrastructure for quality and student success."
+                primaryCta={{
+                    text: "Request a Pilot",
+                    href: "/#request-pilot",
+                }}
+                secondaryCta={{
+                    text: "View Live Demo",
+                    href: "/demo",
+                }}
+                badges={[
+                    { icon: <CheckCircle className="w-4 h-4" />, label: "CUE & TVETA Compliant" },
+                    { icon: <CheckCircle className="w-4 h-4" />, label: "Data Protection Act Aligned" },
+                    { icon: <CheckCircle className="w-4 h-4" />, label: "99.99% Uptime SLA" },
+                ]}
+                faqItems={faqItems}
+            />
         </div>
     );
 }

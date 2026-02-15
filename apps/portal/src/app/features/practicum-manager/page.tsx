@@ -8,7 +8,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
     title: 'Practicum & Internship Management System for TVET & Teacher Training | Schologic',
-    description: 'Digital practicum management for teaching practice and industrial attachments in Kenya. Track student placements, automate supervisor evaluations, manage logbooks, and ensure compliance with automated workflows.',
+    description: 'Digital practicum management for teaching practice and industrial attachments in Kenya. Track placements, automate evaluations, and ensure compliance.',
     keywords: [
         'practicum management system',
         'teaching practice Kenya',

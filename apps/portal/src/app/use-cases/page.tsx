@@ -2,17 +2,35 @@ import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
 import { UnifiedFAQ } from "@/components/use-cases/UnifiedFAQ";
 import Link from "next/link";
 import { ArrowRight, GraduationCap, School, BookOpen, Users } from "lucide-react";
+import { Metadata } from "next";
+import { JsonLdSoftwareApplication } from "@/components/seo/JsonLd";
+
+export const metadata: Metadata = {
+    title: "Use Cases | LMS for Students, Faculty & Institutions | Schologic",
+    description: "Discover how Schologic serves every stakeholder in education. AI grading for instructors, free textbooks for students, and multi-campus management for universities, colleges, and TVET institutions in Kenya.",
+    keywords: [
+        "LMS use cases",
+        "education technology Kenya",
+        "AI grading software",
+        "university LMS",
+        "TVET digital learning",
+        "college hybrid learning",
+        "student learning platform",
+        "Schologic"
+    ],
+};
 
 export default function UseCasesOverview() {
     return (
         <div className="pb-24">
+            <JsonLdSoftwareApplication />
             <SectionGrid className="pt-32 pb-16 text-center">
                 <GridColumn span={8} className="mx-auto">
                     <h1 className="text-5xl md:text-7xl font-serif font-black text-slate-900 mb-8 tracking-tight">
                         How Schologic Works
                     </h1>
                     <p className="text-xl md:text-2xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
-                        A sovereign integrity layer built for the unique needs of every stakeholder in the academic ecosystem.
+                        Smart, credible, and flexible tools built for every stakeholder in the academic ecosystem.
                     </p>
                 </GridColumn>
             </SectionGrid>

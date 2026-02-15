@@ -5,39 +5,33 @@ import { FEATURE_LINKS } from '@/components/features/StickySubNav';
 // Using hardcoded data for now to ensure rendering without data fetching dependencies
 import { GraduationCap, Shield, Sparkles, BookOpen, Grid, Archive, Users, Zap, Lock, FileText } from 'lucide-react';
 import type { Metadata } from 'next';
+import { JsonLdFAQPage } from '@/components/seo/JsonLd';
+import { JsonLdSoftwareApplication } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
     title: 'LMS for Universities & Colleges in Kenya | Schologic',
     description: 'The dedicated LMS for universities and colleges. Explore AI content detection, academic integrity tools, and zero-textbook-cost resources.',
-    keywords: ['LMS', 'universities', 'colleges', 'Kenya', 'academic integrity', 'AI content detection', 'zero textbook cost'],
+    keywords: ['LMS', 'universities', 'colleges', 'Kenya', 'academic integrity', 'AI content detection', 'zero textbook cost', 'Schologic', 'TVET', 'automated grading', 'OER library'],
     openGraph: {
         title: 'LMS for Universities & Colleges in Kenya | Schologic',
         description: 'The dedicated LMS for universities and colleges. Explore AI content detection, academic integrity tools, and zero-textbook-cost resources.',
     },
-    other: {
-        'application/ld+json': JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'SoftwareApplication',
-            'name': 'Schologic LMS',
-            'applicationCategory': 'EducationalApplication',
-            'operatingSystem': 'Web',
-            'offers': { '@type': 'Offer', 'price': '0', 'priceCurrency': 'USD' },
-            'featureList': [
-                'AI Content Detection',
-                'Automated Grading',
-                'Zero Textbook Cost Resources',
-                'Class Management'
-            ]
-        })
-    }
 };
+
+const overviewFaqItems = [
+    { question: "Is the AI detection accurate?", answer: "Our multi-model approach (RoBERTa) provides weighted probability scores, significantly reducing false positives compared to single-model detectors." },
+    { question: "Can I import my existing courses?", answer: "Yes. We support Common Cartridge (IMSCC) imports from Canvas, Blackboard, and Moodle, preserving your structure and content." },
+    { question: "Is there a free trial?", answer: "We offer institutional pilots so key faculty can test the platform with real student data before committing." },
+];
 
 export default function FeaturesPage() {
     return (
         <div className="bg-slate-950 min-h-screen">
+            <JsonLdSoftwareApplication />
+            <JsonLdFAQPage items={overviewFaqItems} />
             <FeatureHero
-                title="The Sovereign Integrity Layer"
-                description="Schologic is the dedicated LMS for universities and colleges, combining advanced AI detection, automated grading, and zero-textbook-cost resources into a single, sovereign platform."
+                title="The Academic Operating System"
+                description="Schologic is an education technology platform built for universities, colleges, and TVET institutions in Africa. AI grading, academic integrity, practicum management, and zero-textbook-cost resources — all in one place."
                 label="Platform Features"
                 align="center"
                 ctaText="Start Your Pilot"

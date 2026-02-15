@@ -22,8 +22,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Schologic LMS | The Sovereign Integrity Layer",
-  description: "The only open-weights LMS with Linguistic Forensic Analysis and Universal OER Ingestion.",
+  title: "Schologic LMS - Smart, Credible, and Flexible Higher Education, with AI",
+  description: "Cut grading time by 80%, eliminate textbook costs, and protect academic integrity — without switching between five different tools. Schologic LMS unifies AI grading, content detection, class management, and open educational resources into one platform designed for African universities and colleges.",
 };
 
 import { ToastProvider } from "@/context/ToastContext";
@@ -31,6 +31,7 @@ import DemoBanner from '@/components/DemoBanner';
 import { UniversalReaderProvider } from '@/components/providers/UniversalReaderProvider';
 import { UserProvider } from "@/context/UserContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { JsonLdOrganization } from "@/components/seo/JsonLd";
 
 
 export default function RootLayout({
@@ -49,6 +50,7 @@ export default function RootLayout({
             <UniversalReaderProvider>
               <NotificationProvider>
                 <DemoBanner />
+                <JsonLdOrganization />
                 {children}
               </NotificationProvider>
             </UniversalReaderProvider>

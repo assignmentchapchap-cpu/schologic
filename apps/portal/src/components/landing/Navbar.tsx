@@ -19,7 +19,7 @@ const FEATURES_MENU = [
 ];
 
 const USE_CASES_MENU = [
-    { href: '/use-cases/universities', label: 'Universities', icon: GraduationCap, description: 'Sovereign AI infrastructure' },
+    { href: '/use-cases/universities', label: 'Universities', icon: GraduationCap, description: 'Multi-campus management' },
     { href: '/use-cases/colleges', label: 'Colleges', icon: School, description: 'Zero textbook costs' },
     { href: '/use-cases/tvet', label: 'TVET', icon: BookOpen, description: 'Competency-based skills' },
     { href: '/use-cases/students', label: 'Students', icon: GraduationCap, description: 'AI study companion' },

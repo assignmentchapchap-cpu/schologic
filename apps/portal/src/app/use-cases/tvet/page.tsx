@@ -1,9 +1,11 @@
 import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
-import { TvetPilotCTA } from "@/components/use-cases/tvet/TvetPilotCTA";
+import { UseCaseCTA } from "@/components/use-cases/UseCaseCTA";
+
 import { PracticumProcessVisual } from "@/components/use-cases/universities/PracticumProcessVisual";
-import { Maximize2, Layers, Users, TrendingUp, Shield, ArrowRight, CheckCircle, BookOpen } from "lucide-react";
+import { Maximize2, Layers, Users, TrendingUp, Shield, ArrowRight, CheckCircle, BookOpen, Share2 } from "lucide-react";
 import Link from "next/link";
+import { JsonLdFAQPage } from "@/components/seo/JsonLd";
 import Image from "next/image";
 import { Metadata } from "next";
 
@@ -17,18 +19,34 @@ export const metadata: Metadata = {
         "TVET capitation reporting system",
         "industrial attachment tracking",
         "continuing technical education",
-        "Schologic for TVET"
+        "Schologic for TVET",
+        "Zero Textbook Cost",
+        "OER TVET",
+        "TVETA accreditation"
     ],
 };
+
+const faqItems = [
+    { question: "Does Schologic support competency-based assessment?", answer: "Yes. Our rubric system maps directly to CDACC competency standards. You define unit competencies as rubric criteria, and the AI assesses submissions against each one." },
+    { question: "Can it handle large student-to-staff ratios?", answer: "Absolutely. That's our core value proposition for TVETs. AI-assisted grading, bulk enrollment, and automated attendance let a single instructor effectively manage hundreds of students." },
+    { question: "How does the practicum/attachment tracking work?", answer: "Students use a mobile logbook to record daily activities, upload evidence, and get supervisor sign-offs. Instructors monitor all attachments from a centralized dashboard." },
+    { question: "How does Schologic simplify CDACC compliance?", answer: "Competency assessments are mapped to CDACC unit standards at the rubric level. The platform automatically tracks which competencies each student has achieved, generating compliance-ready reports for verification and audit." },
+    { question: "What content formats are supported?", answer: "PDFs, IMSCC Common Cartridge, and content from OER repositories like LibreTexts. Our Universal Reader provides a premium reading experience with student engagement alerts." },
+];
 
 export default function TvetPage() {
     return (
         <div>
+            <JsonLdFAQPage items={faqItems} />
             <UseCasesHero
                 title="The Operating System for Competency-Based Excellence."
                 subtitle="Manage the complexity of CBET with one platform. Sync theory, track industrial attachment, and simplify CDACC compliance without adding administrative weight."
                 label="For TVET Institutions"
                 accentColor="emerald"
+                ctaText="Request a Pilot"
+                ctaHref="/#request-pilot"
+                secondaryCtaText="View Live Demo"
+                secondaryCtaHref="/demo"
                 visualPosition="left"
                 visual={
                     <div className="hidden md:block relative w-full max-w-[400px] aspect-square">
@@ -98,7 +116,7 @@ export default function TvetPage() {
                             <h2 className="text-3xl font-serif font-bold text-slate-900 mb-4">The Faculty Force Multiplier.</h2>
                             <div className="text-slate-600 space-y-4">
                                 <p>
-                                    Break the cycle of faculty exhaustion and administrative fatigue. Schologic acts as a strategic <strong>force multiplier</strong>, utilizing admin automation and bulk enrollment tools to help a single instructor manage massive student-to-staff ratios without losing the personal touch.
+                                    Break the cycle of faculty exhaustion and administrative fatigue. Schologic acts as a strategic <strong>force multiplier</strong>, utilizing admin automation and bulk enrollment tools to help a single instructor manage massive student-to-staff ratios without losing the personal touch. In many <strong>TVET institutions</strong>, one instructor is responsible for 200+ students across theory and practical units — a ratio that makes personalized assessment nearly impossible without intelligent <strong>automation</strong> and <strong>AI-assisted grading</strong>.
                                 </p>
                                 <p>
                                     By offloading routine "busy work" to our smart engine, your institution achieves <strong>instructional scaling</strong> that maintains high standards while directly reducing instructor burnout and operational friction.
@@ -107,9 +125,12 @@ export default function TvetPage() {
                                     Whether managing day classes, evening cohorts, or distance learners, faculty can now focus on what truly matters: <strong>teaching, mentoring, and developing competent graduates</strong> ready for the workforce.
                                 </p>
                             </div>
-                            <div className="mt-8">
+                            <div className="mt-8 flex flex-wrap items-center gap-4">
                                 <Link href="/features/ai-teaching-assistant" className="text-emerald-600 font-bold hover:text-emerald-700 inline-flex items-center gap-2 px-6 py-3 bg-emerald-50 rounded-full hover:bg-emerald-100 transition-colors">
                                     Explore Teaching Assistant <ArrowRight className="w-4 h-4" />
+                                </Link>
+                                <Link href="/?mode=invite" className="text-slate-500 font-bold hover:text-emerald-600 inline-flex items-center gap-2 transition-colors">
+                                    <Share2 className="w-4 h-4" /> Invite an Instructor
                                 </Link>
                             </div>
                         </div>
@@ -182,6 +203,9 @@ export default function TvetPage() {
                                 <p>
                                     This digital continuity ensures that <strong>Industry Supervisors</strong> can grade competencies in real-time, effectively bridging the disconnect between institutional training and actual market requirements while adhering to the rigorous assessment standards demanded by modern industries.
                                 </p>
+                                <p>
+                                    Every attachment activity is timestamped and geotagged, creating an auditable trail for <strong>CDACC verification</strong>. When <strong>TVETA</strong> assessors request evidence of student competency development during <strong>industrial placement</strong>, the institution can produce comprehensive digital records instantly — replacing the unreliable paper logbooks that often go missing or arrive incomplete.
+                                </p>
                             </div>
 
                             <div className="mt-10 pt-8 border-t border-slate-700">
@@ -212,7 +236,7 @@ export default function TvetPage() {
                                     By adopting our <strong>Zero Textbook Cost (ZTC)</strong> model with integrated Open Educational Resources (OER), you free up millions in capital to invest in modern workshop equipment that acts as the real differentiator for your graduates.
                                 </p>
                                 <p>
-                                    Modernize your institutional library with a <strong>Digital Repository</strong> that remains perpetually current, unlike physical books that become obsolete the moment they are printed, ensuring your students always learn from the latest standards and technologies.
+                                    Modernize your institutional library with a <strong>Digital Repository</strong> that remains perpetually current, unlike physical books that become obsolete the moment they are printed, ensuring your students always learn from the latest standards and technologies. For <strong>TVET institutions</strong> funded through <strong>capitation grants</strong>, this reallocation is transformative. Every shilling saved on printed manuals is a shilling invested in CNC machines, automotive diagnostic equipment, or modern ICT labs — the tangible infrastructure that determines your graduates' <strong>employability</strong>.
                                 </p>
                             </div>
                             <div className="mt-8">
@@ -263,25 +287,21 @@ export default function TvetPage() {
             </div>
 
             {/* Section 5: CTA - Gradient Background */}
-            <div className="bg-gradient-to-b from-emerald-50 to-white py-24 text-center bg-grid-emerald-500/10">
-                <SectionGrid>
-                    <GridColumn span={8} className="mx-auto">
-                        <div className="w-20 h-20 bg-white rounded-3xl shadow-xl shadow-emerald-900/5 flex items-center justify-center mx-auto mb-8 transform rotate-3">
-                            <Shield className="w-10 h-10 text-emerald-600" />
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-6">The Future of TVET is Digital.</h2>
-                        <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                            Join forward-thinking institutions building capacity, relief, and reputation. Schologic integrates secure assessment tools, AI content detection, and digital proctoring into every course.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                            <TvetPilotCTA />
-                            <Link href="/features" className="text-slate-600 font-bold hover:text-emerald-600 transition-colors flex items-center gap-2 text-lg">
-                                Explore All Features <ArrowRight className="w-5 h-5" />
-                            </Link>
-                        </div>
-                    </GridColumn>
-                </SectionGrid>
-            </div>
+            <UseCaseCTA
+                accentColor="emerald"
+                icon={<Shield className="w-8 h-8 text-emerald-600" />}
+                heading="The Future of TVET is Digital."
+                subtitle="Join forward-thinking institutions building capacity, relief, and reputation. Schologic integrates secure assessment tools, AI content detection, and digital proctoring into every course."
+                primaryCta={{
+                    text: "Request a Pilot",
+                    href: "/#request-pilot",
+                }}
+                secondaryCta={{
+                    text: "Explore All Features",
+                    href: "/features",
+                }}
+                faqItems={faqItems}
+            />
         </div>
     );
 }

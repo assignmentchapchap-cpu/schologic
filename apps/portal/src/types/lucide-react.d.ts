@@ -31,6 +31,7 @@ declare module 'lucide-react' {
     export const BookOpen: LucideIcon;
     export const Bot: LucideIcon;
     export const Brain: LucideIcon;
+    export const Briefcase: LucideIcon;
     export const Calendar: LucideIcon;
     export const Camera: LucideIcon;
     export const Cast: LucideIcon;

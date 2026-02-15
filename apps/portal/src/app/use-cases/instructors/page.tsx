@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
+import { UseCaseCTA } from "@/components/use-cases/UseCaseCTA";
 import { InstructorVisualPlaceholder } from "@/components/use-cases/InstructorVisualPlaceholder";
 import { TAInsightsVisual } from "@/components/use-cases/TAInsightsVisual";
 import { PracticumProcessVisual } from "@/components/use-cases/universities/PracticumProcessVisual";
@@ -13,30 +14,41 @@ import {
     MapPin,
     TrendingUp,
     BookOpen,
-    ArrowRight
+    ArrowRight,
+    Share2
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { JsonLdFAQPage } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
     title: "Schologic for Instructors | AI Grading & Retention Tools",
     description: "Slash grading time by 80% with Schologic's AI Teaching Assistant. Detect AI writing, manage digital practicums, and boost retention with real-time analytics. The OS for modern faculty.",
-    keywords: ["AI grading assistant", "academic integrity software", "digital internship logbook", "student retention analytics", "plagiarism checker", "rubric generation", "higher education"]
+    keywords: ["AI grading assistant", "academic integrity software", "digital internship logbook", "student retention analytics", "plagiarism checker", "rubric generation", "higher education", "instructor LMS Kenya", "AI Teaching Assistant", "faculty workload reduction"]
 };
+
+const faqItems = [
+    { question: "How long does setup take?", answer: "Under 10 minutes. Create your account, set up your first class, upload a rubric, and start grading. No IT department or institutional approval required for individual pilots." },
+    { question: "Can I use my own rubrics?", answer: "Yes. Schologic supports fully custom rubrics. You define the criteria, point allocations, and descriptors. The AI applies your exact rubric consistently across all submissions." },
+    { question: "How accurate is the AI grading?", answer: "Our AI teaching assistant achieves high consistency with instructor grading. Every score comes with detailed rubric-level feedback, and you can review and adjust any grade before releasing." },
+    { question: "Does it detect AI-generated content?", answer: "Yes. Our built-in integrity engine detects AI-generated text, paraphrasing tools, and plagiarism — all in one scan. No need for separate third-party tools." },
+    { question: "What if my institution isn't on Schologic yet?", answer: "Individual instructors can start a free pilot independently. Once you see the results, you can recommend institutional adoption through our pilot request process." },
+];
 
 export default function InstructorsPage() {
     return (
         <main className="min-h-screen bg-white">
+            <JsonLdFAQPage items={faqItems} />
             {/* 1. Hero Section */}
             <UseCasesHero
                 title="Reclaim Your Classroom."
                 subtitle="Grade papers in seconds, not Sundays. Detect AI usage with confidence. Mentor students who usually slip through the cracks. The operating system for the modern academic."
                 label="For Instructors"
                 accentColor="rose"
-                ctaText="Try the Grading Copilot"
-                ctaHref="/#pilot"
-                secondaryCtaText="View Demo Video"
+                ctaText="Try Grading Copilot"
+                ctaHref="/login?view=signup&role=instructor"
+                secondaryCtaText="Start Demo"
                 secondaryCtaHref="/demo"
                 visual={
                     <div className="hidden md:block relative w-full max-w-[400px] aspect-square">
@@ -69,7 +81,7 @@ export default function InstructorsPage() {
                             Don't have a rubric? Our <strong>Rubric Generator</strong> instantly creates one aligned to Bloom's Taxonomy directly from your assignment prompt. This is not automated grading; it is <strong>augmented intelligence</strong>. You maintain full &quot;Human-in-the-Loop&quot; control to review every comment, edit the nuanced feedback, and approve the final grade. By automating the repetitive mechanics of assessment, you can reduce your grading time by up to <a href="https://asu.edu" target="_blank" rel="noopener noreferrer" className="text-rose-600 hover:text-rose-700 font-medium underline decoration-rose-200 underline-offset-4">80%</a> while actually increasing the depth and consistency of feedback your students receive. Whether it’s a 500-student lecture or a graduate seminar, give every submission the attention it deserves without the burnout.
                         </p>
                     </div>
-                    <Link href="/features/grading-assistant" className="inline-flex items-center text-rose-600 font-bold hover:text-rose-700 transition-colors">
+                    <Link href="/features/ai-teaching-assistant" className="inline-flex items-center text-rose-600 font-bold hover:text-rose-700 transition-colors">
                         Explore Grading Tools <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                 </GridColumn>
@@ -158,9 +170,14 @@ export default function InstructorsPage() {
                             Schologic empowers you with <strong>Real-Time Engagement Analytics</strong>. Our dashboard aggregates critical data points to flag students based on proven risk indicators: <strong>Late Assignments</strong> and <strong>High AI Usage</strong>. These specific metrics are strong predictors of academic struggle. Instead of waiting for a mid-semester crisis, you can see exactly which students are falling behind and practice <strong>Intrusive Advising</strong>: sending a personalized, supportive check-in email when it matters most. By moving from reactive to proactive support, you can significantly improve student success rates and ensure no student is left behind due to a lack of timely support.
                         </p>
                     </div>
-                    <Link href="/features/analytics" className="inline-flex items-center text-rose-600 font-bold hover:text-rose-700 transition-colors">
-                        View Student Analytics <ArrowRight className="w-4 h-4 ml-2" />
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-4">
+                        <Link href="#retention" className="inline-flex items-center text-rose-600 font-bold hover:text-rose-700 transition-colors">
+                            View Student Analytics <ArrowRight className="w-4 h-4 ml-2" />
+                        </Link>
+                        <Link href="/?mode=invite" className="inline-flex items-center gap-2 text-slate-500 font-bold hover:text-rose-600 transition-colors">
+                            <Share2 className="w-4 h-4" /> Invite a Colleague
+                        </Link>
+                    </div>
                 </GridColumn>
             </SectionGrid>
 
@@ -181,7 +198,7 @@ export default function InstructorsPage() {
                             You can ingest content from trusted global repositories like LibreTexts or your own PDFs directly into the LMS. The Universal Reader provides a premium, distraction-free reading experience that supports <strong>IMSCC Common Cartridge</strong> formats, allowing for rich, interactive chapters. Crucially, it provides <strong>Student Alerts</strong>: automated notifications when new materials are posted or readings are due. This keeps students aligned with your syllabus. By controlling the reading experience and eliminating cost barriers, you ensure every student has access to high-quality materials, leveling the playing field for academic success.
                         </p>
                     </div>
-                    <Link href="/features/resource-library" className="inline-flex items-center text-rose-600 font-bold hover:text-rose-700 transition-colors">
+                    <Link href="/features/oer-library" className="inline-flex items-center text-rose-600 font-bold hover:text-rose-700 transition-colors">
                         Browse the Library <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                 </GridColumn>
@@ -193,46 +210,26 @@ export default function InstructorsPage() {
             </SectionGrid>
 
             {/* 7. Final CTA */}
-            <div className="bg-gradient-to-b from-rose-50 to-white py-12 md:py-20 text-center bg-grid-rose-500/10">
-                <SectionGrid>
-                    <GridColumn span={8} className="mx-auto">
-                        <div className="w-20 h-20 bg-white rounded-3xl shadow-xl shadow-rose-900/5 flex items-center justify-center mx-auto mb-8 transform rotate-3">
-                            <Zap className="w-10 h-10 text-rose-600" />
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-serif font-black text-slate-900 mb-6">
-                            Join the Faculty of the Future.
-                        </h2>
-                        <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                            Start your free pilot today. No credit card required for individual instructor accounts.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                            <Link
-                                href="/#pilot"
-                                className="inline-flex items-center justify-center px-8 py-4 rounded-full font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-lg hover:shadow-xl min-w-[240px] text-lg"
-                            >
-                                Start Free Pilot
-                            </Link>
-                            <Link
-                                href="/demo"
-                                className="text-slate-600 font-bold hover:text-rose-600 transition-colors flex items-center gap-2 text-lg"
-                            >
-                                View Live Demo <ArrowRight className="w-5 h-5" />
-                            </Link>
-                        </div>
-                        <div className="mt-12 flex justify-center gap-8 text-rose-600/80 text-sm font-medium">
-                            <div className="flex items-center gap-2">
-                                <Zap className="w-4 h-4" /> Instant Grading
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Shield className="w-4 h-4" /> AI Detection
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <TrendingUp className="w-4 h-4" /> Retention Analytics
-                            </div>
-                        </div>
-                    </GridColumn>
-                </SectionGrid>
-            </div>
+            <UseCaseCTA
+                accentColor="rose"
+                icon={<Zap className="w-8 h-8 text-rose-600" />}
+                heading="Join the Faculty of the Future."
+                subtitle="Create your account, upload your first rubric, and start grading in under 10 minutes. No IT support needed, no institutional approval required. See the results, then share with your department."
+                primaryCta={{
+                    text: "Start Free Pilot",
+                    href: "/login?view=signup&role=instructor",
+                }}
+                secondaryCta={{
+                    text: "View Live Demo",
+                    href: "/demo",
+                }}
+                badges={[
+                    { icon: <Zap className="w-4 h-4" />, label: "Instant Grading" },
+                    { icon: <Shield className="w-4 h-4" />, label: "AI Detection" },
+                    { icon: <TrendingUp className="w-4 h-4" />, label: "Retention Analytics" },
+                ]}
+                faqItems={faqItems}
+            />
         </main>
     );
 }

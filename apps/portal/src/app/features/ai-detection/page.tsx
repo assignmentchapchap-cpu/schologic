@@ -7,8 +7,8 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
     title: 'AI Content Detection for Academic Integrity | Schologic LMS',
-    description: 'AI content detection for online classes. Multi-model analysis with transparent reporting for universities in Kenya.',
-    keywords: ['AI content detection', 'academic integrity', 'online classes', 'Kenya', 'plagiarism detection'],
+    description: 'Open-weights AI content detection with multi-model RoBERTa analysis. Transparent, evidence-based reporting for universities and colleges in Kenya. No false-positive black boxes.',
+    keywords: ['AI content detection', 'academic integrity', 'online classes', 'Kenya', 'plagiarism detection', 'AI writing detection', 'ChatGPT detection', 'paraphrase detection', 'RoBERTa', 'open-weights'],
     openGraph: {
         title: 'AI Content Detection for Academic Integrity | Schologic LMS',
         description: 'AI content detection for online classes. Multi-model analysis with transparent reporting for universities in Kenya.',

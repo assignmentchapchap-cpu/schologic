@@ -7,8 +7,8 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
     title: 'Zero Textbook Cost (ZTC) Library | Schologic LMS',
-    description: 'Zero Textbook Costs for universities in Kenya. Import OER content from LibreTexts and OpenStax directly into your courses.',
-    keywords: ['zero textbook cost', 'ZTC', 'OER', 'LibreTexts', 'OpenStax', 'universities', 'Kenya'],
+    description: 'Eliminate textbook costs for students. Import peer-reviewed OER from LibreTexts and OpenStax directly into your courses with automated attribution and licensing compliance.',
+    keywords: ['zero textbook cost', 'ZTC', 'OER', 'LibreTexts', 'OpenStax', 'universities', 'Kenya', 'free textbooks', 'Creative Commons', 'IMSCC import', 'open educational resources'],
     openGraph: {
         title: 'Zero Textbook Cost (ZTC) Library | Schologic LMS',
         description: 'Zero Textbook Costs for universities in Kenya. Import OER content from LibreTexts and OpenStax directly into your courses.',

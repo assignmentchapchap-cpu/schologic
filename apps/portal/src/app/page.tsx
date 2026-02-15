@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/landing/Navbar';
 import Hero from '@/components/landing/Hero';
 import IntegrityHub from '@/components/landing/IntegrityHub';
@@ -9,18 +10,29 @@ import SchologicTA from '@/components/landing/SchologicTA';
 import Footer from '@/components/landing/Footer';
 import DemoSignupModal from '@/components/auth/DemoSignupModal';
 import InstitutionalPilotModal from '@/components/leads/InstitutionalPilotModal';
-import { Sparkles } from 'lucide-react';
+import ShareDemoModal from '@/components/landing/ShareDemoModal'; // Moved here
+import { Sparkles, Share2 } from 'lucide-react';
 
-export default function Home() {
+function HomeContent() {
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [showPilotModal, setShowPilotModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Check for hash to open modals on initial load or navigation
+    // 1. Check for legacy hash
     if (typeof window !== 'undefined' && window.location.hash === '#request-pilot') {
       setShowPilotModal(true);
     }
-  }, []);
+
+    // 2. Check for mode query param
+    const mode = searchParams.get('mode');
+    if (mode === 'demo') {
+      setShowDemoModal(true);
+    } else if (mode === 'invite') {
+      setShowInviteModal(true);
+    }
+  }, [searchParams]);
 
   return (
     <main className="min-h-screen bg-slate-900 selection:bg-indigo-500/30">
@@ -52,40 +64,62 @@ export default function Home() {
             <span>INSTITUTIONAL PARTNERSHIP PROGRAM</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-black text-white mb-8 tracking-tight">
-            Ready to secure your <br />
-            Institutional Sovereignty?
+            Ready to transform <br />
+            Academic Excellence?
           </h2>
           <p className="text-xl text-indigo-200 mb-10 max-w-2xl mx-auto font-light">
-            Join 500+ forward-thinking institutions building their own AI infrastructure, not renting it.
+            Join forward-thinking institutions using AI to grade smarter, teach honestly, and spend less.
           </p>
-          <button
-            onClick={() => setShowPilotModal(true)}
-            className="px-10 py-5 bg-white text-indigo-900 rounded-lg font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl shadow-indigo-900/40 active:scale-95 font-sans"
-          >
-            Start Your Institutional Pilot
-          </button>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={() => setShowPilotModal(true)}
+              className="px-8 py-4 bg-white text-indigo-900 rounded-lg font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl shadow-indigo-900/40 active:scale-95 font-sans min-w-[280px]"
+            >
+              Start Your Institutional Pilot
+            </button>
+
+            <button
+              onClick={() => setShowInviteModal(true)}
+              className="px-8 py-4 bg-transparent border-2 border-indigo-400/30 text-indigo-100 rounded-lg font-bold text-lg hover:bg-indigo-800/50 hover:border-indigo-400/60 transition-all active:scale-95 font-sans flex items-center justify-center gap-2 min-w-[280px]"
+            >
+              <Share2 className="w-5 h-5" />
+              Invite an Instructor
+            </button>
+          </div>
         </div>
       </section>
 
       <Footer />
 
-      {/* Demo Modal */}
+      {/* Modals */}
       {showDemoModal && (
         <DemoSignupModal onClose={() => setShowDemoModal(false)} />
       )}
 
-      {/* Pilot Request Modal */}
       {showPilotModal && (
         <InstitutionalPilotModal onClose={() => setShowPilotModal(false)} />
       )}
 
+      {showInviteModal && (
+        <ShareDemoModal onClose={() => setShowInviteModal(false)} />
+      )}
+
       {/* Hidden Semantic Text for AI Crawlers */}
       <div className="hidden">
-        Evidence-Based AI Detection based on the Human ChatGPT Comparison Corpus (HC3).
-        Schologic LMS is the Sovereign Integrity Layer.
-        It uses Open-Weights Models for Linguistic Forensic Analysis.
-        LTI 1.3 Compliant. IMS Global Common Cartridge 1.3.
+        Schologic is an education technology company building the operating system for academic integrity and digital learning in Africa.
+        AI content detection, automated grading, practicum management, and open educational resources for universities, colleges, and TVET institutions.
+        Evidence-Based AI Detection using RoBERTa open-weights models trained on the Human ChatGPT Comparison Corpus (HC3).
+        LTI 1.3 Compliant. IMS Global Common Cartridge 1.3. CUE and CDACC aligned.
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
+      <HomeContent />
+    </Suspense>
   );
 }

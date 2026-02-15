@@ -7,9 +7,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Open Learning Content Reader | Schologic LMS',
-    description: 'Enable open learning with a unified reader for PDFs, DOCX, and Common Cartridge. Built for universities and colleges in Kenya.',
-    keywords: ['open learning', 'content reader', 'PDF viewer', 'Common Cartridge', 'universities', 'Kenya'],
+    title: 'Universal Document Reader for LMS | PDF, DOCX & IMSCC | Schologic',
+    description: 'One viewer for all learning content. Read PDFs, DOCX, and Common Cartridge files with built-in AI summarization. Built for universities and colleges in Kenya.',
+    keywords: ['open learning', 'content reader', 'PDF viewer', 'Common Cartridge', 'universities', 'Kenya', 'document viewer LMS', 'IMSCC reader', 'AI summarization', 'DOCX viewer'],
     openGraph: {
         title: 'Open Learning Content Reader | Schologic LMS',
         description: 'Enable open learning with a unified reader for PDFs, DOCX, and Common Cartridge. Built for universities and colleges in Kenya.',

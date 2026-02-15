@@ -140,7 +140,7 @@ export async function submitPilotRequest(data: PilotRequestData) {
     
     <p style="font-size: 15px;">Your inquiry regarding a <strong>Schologic Institutional Pilot</strong> at <strong>${data.institution}</strong> has been secured by our priority system.</p>
     
-    <p style="font-size: 15px;">We understand the critical nature of maintaining academic integrity and sovereignty at scale. Below is your engagement roadmap:</p>
+    <p style="font-size: 15px;">We understand the critical nature of maintaining academic integrity and excellence at scale. Below is your engagement roadmap:</p>
 
     <!-- ROAMAP -->
     <div style="margin: 40px 0;">
@@ -182,7 +182,7 @@ export async function submitPilotRequest(data: PilotRequestData) {
       <p style="margin-bottom: 5px;"><strong>Schologic LMS & Integrity Hub</strong></p>
       <p style="margin-bottom: 5px;">Regional HQ: Mang'u Road, Nairobi, Kenya</p>
       <p style="margin-bottom: 5px;">For Queries Contact +254 108289977</p>
-      <p>Data Sovereignty Guaranteed | Zero-Training Implementation</p>
+      <p>Smart, Credible, and Flexible Higher Education, with AI</p>
     </div>
   </div>
 </div>
@@ -197,3 +197,156 @@ export async function submitPilotRequest(data: PilotRequestData) {
     return { error: message };
   }
 }
+
+export interface ShareDemoData {
+  senderName: string;
+  senderEmail: string;
+  recipientName: string;
+  recipientEmail: string;
+  recipientPhone: string;
+  message?: string;
+}
+
+export async function submitDemoInvite(data: ShareDemoData) {
+  try {
+    // 1. Send Invitation to Recipient
+    await resend.emails.send({
+      from: 'Schologic Invite <onboarding@schologic.com>',
+      to: data.recipientEmail,
+      subject: `Private Invitation: Join ${data.senderName} on Schologic`,
+      html: `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; max-width: 600px; margin: 0 auto; line-height: 1.6; color: #334155;">
+  <div style="background: #0f172a; padding: 40px 30px; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 300; letter-spacing: 2px;">SCHOLOGIC LMS</h1>
+    <p style="color: #94a3b8; margin: 10px 0 0 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Operating System for Academic Success</p>
+  </div>
+
+  <div style="padding: 40px 30px; background: #ffffff;">
+    <p style="font-size: 16px; margin-top: 0;">Hello ${data.recipientName},</p>
+    
+    <p style="font-size: 15px;"><strong>${data.senderName}</strong> (<a href="mailto:${data.senderEmail}" style="color: #4f46e5; text-decoration: none;">${data.senderEmail}</a>) has invited you to explore Schologic.</p>
+
+    ${data.message ? `
+    <div style="background: #f8fafc; border-left: 4px solid #4f46e5; padding: 15px 20px; margin: 25px 0; font-style: italic; color: #475569;">
+      "${data.message}"
+    </div>
+    ` : ''}
+    
+    <div style="margin: 30px 0;">
+      <h3 style="color: #0f172a; font-size: 18px; margin-bottom: 10px;">Why Schologic?</h3>
+      <p style="font-size: 15px; color: #475569; margin-bottom: 20px;">
+        Schologic is the operating system for modern faculty, featuring <strong>AI-Powered Grading</strong> (80% faster), <strong>Academic Integrity Detection</strong>, and <strong>Digital Practicum Management</strong>.
+      </p>
+      <p style="font-size: 14px;">
+        <a href="https://schologic.com/use-cases/instructors" style="color: #4f46e5; font-weight: 600; text-decoration: none;">Read More about Instructor Features &rarr;</a>
+      </p>
+    </div>
+
+    <div style="text-align: center; margin: 40px 0;">
+      <a href="https://schologic.com/?mode=demo" style="background: #4f46e5; color: white; padding: 14px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">
+        Create Demo Account
+      </a>
+    </div>
+
+    <p style="font-size: 14px; margin-top: 30px; border-top: 1px solid #f1f5f9; padding-top: 20px;">Sincerely,<br/><span style="font-weight: bold; color: #0f172a;">The Schologic Team</span></p>
+  </div>
+  
+  <div style="background: #f8fafc; padding: 20px; text-align: center; font-size: 11px; color: #94a3b8;">
+     <p>You received this invitation because ${data.senderEmail} entered your email address on Schologic.</p>
+  </div>
+</div>
+      `
+    });
+
+    // 2. Send Lead Notification to Admin
+    await resend.emails.send({
+      from: 'Schologic System <onboarding@schologic.com>',
+      to: 'info@schologic.com',
+      subject: `[REFERRAL] New Lead Referred by ${data.senderName}`,
+      html: `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.6; color: #1e293b; background: white; border: 1px solid #e2e8f0; border-top: 4px solid #4f46e5;">
+  <div style="padding: 30px;">
+    <h2 style="margin: 0 0 20px 0; font-size: 20px; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">New Referral Lead</h2>
+    
+    <div style="margin-bottom: 30px;">
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px; font-weight: 500;">REFERRER DETAILS</p>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+        <tr>
+          <td style="padding: 8px 0; font-size: 14px; color: #64748b; width: 120px;">Name</td>
+          <td style="padding: 8px 0; font-size: 14px; font-weight: 600;">${data.senderName}</td>
+        </tr>
+         <tr>
+          <td style="padding: 8px 0; font-size: 14px; color: #64748b;">Email</td>
+          <td style="padding: 8px 0; font-size: 14px;">${data.senderEmail}</td>
+        </tr>
+      </table>
+
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px; font-weight: 500; border-top: 1px dashed #e2e8f0; padding-top: 20px;">RECIPIENT (LEAD) DETAILS</p>
+      <table style="width: 100%; border-collapse: collapse;">
+         <tr>
+          <td style="padding: 8px 0; font-size: 14px; color: #64748b; width: 120px;">Name</td>
+          <td style="padding: 8px 0; font-size: 14px; font-weight: 600;">${data.recipientName}</td>
+        </tr>
+         <tr>
+          <td style="padding: 8px 0; font-size: 14px; color: #64748b;">Email</td>
+          <td style="padding: 8px 0; font-size: 14px;"><a href="mailto:${data.recipientEmail}" style="color: #4f46e5; text-decoration: none;">${data.recipientEmail}</a></td>
+        </tr>
+         <tr>
+          <td style="padding: 8px 0; font-size: 14px; color: #64748b;">Phone</td>
+          <td style="padding: 8px 0; font-size: 14px;">${data.recipientPhone}</td>
+        </tr>
+      </table>
+    </div>
+
+    ${data.message ? `
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px;">
+      <p style="margin: 0 0 5px 0; font-size: 12px; font-weight: bold; color: #475569; text-transform: uppercase;">Sender's Message</p>
+      <p style="margin: 0; font-size: 14px; color: #334155; font-style: italic;">"${data.message}"</p>
+    </div>
+    ` : ''}
+    
+    <div style="border-top: 1px solid #f1f5f9; padding-top: 20px; font-size: 11px; color: #94a3b8; text-align: center; margin-top: 30px;">
+      <p>Lead generated via Schologic Share Demo Feature.</p>
+    </div>
+  </div>
+</div>
+      `
+    });
+
+    // 3. Send Confirmation to Sender (CC)
+    await resend.emails.send({
+      from: 'Schologic Team <onboarding@schologic.com>',
+      to: data.senderEmail,
+      subject: `You invited ${data.recipientName} to Schologic`,
+      html: `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; max-width: 600px; margin: 0 auto; line-height: 1.6; color: #334155;">
+  <div style="background: #0f172a; padding: 30px; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 20px; font-weight: 300; letter-spacing: 2px;">SCHOLOGIC LMS</h1>
+  </div>
+
+  <div style="padding: 40px 30px;">
+    <p style="font-size: 16px; margin-top: 0;">Hi ${data.senderName},</p>
+    
+    <p style="font-size: 15px;">Thanks for sharing Schologic! We've successfully sent an invitation to <strong>${data.recipientName}</strong> (${data.recipientEmail}) on your behalf.</p>
+    
+    <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 25px 0;">
+       <p style="margin: 0 0 5px 0; font-size: 12px; font-weight: bold; color: #64748b;">YOU SHARED:</p>
+       <p style="margin: 0; font-size: 14px; color: #334155;">"Schologic is the operating system for modern faculty..."</p>
+       ${data.message ? `<p style="margin: 10px 0 0 0; font-size: 14px; color: #334155; font-style: italic; border-top: 1px solid #cbd5e1; padding-top: 10px;">"${data.message}"</p>` : ''}
+    </div>
+
+    <p style="font-size: 14px;">We appreciate you advocating for better academic technology.</p>
+  </div>
+</div>
+      `
+    });
+
+    return { success: true };
+
+  } catch (error: unknown) {
+    console.error('Share Demo Error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to send invitation';
+    return { error: message };
+  }
+}
+

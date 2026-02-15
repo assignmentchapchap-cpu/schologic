@@ -7,19 +7,19 @@ import { AITeachingAssistantFAQ } from '@/components/features/ai-teaching-assist
 import { RelatedFeatures } from '@/components/features/RelatedFeatures';
 
 export const metadata: Metadata = {
-    title: 'AI Teacher Assistant for Grading | Schologic LMS',
-    description: 'AI teacher assistant for distance learning. Automate grading, generate rubrics, reduce instructor burnout in universities and colleges.',
-    keywords: ['AI assistant', 'teacher assistant', 'AI grading', 'distance learning', 'Kenya', 'rubric generator'],
+    title: 'AI Teaching Assistant for Grading | Schologic LMS',
+    description: 'Cut grading time by 80% with Schologic\'s AI Teaching Assistant. Automate rubric-based feedback, generate balanced rubrics, and reduce instructor burnout across universities and colleges in Kenya.',
+    keywords: ['AI assistant', 'AI teaching assistant', 'AI grading', 'distance learning', 'Kenya', 'rubric generator', 'automated feedback', 'instructor burnout', 'grading automation'],
     openGraph: {
-        title: 'AI Teacher Assistant for Grading | Schologic LMS',
-        description: 'AI teacher assistant for distance learning. Automate grading, generate rubrics, reduce instructor burnout in universities and colleges.',
+        title: 'AI Teaching Assistant for Grading | Schologic LMS',
+        description: 'Cut grading time by 80% with Schologic\'s AI Teaching Assistant. Automate rubric-based feedback and reduce instructor burnout.',
     },
     other: {
         'application/ld+json': JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'SoftwareApplication',
             'name': 'Schologic AI Teaching Assistant',
-            'applicationCategory': 'TeacherTool',
+            'applicationCategory': 'EducationalApplication',
             'operatingSystem': 'Web',
             'offers': { '@type': 'Offer', 'price': '0', 'priceCurrency': 'USD' },
             'featureList': [

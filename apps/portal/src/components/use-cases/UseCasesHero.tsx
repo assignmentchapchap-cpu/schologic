@@ -12,8 +12,10 @@ interface UseCasesHeroProps {
     visualPosition?: "left" | "right";
     ctaText?: string;
     ctaHref?: string;
+    onCtaClick?: () => void;
     secondaryCtaText?: string;
     secondaryCtaHref?: string;
+    onSecondaryCtaClick?: () => void;
 }
 
 import Link from "next/link";
@@ -28,8 +30,10 @@ export function UseCasesHero({
     visualPosition = "right",
     ctaText,
     ctaHref,
+    onCtaClick,
     secondaryCtaText,
-    secondaryCtaHref
+    secondaryCtaHref,
+    onSecondaryCtaClick
 }: UseCasesHeroProps) {
 
     const colorStyles = {
@@ -74,7 +78,7 @@ export function UseCasesHero({
     const style = colorStyles[accentColor];
 
     return (
-        <SectionGrid className="pt-32 pb-16">
+        <SectionGrid className="pt-32 pb-16 min-h-[85vh] flex flex-col justify-center">
             {visual && visualPosition === "left" && (
                 <GridColumn span={6} className="relative flex items-center justify-center md:justify-start mb-8 md:mb-0">
                     {visual}
@@ -94,21 +98,40 @@ export function UseCasesHero({
 
                 {(ctaText || secondaryCtaText) && (
                     <div className={cn("flex flex-col sm:flex-row gap-4", !visual && "justify-center")}>
-                        {ctaText && ctaHref && (
-                            <Link
-                                href={ctaHref}
-                                className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-all shadow-lg hover:shadow-xl min-w-[200px]", style.button)}
-                            >
-                                {ctaText}
-                            </Link>
+                        {ctaText && (
+                            onCtaClick ? (
+                                <button
+                                    onClick={onCtaClick}
+                                    className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-all shadow-lg hover:shadow-xl min-w-[200px] whitespace-nowrap", style.button)}
+                                >
+                                    {ctaText}
+                                </button>
+                            ) : ctaHref ? (
+                                <Link
+                                    href={ctaHref}
+                                    className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-all shadow-lg hover:shadow-xl min-w-[200px] whitespace-nowrap", style.button)}
+                                >
+                                    {ctaText}
+                                </Link>
+                            ) : null
                         )}
-                        {secondaryCtaText && secondaryCtaHref && (
-                            <Link
-                                href={secondaryCtaHref}
-                                className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-colors min-w-[200px]", style.secondary)}
-                            >
-                                {secondaryCtaText} <ArrowRight className="w-4 h-4 ml-2" />
-                            </Link>
+
+                        {secondaryCtaText && (
+                            onSecondaryCtaClick ? (
+                                <button
+                                    onClick={onSecondaryCtaClick}
+                                    className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-colors min-w-[200px] whitespace-nowrap", style.secondary)}
+                                >
+                                    {secondaryCtaText} <ArrowRight className="w-4 h-4 ml-2" />
+                                </button>
+                            ) : secondaryCtaHref ? (
+                                <Link
+                                    href={secondaryCtaHref}
+                                    className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-colors min-w-[200px] whitespace-nowrap", style.secondary)}
+                                >
+                                    {secondaryCtaText} <ArrowRight className="w-4 h-4 ml-2" />
+                                </Link>
+                            ) : null
                         )}
                     </div>
                 )}

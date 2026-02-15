@@ -29,15 +29,15 @@ export default function Hero({ onOpenDemo, onOpenPilot }: HeroProps) {
 
                     {/* Headline */}
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-black text-white tracking-tight leading-tight mb-8">
-                        The Sovereign LMS Built for <br />
+                        Smart, Credible, and Flexible <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-blue-400 to-emerald-400">
-                            Academic Truth.
+                            Higher Education, with AI.
                         </span>
                     </h1>
 
                     {/* Subhead */}
                     <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed font-light">
-                        Empower your institution with <strong className="text-white font-medium">Linguistic Forensic Analysis</strong> and <strong className="text-white font-medium">Universal OER Ingestion</strong>. Join 100,000+ peer-reviewed textbooks. Own your data. Verify your truth.
+                        Cut grading time by 80%, eliminate textbook costs, and protect academic integrity — all from one platform built for African universities, colleges, and TVET institutions.
                     </p>
 
                     {/* CTAs - 3 Tier Hierarchy */}

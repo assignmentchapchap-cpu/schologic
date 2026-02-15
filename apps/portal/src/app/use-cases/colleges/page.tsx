@@ -1,35 +1,52 @@
 import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
-import { CollegesPilotCTA } from "@/components/use-cases/colleges/CollegesPilotCTA";
+import { UseCaseCTA } from "@/components/use-cases/UseCaseCTA";
 import { StudentMobileCarousel } from "@/components/use-cases/colleges/StudentMobileCarousel";
-import { Maximize2, Layers, Users, TrendingUp, Shield, ArrowRight, CheckCircle } from "lucide-react";
+import { Maximize2, Layers, Users, TrendingUp, Shield, ArrowRight, CheckCircle, Share2 } from "lucide-react";
 import Link from "next/link";
+import { JsonLdFAQPage } from "@/components/seo/JsonLd";
 import Image from "next/image";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: "LMS for Colleges in Kenya | Hybrid Learning Platform | Schologic",
-    description: "Schologic is the lean academic engine for modern colleges in Kenya. Unify full-time, evening, and distance programs on one platform to maximize enrollment capacity, automate instructor grading with AI, and ensure academic integrity.",
+    description: "Schologic is the lean academic engine for modern Kenyan colleges. Unify full-time, evening, and distance programs on one platform with AI grading and academic integrity.",
     keywords: [
         "LMS for colleges Kenya",
         "hybrid learning platform",
         "online distance learning ODL",
         "academic integrity software",
-        "AI grading for universities",
+        "AI grading for colleges",
         "enrollment capacity management",
-        "TVET LMS Kenya",
-        "Schologic for colleges"
+        "evening program Kenya",
+        "Schologic for colleges",
+        "student retention",
+        "blended learning",
+        "credential verification"
     ],
 };
+
+const faqItems = [
+    { question: "Can Schologic handle day, evening, and online cohorts?", answer: "Yes. Our multi-modal architecture is built for hybrid delivery. Content, rubrics, and grading standards are shared across all cohorts, ensuring consistency regardless of delivery mode." },
+    { question: "How does it reduce instructor workload?", answer: "By automating grading, attendance tracking, and content distribution across cohorts. An instructor teaching 3 sections uploads once and the AI applies rubrics consistently to all submissions." },
+    { question: "What assessment integrity tools are included?", answer: "AI content detection, paraphrase detection, plagiarism checking, and submission analytics \u2014 all built-in. No separate subscriptions or third-party tools needed." },
+    { question: "Are credentials equivalent across day, evening, and distance?", answer: "Yes. Because all cohorts share the same rubrics, integrity checks, and assessment standards, graduates from every delivery mode hold verifiably equivalent credentials." },
+    { question: "How do we get started with a pilot?", answer: "Click 'Launch Your Hybrid Campus' above to request an institutional pilot. Our team will set up your deployment, train your faculty, and support you throughout the pilot period." },
+];
 
 export default function CollegesPage() {
     return (
         <div>
+            <JsonLdFAQPage items={faqItems} />
             <UseCasesHero
                 title="The Lean Academic Engine for Modern Colleges."
                 subtitle="Deliver full-time, evening, and distance programs through one unified platform. Maximize capacity, empower instructors, and protect credentials."
                 label="For Colleges"
                 accentColor="amber"
+                ctaText="Request a Pilot"
+                ctaHref="/#request-pilot"
+                secondaryCtaText="View Live Demo"
+                secondaryCtaHref="/demo"
                 visualPosition="left"
                 visual={
                     <div className="hidden md:block relative w-full max-w-[400px] aspect-square">
@@ -96,10 +113,13 @@ export default function CollegesPage() {
                                     Traditional administration often means managing separate systems for different student populations. This fragmentation leads to duplicated work and inconsistent standards.
                                 </p>
                                 <p>
-                                    Schologic consolidates all delivery modes into a <strong>single unified platform</strong>. Full-time students taking assessments on campus use the same system as distance learners in Mombasa. Evening students accessing materials after work use the same interface.
+                                    Schologic consolidates all delivery modes into a <strong>single unified platform</strong>. Full-time students taking assessments on campus use the same system as distance learners in Mombasa. Evening students accessing materials after work use the same interface. Instructors manage a single gradebook that spans all cohorts. Rubrics, content libraries, and assessment schedules are shared institution-wide, eliminating duplicate work and ensuring every student receives identical evaluation criteria.
                                 </p>
                                 <p>
                                     Our <strong>blended learning architecture</strong> guarantees that every student—regardless of mode—earns a credential of equal value.
+                                </p>
+                                <p>
+                                    This unified approach isn't just efficient — it's essential for <strong>accreditation</strong>. When regulators audit your programs, you can demonstrate that <strong>distance learning</strong> graduates met the exact same assessment standards as full-time on-campus students.
                                 </p>
                             </div>
                             <div className="mt-8">
@@ -172,13 +192,19 @@ export default function CollegesPage() {
                                     In many Kenyan colleges, the same instructor teaches day, evening, and distance sections. Without proper tools, this means triple the administrative work: separate rosters, multiple gradebooks, and manual tracking.
                                 </p>
                                 <p>
-                                    Schologic's <strong>instructor efficiency tools</strong> eliminate this redundancy. Content uploaded once is available to all. Rubrics apply consistently across modes. Attendance and grading are automated.
+                                    Schologic's <strong>instructor efficiency tools</strong> eliminate this redundancy. Content uploaded once is available to all. Rubrics apply consistently across modes. Attendance and grading are automated. Our <strong>AI Teaching Assistant</strong> handles first-pass grading against your rubrics, providing instant feedback to all cohorts simultaneously. An instructor teaching 300 students across three delivery modes can now accomplish what previously required an entire departmental team.
+                                </p>
+                                <p>
+                                    The impact goes beyond efficiency. When instructors spend less time on administrative tasks, they invest more in mentoring, curriculum development, and the hands-on guidance that defines a quality college education. This directly addresses <strong>faculty retention</strong> — a growing concern across Kenya's higher education landscape.
                                 </p>
                             </div>
 
-                            <div className="mt-10 pt-8 border-t border-slate-700">
+                            <div className="mt-10 pt-8 border-t border-slate-700 flex flex-wrap items-center gap-4">
                                 <Link href="/features/ai-teaching-assistant" className="text-amber-400 font-bold hover:text-amber-300 inline-flex items-center gap-2">
                                     Explore AI Teaching Assistant <ArrowRight className="w-4 h-4" />
+                                </Link>
+                                <Link href="/?mode=invite" className="text-slate-400 font-bold hover:text-amber-400 inline-flex items-center gap-2 transition-colors">
+                                    <Share2 className="w-4 h-4" /> Invite an Instructor
                                 </Link>
                             </div>
                         </div>
@@ -250,10 +276,13 @@ export default function CollegesPage() {
                                     Student dropout is a significant concern, particularly among evening and distance learners balancing work and family. Disengagement quickly leads to dropout without intervention.
                                 </p>
                                 <p>
-                                    Schologic's <strong>student success platform</strong> provides early warning indicators. Our analytics track grades, login frequency, and content interaction. When a student disengages—whether full-time or distance—the system flags them for follow-up.
+                                    Schologic's <strong>student success platform</strong> provides early warning indicators. Our analytics track grades, login frequency, and content interaction. When a student disengages—whether full-time or distance—the system flags them for follow-up. Faculty receive actionable dashboards showing which students haven't logged in for 48+ hours, which assignments are overdue, and which grades are trending downward — across all enrollment modes in a single view.
                                 </p>
                                 <p>
                                     For students, a <strong>modern, mobile-first interface</strong> clearly displays deadlines and progress, making the learning path transparent and accessible.
+                                </p>
+                                <p>
+                                    For college administrators, improved <strong>student retention</strong> means higher completion rates, stronger institutional reputation, and more predictable revenue from tuition and government <strong>capitation grants</strong>.
                                 </p>
                             </div>
                         </div>
@@ -301,25 +330,21 @@ export default function CollegesPage() {
             </div>
 
             {/* Section 5: Academic Integrity (CTA) - Gradient Background */}
-            <div className="bg-gradient-to-b from-amber-50 to-white py-24 text-center bg-grid-amber-500/10">
-                <SectionGrid>
-                    <GridColumn span={8} className="mx-auto">
-                        <div className="w-20 h-20 bg-white rounded-3xl shadow-xl shadow-amber-900/5 flex items-center justify-center mx-auto mb-8 transform rotate-3">
-                            <Shield className="w-10 h-10 text-amber-600" />
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-6">One Standard. Verified Achievement.</h2>
-                        <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                            Combat the perception that evening or online programs are less rigorous. Schologic integrates secure assessment tools, AI content detection, and digital proctoring into every course.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                            <CollegesPilotCTA />
-                            <Link href="/features/ai-detection" className="text-slate-600 font-bold hover:text-amber-600 transition-colors flex items-center gap-2 text-lg">
-                                Explore Integrity Tools
-                            </Link>
-                        </div>
-                    </GridColumn>
-                </SectionGrid>
-            </div>
+            <UseCaseCTA
+                accentColor="amber"
+                icon={<Shield className="w-8 h-8 text-amber-600" />}
+                heading="One Standard. Verified Achievement."
+                subtitle="Combat the perception that evening or online programs are less rigorous. Schologic integrates secure assessment tools, AI content detection, and digital proctoring into every course."
+                primaryCta={{
+                    text: "Request a Pilot",
+                    href: "/#request-pilot",
+                }}
+                secondaryCta={{
+                    text: "Explore Features",
+                    href: "/features/ai-detection",
+                }}
+                faqItems={faqItems}
+            />
         </div>
     );
 }

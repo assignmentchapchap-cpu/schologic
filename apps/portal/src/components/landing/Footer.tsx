@@ -50,15 +50,15 @@ export default function Footer() {
                             Schologic LMS
                         </div>
                         <p className="text-slate-500 text-sm leading-relaxed">
-                            The Sovereign Integrity Layer for Higher Education.
-                            Built on Open-Weights intelligence for academic truth.
+                            The operating system for academic integrity and digital learning in Africa.
+                            AI detection, automated grading, practicum management, and open educational resources.
                         </p>
                     </div>
 
                     <div>
                         <h4 className="font-bold text-slate-200 mb-4 text-sm">Platform</h4>
                         <ul className="space-y-2 text-slate-500 text-sm">
-                            <li><a href="#" className="hover:text-indigo-400 transition-colors">Linguistic Forensics</a></li>
+                            <li><a href="/features/ai-detection" className="hover:text-indigo-400 transition-colors">AI Detection</a></li>
                             <li><a href="#" className="hover:text-indigo-400 transition-colors">Universal Reader</a></li>
                             <li><a href="/features/ai-teaching-assistant" className="hover:text-indigo-400 transition-colors">Schologic TA</a></li>
                             <li><a href="#" className="hover:text-indigo-400 transition-colors">LTI 1.3 Integrations</a></li>

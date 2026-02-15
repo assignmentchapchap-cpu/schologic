@@ -7,9 +7,9 @@ import { ClassManagerFAQ } from '@/components/features/class-manager/ClassManage
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Online Class Manager for Universities | Schologic LMS',
-    description: 'Manage online classes for universities in Kenya. Single dashboard for hybrid, in-person, and distance learning courses.',
-    keywords: ['online classes', 'class management', 'LMS', 'universities', 'Kenya', 'distance learning'],
+    title: 'Online Class Manager for Universities & Colleges | Schologic LMS',
+    description: 'Manage online classes for universities, colleges, and TVET institutions in Kenya. Single dashboard for hybrid, in-person, and distance learning courses with built-in gradebook.',
+    keywords: ['online classes', 'class management', 'LMS', 'universities', 'Kenya', 'distance learning', 'assignment management', 'student roster', 'hybrid learning', 'gradebook', 'colleges', 'TVET'],
     openGraph: {
         title: 'Online Class Manager for Universities | Schologic LMS',
         description: 'Manage online classes for universities in Kenya. Single dashboard for hybrid, in-person, and distance learning courses.',
