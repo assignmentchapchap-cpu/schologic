@@ -3,7 +3,7 @@ export function BackgroundGrid() {
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
             {/* Base Grid - Lighter and clearer */}
             <div
-                className="absolute inset-0 opacity-[0.4]"
+                className="absolute inset-0 opacity-[0.3]"
                 style={{
                     backgroundImage: `
                         linear-gradient(to right, rgba(148, 163, 184, 0.2) 1px, transparent 1px),
@@ -15,7 +15,7 @@ export function BackgroundGrid() {
 
             {/* Major Grid Lines - Every 5th line or larger spacing for "futuristic" feel */}
             <div
-                className="absolute inset-0 opacity-[0.3]"
+                className="absolute inset-0 opacity-[0.1]"
                 style={{
                     backgroundImage: `
                         linear-gradient(to right, rgba(148, 163, 184, 0.4) 1px, transparent 1px),

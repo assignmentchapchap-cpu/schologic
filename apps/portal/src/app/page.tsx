@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/landing/Navbar';
-import Hero from '@/components/landing/Hero';
+import { LightHero } from '@/components/landing/LightHero';
 import IntegrityHub from '@/components/landing/IntegrityHub';
 import UniversalReader from '@/components/landing/UniversalReader';
 import SchologicTA from '@/components/landing/SchologicTA';
@@ -39,10 +39,8 @@ function HomeContent() {
       <Navbar onOpenDemo={() => setShowDemoModal(true)} />
 
       {/* Section 1: The Authority Hook */}
-      <Hero
-        onOpenDemo={() => setShowDemoModal(true)}
-        onOpenPilot={() => setShowPilotModal(true)}
-      />
+      {/* Section 1: The Authority Hook */}
+      <LightHero />
 
       {/* Section 2: Forensic Evidence */}
       <IntegrityHub />

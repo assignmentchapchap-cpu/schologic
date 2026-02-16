@@ -55,6 +55,7 @@ declare module 'lucide-react' {
     export const Compass: LucideIcon;
     export const Copy: LucideIcon;
     export const Cpu: LucideIcon;
+    export const CreditCard: LucideIcon;
     export const Crosshair: LucideIcon;
     export const Database: LucideIcon;
     export const DollarSign: LucideIcon;
