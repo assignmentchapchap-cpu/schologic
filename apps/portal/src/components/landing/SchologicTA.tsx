@@ -1,5 +1,7 @@
 import { Sparkles, Clock, Users } from 'lucide-react';
-import { TAInsightsVisual } from '@/components/use-cases/TAInsightsVisual';
+import dynamic from 'next/dynamic';
+
+const TAInsightsVisual = dynamic(() => import('@/components/landing/visuals/TAInsightsVisual').then(mod => mod.TAInsightsVisual), { ssr: false });
 
 export default function SchologicTA() {
     return (

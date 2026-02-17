@@ -7,11 +7,13 @@ import Image from "next/image";
 import { Metadata } from "next";
 
 import { UniversitiesHeroVisual } from "@/components/use-cases/universities/UniversitiesHeroVisual";
-import { PracticumProcessVisual } from "@/components/use-cases/universities/PracticumProcessVisual";
-import { SystemEcosystemVisual } from "@/components/use-cases/universities/SystemEcosystemVisual";
-import { TAInsightsVisual } from "@/components/use-cases/TAInsightsVisual";
-import { ZTCIngestionVisual } from "@/components/use-cases/ZTCIngestionVisual";
-import { DeanDashboardVisual } from "@/components/use-cases/universities/DeanDashboardVisual";
+import dynamic from 'next/dynamic';
+
+const PracticumProcessVisual = dynamic(() => import("@/components/landing/visuals/PracticumProcessVisual").then(mod => mod.PracticumProcessVisual), { ssr: false });
+const TAInsightsVisual = dynamic(() => import("@/components/landing/visuals/TAInsightsVisual").then(mod => mod.TAInsightsVisual), { ssr: false });
+const ZTCIngestionVisual = dynamic(() => import("@/components/landing/visuals/ZTCIngestionVisual").then(mod => mod.ZTCIngestionVisual), { ssr: false });
+const DeanDashboardVisual = dynamic(() => import("@/components/landing/visuals/DeanDashboardVisual").then(mod => mod.DeanDashboardVisual), { ssr: false });
+const SystemEcosystemVisual = dynamic(() => import("@/components/landing/visuals/SystemEcosystemVisual").then(mod => mod.SystemEcosystemVisual), { ssr: false });
 import { JsonLdFAQPage } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {

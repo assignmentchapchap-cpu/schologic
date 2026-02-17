@@ -5,12 +5,37 @@ import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/landing/Navbar';
 import { LightHero } from '@/components/landing/LightHero';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
-import { IntegrityCheckVisual } from '@/components/use-cases/IntegrityCheckVisual';
-import { TAInsightsVisual } from '@/components/use-cases/TAInsightsVisual';
-import { PracticumProcessVisual } from '@/components/use-cases/universities/PracticumProcessVisual';
-import { ZTCIngestionVisual } from '@/components/use-cases/ZTCIngestionVisual';
-import { StudentMobileCarousel } from '@/components/use-cases/colleges/StudentMobileCarousel';
-import { SystemEcosystemVisual } from '@/components/use-cases/universities/SystemEcosystemVisual';
+import dynamic from 'next/dynamic';
+
+const IntegrityCheckVisual = dynamic(() => import('@/components/landing/visuals/IntegrityCheckVisual').then(mod => mod.IntegrityCheckVisual), {
+  ssr: false,
+  loading: () => <div className="w-full aspect-video bg-slate-50 animate-pulse rounded-xl border border-slate-100" />
+});
+
+const TAInsightsVisual = dynamic(() => import('@/components/landing/visuals/TAInsightsVisual').then(mod => mod.TAInsightsVisual), {
+  ssr: false,
+  loading: () => <div className="w-full aspect-video bg-slate-50 animate-pulse rounded-2xl border border-slate-100" />
+});
+
+const PracticumProcessVisual = dynamic(() => import('@/components/landing/visuals/PracticumProcessVisual').then(mod => mod.PracticumProcessVisual), {
+  ssr: false,
+  loading: () => <div className="w-full aspect-square bg-slate-50 animate-pulse rounded-2xl border border-emerald-100" />
+});
+
+const ZTCIngestionVisual = dynamic(() => import('@/components/landing/visuals/ZTCIngestionVisual').then(mod => mod.ZTCIngestionVisual), {
+  ssr: false,
+  loading: () => <div className="w-full aspect-video bg-slate-50 animate-pulse rounded-2xl border border-slate-200" />
+});
+
+const StudentMobileCarousel = dynamic(() => import('@/components/landing/visuals/StudentMobileCarousel').then(mod => mod.StudentMobileCarousel), {
+  ssr: false,
+  loading: () => <div className="w-full aspect-[4/5] bg-slate-50 animate-pulse rounded-3xl" />
+});
+
+const SystemEcosystemVisual = dynamic(() => import('@/components/landing/visuals/SystemEcosystemVisual').then(mod => mod.SystemEcosystemVisual), {
+  ssr: false,
+  loading: () => <div className="w-full aspect-square bg-slate-50 animate-pulse rounded-2xl border border-slate-100" />
+});
 import { BackgroundGrid } from '@/components/use-cases/BackgroundGrid';
 import {
   FileText, Shield, Activity,

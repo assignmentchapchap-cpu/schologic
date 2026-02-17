@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
 import { StudentsHeroVisual } from "@/components/use-cases/students/StudentsHeroVisual";
-import { TAInsightsVisual } from "@/components/use-cases/TAInsightsVisual";
-import { ZTCIngestionVisual } from "@/components/use-cases/ZTCIngestionVisual";
+import dynamic from 'next/dynamic';
+
+const TAInsightsVisual = dynamic(() => import("@/components/landing/visuals/TAInsightsVisual").then(mod => mod.TAInsightsVisual), { ssr: false });
+const ZTCIngestionVisual = dynamic(() => import("@/components/landing/visuals/ZTCIngestionVisual").then(mod => mod.ZTCIngestionVisual), { ssr: false });
+const StudentMobileCarousel = dynamic(() => import("@/components/landing/visuals/StudentMobileCarousel").then(mod => mod.StudentMobileCarousel), { ssr: false });
 import { FlexibleLearningVisual } from "@/components/use-cases/students/FlexibleLearningVisual";
-import { StudentMobileCarousel } from "@/components/use-cases/colleges/StudentMobileCarousel";
 import { UseCaseCTA } from "@/components/use-cases/UseCaseCTA";
 import { Share2, Zap, Smartphone, BookOpen, ArrowRight } from "lucide-react";
 import Link from "next/link";
