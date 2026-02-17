@@ -197,7 +197,7 @@ export default function HomeClient() {
 
             {/* Section 7: RBAC */}
             <FeaturesSection
-                eyebrow="Enterprise Security"
+                eyebrow="Enterprise-Grade Security"
                 title="Granular Governance for Complex Institutions."
                 description="A unified LMS framework that ensures data privacy and compliance. Give Deans, HODs, and Admins the exact visibility they need without compromising security."
                 align="right"

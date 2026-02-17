@@ -93,6 +93,7 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
     }
 
     try {
+        console.log(`[LibraryAction] Starting upload for: ${file.name} (${file.size} bytes)`);
         const blob = await put(file.name, file, { access: 'public', addRandomSuffix: true, token: process.env.BLOB_READ_WRITE_TOKEN });
 
         // 2. Extract Text via Doc Engine
@@ -106,9 +107,10 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
             if (result) {
                 extractedContent = result.content;
                 extractedTitle = result.title;
+                console.log(`[LibraryAction] Text extraction successful for ${file.name}`);
             }
         } catch (e) {
-            console.warn("Text extraction skipped/failed:", e);
+            console.warn("[LibraryAction] Text extraction failed (skipping):", e);
         }
 
         // 3. Insert to DB
@@ -122,7 +124,7 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
         // Smart Title Logic
         const finalTitle = (title === file.name && extractedTitle) ? extractedTitle : (title || extractedTitle || file.name);
 
-        const { error } = await supabase.from('assets').insert({
+        const { error: dbError } = await supabase.from('assets').insert({
             title: finalTitle,
             file_url: blob.url,
             content: extractedContent,
@@ -134,18 +136,27 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
             size_bytes: file.size
         });
 
-        if (error) {
-            console.error("DB Insert Error:", error);
-            return { error: "Failed to save file metadata." };
+        if (dbError) {
+            console.error("[LibraryAction] DB Insert Error:", dbError);
+            return { error: `Database error: ${dbError.message || "Failed to save metadata"}` };
         }
 
-    } catch (error: any) {
-        console.error("Upload Error:", error);
-        return { error: error.message || "Failed to upload file." };
-    }
+        console.log(`[LibraryAction] Upload complete for ${file.name}. Triggering revalidation...`);
 
-    revalidatePath('/instructor/library');
-    return { success: true };
+        // Wrap revalidation in a safe block to prevent 500s if cache is jittery
+        try {
+            revalidatePath('/instructor/library');
+        } catch (revalErr) {
+            console.warn("[LibraryAction] Revalidation soft-failed:", revalErr);
+            // We don't return error here because the upload actually worked.
+        }
+
+        return { success: true };
+
+    } catch (err: any) {
+        console.error("[LibraryAction] Fatal Upload Error:", err);
+        return { error: err.message || "An unexpected server error occurred during upload." };
+    }
 }
 
 export async function createManualAsset(title: string, content: AssetContent | string, collectionId?: string) {
