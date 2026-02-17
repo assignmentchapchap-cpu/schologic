@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { ArrowRight, CheckCircle, Zap, CreditCard, Clock, ShieldCheck } from "lucide-react";
+import { CheckCircle, Clock, ShieldCheck } from "lucide-react";
 import { BackgroundGrid } from "@/components/use-cases/BackgroundGrid";
 import { DeanDashboardVisual } from "@/components/use-cases/universities/DeanDashboardVisual";
 
@@ -43,7 +43,6 @@ export function LightHero() {
                             </div>
 
                             {/* Assurances / Affirmations */}
-                            {/* Assurances / Affirmations */}
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-slate-500 mt-2">
                                 <div className="flex items-center gap-2">
                                     <CheckCircle className="w-5 h-5 text-emerald-600" />
@@ -63,8 +62,13 @@ export function LightHero() {
 
                     {/* RIGHT REGION: Visual (Span 5) */}
                     <div className="md:col-span-5 relative mt-12 md:mt-0">
+                        {/* Ambient Glow - Intelligence/Warmth */}
+                        <div
+                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[#FFBF00] opacity-30 blur-[120px] rounded-full mix-blend-multiply pointer-events-none z-0"
+                        />
+
                         {/* Monitor Visual - Scaled to fit */}
-                        <div className="relative w-full md:min-w-[130%] md:-ml-[20%] lg:min-w-[125%] lg:-ml-[15%]">
+                        <div className="relative z-10 w-full md:min-w-[130%] md:-ml-[20%] lg:min-w-[125%] lg:-ml-[15%]">
                             <DeanDashboardVisual />
                         </div>
                     </div>

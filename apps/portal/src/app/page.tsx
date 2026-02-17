@@ -4,14 +4,27 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/landing/Navbar';
 import { LightHero } from '@/components/landing/LightHero';
-import IntegrityHub from '@/components/landing/IntegrityHub';
-import UniversalReader from '@/components/landing/UniversalReader';
-import SchologicTA from '@/components/landing/SchologicTA';
+import { FeaturesSection } from '@/components/landing/FeaturesSection';
+import { IntegrityCheckVisual } from '@/components/use-cases/IntegrityCheckVisual';
+import { TAInsightsVisual } from '@/components/use-cases/TAInsightsVisual';
+import { PracticumProcessVisual } from '@/components/use-cases/universities/PracticumProcessVisual';
+import { ZTCIngestionVisual } from '@/components/use-cases/ZTCIngestionVisual';
+import { StudentMobileCarousel } from '@/components/use-cases/colleges/StudentMobileCarousel';
+import { SystemEcosystemVisual } from '@/components/use-cases/universities/SystemEcosystemVisual';
+import {
+  FileText, Shield, Activity,
+  Sparkles, Clock, Users,
+  MapPin, CheckCircle, Target,
+  BookOpen, Globe, Repeat,
+  Smartphone, Calendar, // Removed Book (use BookOpen)
+  Lock, Eye, Share2, // Removed Key
+  FileCheck, // Added for QA (replaces Key)
+  GraduationCap // Added for Study (replaces Book if needed, or use BookOpen)
+} from 'lucide-react';
 import Footer from '@/components/landing/Footer';
 import DemoSignupModal from '@/components/auth/DemoSignupModal';
 import InstitutionalPilotModal from '@/components/leads/InstitutionalPilotModal';
 import ShareDemoModal from '@/components/landing/ShareDemoModal'; // Moved here
-import { Sparkles, Share2 } from 'lucide-react';
 
 function HomeContent() {
   const [showDemoModal, setShowDemoModal] = useState(false);
@@ -43,13 +56,169 @@ function HomeContent() {
       <LightHero />
 
       {/* Section 2: Forensic Evidence */}
-      <IntegrityHub />
+      <FeaturesSection
+        eyebrow="Evidence-Based Integrity"
+        title="Protect Reputation with Multi-Model Forensics."
+        description="Detect AI-generated content with 99% accuracy. We strictly avoid 'black box' guessing by using a transparent, multi-stage analysis engine."
+        align="left"
+        visual={<IntegrityCheckVisual />}
+        visualScaleClass="scale-[0.75] group-hover:scale-[0.8] origin-center"
+        features={[
+          {
+            icon: FileText,
+            title: "Segment Analysis",
+            description: "Submissions are split into semantic units to isolate specific AI-generated claims."
+          },
+          {
+            icon: Shield,
+            title: "Multi-Model Scan",
+            description: "Files run against 3 specialized models (RoBERTa, OpenAI, context-aware) to catch distinct patterns."
+          },
+          {
+            icon: Activity,
+            title: "Authenticity Score",
+            description: "Weighted triangulation filters false positives, giving you actionable proof."
+          }
+        ]}
+      />
 
-      {/* Section 3: ZTC Mandate ROI */}
-      <UniversalReader />
+      {/* Section 3: AI Teaching Assistant */}
+      <FeaturesSection
+        eyebrow="Faculty Retention Engine"
+        title="Scale Personalized Learning with 24/7 AI Tutors."
+        description="Reduce grading time by 80% without sacrificing quality. Our AI drafts feedback based on YOUR rubric, identifying at-risk students instantly."
+        align="right"
+        className="bg-slate-50"
+        visual={<TAInsightsVisual />}
+        features={[
+          {
+            icon: Sparkles,
+            title: "Rubric Generator",
+            description: "Convert a simple prompt into a standardized 5-point rubric in seconds."
+          },
+          {
+            icon: Target,
+            title: "Deterministic Scoring",
+            description: "Anti-Hallucination logic maps student work to criteria, never inventing grades."
+          },
+          {
+            icon: Users,
+            title: "Platform Copilot",
+            description: "Context-aware help for navigating the portal and finding resources."
+          }
+        ]}
+      />
 
-      {/* Section 4: Faculty Retention */}
-      <SchologicTA />
+      {/* Section 4: Practicum Management */}
+      <FeaturesSection
+        eyebrow="Field Placement Tracking"
+        title="Digitize the Entire Placement Lifecycle."
+        description="Replace paper logbooks with a verified digital trail. Track hours, approve logs, and evaluate competencies in real-time."
+        align="left"
+        className="bg-white"
+        visual={<PracticumProcessVisual />}
+        features={[
+          {
+            icon: MapPin,
+            title: "Placement Workflow",
+            description: "Automated enrollment and site assignment for thousands of students."
+          },
+          {
+            icon: CheckCircle,
+            title: "Supervision Tracking",
+            description: "GPS-verified attendance logging and digital preceptor approvals."
+          },
+          {
+            icon: Target,
+            title: "Assessment Framework",
+            description: "Competency-based evaluation matrices for precise skill tracking."
+          }
+        ]}
+      />
+
+      {/* Section 5: Zero Textbook Cost */}
+      <FeaturesSection
+        eyebrow="OER Library Integration"
+        title="Eliminate Student Costs with Open Standards."
+        description="Import high-quality, peer-reviewed content from LibreTexts and OpenStax directly into your course with one click."
+        align="right"
+        className="bg-slate-50"
+        visual={<ZTCIngestionVisual />}
+        visualScaleClass="scale-[0.65] group-hover:scale-[0.67] origin-center"
+        features={[
+          {
+            icon: BookOpen,
+            title: "Zero Student Cost",
+            description: "Replace expensive textbooks with free, high-quality OER materials."
+          },
+          {
+            icon: Globe,
+            title: "Global Connectivity",
+            description: "IMS Common Cartridge support ensures compatibility with global repositories."
+          },
+          {
+            icon: Repeat,
+            title: "Remix & Adapt",
+            description: "Full editorial control to mix chapters, add localized content, and customize flow."
+          }
+        ]}
+      />
+
+      {/* Section 6: Mobile First */}
+      <FeaturesSection
+        eyebrow="Offline-First Learning"
+        title="Learning That Fits in Every Student's Pocket."
+        description="Designed for the reality of student life. A fully functional app that allows students to learn, submit, and track progress anywhere."
+        align="left"
+        className="bg-white"
+        visual={<StudentMobileCarousel />}
+        visualScaleClass="scale-[0.75] group-hover:scale-[0.8] origin-center"
+        features={[
+          {
+            icon: Smartphone,
+            title: "Universal Access",
+            description: "Dashboard, Grades, and Assignments available on any smartphone."
+          },
+          {
+            icon: BookOpen,
+            title: "AI Study Assistant",
+            description: "Personalized tutoring and content analysis available on mobile."
+          },
+          {
+            icon: Calendar,
+            title: "Digital Logbook",
+            description: "Students document field experiences and clinical hours directly from their phone."
+          }
+        ]}
+      />
+
+      {/* Section 7: RBAC */}
+      <FeaturesSection
+        eyebrow="Enterprise Security"
+        title="Granular Governance for Complex Institutions."
+        description="Ensure data privacy and compliance. Give Deans, HODs, and Admins the exact visibility they need without compromising security."
+        align="right"
+        className="bg-slate-50"
+        visual={<SystemEcosystemVisual />}
+        visualScaleClass="scale-[0.75] group-hover:scale-[0.8] origin-center"
+        features={[
+          {
+            icon: Eye,
+            title: "Vice Chancellor View",
+            description: "High-level dashboards for strategic policy and multi-campus oversight."
+          },
+          {
+            icon: FileCheck,
+            title: "Departmental QA",
+            description: "Head of Department tools for tracking curriculum compliance and staff allocation."
+          },
+          {
+            icon: Lock,
+            title: "Audit Logs",
+            description: "Complete traceability of every grade change and system action."
+          }
+        ]}
+      />
 
       {/* Final Institutional CTA */}
       <section id="pilot" className="py-24 bg-indigo-900 relative overflow-hidden border-t border-indigo-800">

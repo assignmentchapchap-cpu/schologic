@@ -25,7 +25,7 @@ export const ZTCIngestionVisual = () => {
 
     return (
         <div
-            className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans flex flex-col h-full overflow-x-auto"
+            className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans flex flex-col overflow-x-auto"
             role="img"
             aria-label="Universal OER Ingestion animation showing import process from LibreTexts and OpenStax"
             data-nosnippet
