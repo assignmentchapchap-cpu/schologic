@@ -1,9 +1,7 @@
 import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
 import { UseCaseCTA } from "@/components/use-cases/UseCaseCTA";
-import dynamic from 'next/dynamic';
-
-const StudentMobileCarousel = dynamic(() => import("@/components/landing/visuals/StudentMobileCarousel").then(mod => mod.StudentMobileCarousel), { ssr: false });
+import { StudentMobileCarousel } from "@/components/landing/visuals/LazyVisuals";
 import { Maximize2, Layers, Users, TrendingUp, Shield, ArrowRight, CheckCircle, Share2 } from "lucide-react";
 import Link from "next/link";
 import { JsonLdFAQPage } from "@/components/seo/JsonLd";

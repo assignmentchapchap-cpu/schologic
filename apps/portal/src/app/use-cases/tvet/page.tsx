@@ -2,9 +2,7 @@ import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
 import { UseCaseCTA } from "@/components/use-cases/UseCaseCTA";
 
-import dynamic from 'next/dynamic';
-
-const PracticumProcessVisual = dynamic(() => import("@/components/landing/visuals/PracticumProcessVisual").then(mod => mod.PracticumProcessVisual), { ssr: false });
+import { PracticumProcessVisual } from "@/components/landing/visuals/LazyVisuals";
 import { Maximize2, Layers, Users, TrendingUp, Shield, ArrowRight, CheckCircle, BookOpen, Share2 } from "lucide-react";
 import Link from "next/link";
 import { JsonLdFAQPage } from "@/components/seo/JsonLd";

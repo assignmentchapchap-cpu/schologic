@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
 import { StudentsHeroVisual } from "@/components/use-cases/students/StudentsHeroVisual";
-import dynamic from 'next/dynamic';
-
-const TAInsightsVisual = dynamic(() => import("@/components/landing/visuals/TAInsightsVisual").then(mod => mod.TAInsightsVisual), { ssr: false });
-const ZTCIngestionVisual = dynamic(() => import("@/components/landing/visuals/ZTCIngestionVisual").then(mod => mod.ZTCIngestionVisual), { ssr: false });
-const StudentMobileCarousel = dynamic(() => import("@/components/landing/visuals/StudentMobileCarousel").then(mod => mod.StudentMobileCarousel), { ssr: false });
+import {
+    TAInsightsVisual,
+    ZTCIngestionVisual,
+    StudentMobileCarousel
+} from "@/components/landing/visuals/LazyVisuals";
 import { FlexibleLearningVisual } from "@/components/use-cases/students/FlexibleLearningVisual";
 import { UseCaseCTA } from "@/components/use-cases/UseCaseCTA";
 import { Share2, Zap, Smartphone, BookOpen, ArrowRight } from "lucide-react";

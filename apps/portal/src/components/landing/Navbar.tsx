@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 interface NavbarProps {
     onOpenDemo?: () => void;
+    solid?: boolean;
 }
 
 const FEATURES_MENU = [
@@ -25,7 +26,7 @@ const USE_CASES_MENU = [
     { href: '/use-cases/instructors', label: 'Instructors', icon: Users, description: 'Automated grading' },
 ];
 
-export default function Navbar({ onOpenDemo }: NavbarProps) {
+export default function Navbar({ onOpenDemo, solid }: NavbarProps) {
     const [featuresOpen, setFeaturesOpen] = useState(false);
     const [useCasesOpen, setUseCasesOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

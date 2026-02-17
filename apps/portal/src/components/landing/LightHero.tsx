@@ -5,15 +5,7 @@ import { CheckCircle, Clock, ShieldCheck } from "lucide-react";
 import { BackgroundGrid } from "@/components/use-cases/BackgroundGrid";
 import dynamic from 'next/dynamic';
 
-const DeanDashboardVisual = dynamic(() => import("@/components/landing/visuals/DeanDashboardVisual").then(mod => mod.DeanDashboardVisual), {
-    ssr: false,
-    loading: () => (
-        <div className="w-full max-w-4xl pt-4 animate-pulse">
-            <div className="w-[92%] mx-auto aspect-[16/10] bg-slate-200 rounded-t-[18px]" />
-            <div className="h-[14px] bg-slate-300 w-full rounded-b-[16px]" />
-        </div>
-    )
-});
+import { DeanDashboardVisual } from "@/components/landing/visuals/LazyVisuals";
 
 export function LightHero() {
     return (

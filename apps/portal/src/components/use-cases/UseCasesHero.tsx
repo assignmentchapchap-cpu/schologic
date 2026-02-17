@@ -1,7 +1,8 @@
 'use client';
 
-import { SectionGrid, GridColumn } from "./SectionGrid";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 interface UseCasesHeroProps {
     title: string;
@@ -17,9 +18,6 @@ interface UseCasesHeroProps {
     secondaryCtaHref?: string;
     onSecondaryCtaClick?: () => void;
 }
-
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 
 export function UseCasesHero({
     title,
@@ -78,70 +76,82 @@ export function UseCasesHero({
     const style = colorStyles[accentColor];
 
     return (
-        <SectionGrid className="pt-32 pb-16 min-h-[85vh] flex flex-col justify-center">
-            {visual && visualPosition === "left" && (
-                <GridColumn span={6} className="relative flex items-center justify-center md:justify-start mb-8 md:mb-0">
-                    {visual}
-                </GridColumn>
-            )}
+        <div className="relative pt-24 pb-10 md:pt-32 md:pb-16 overflow-hidden">
+            <div className="w-full pl-6 pr-6 md:pr-12 lg:pr-16 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
 
-            <GridColumn span={visual ? 6 : 8} className={visual ? (visualPosition === "left" ? "md:pl-12" : "md:pr-12") : "mx-auto text-center"}>
-                <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wider mb-8", style.pill)}>
-                    {label}
-                </div>
-                <h1 className="text-5xl md:text-6xl font-serif font-black text-slate-900 mb-6 leading-tight">
-                    {title}
-                </h1>
-                <p className="text-xl text-slate-600 leading-relaxed mb-8">
-                    {subtitle}
-                </p>
+                    {/* Visual Region - Left */}
+                    {visual && visualPosition === "left" && (
+                        <div className="md:col-span-5 relative flex items-center justify-center mb-8 md:mb-0">
+                            {visual}
+                        </div>
+                    )}
 
-                {(ctaText || secondaryCtaText) && (
-                    <div className={cn("flex flex-col sm:flex-row gap-4", !visual && "justify-center")}>
-                        {ctaText && (
-                            onCtaClick ? (
-                                <button
-                                    onClick={onCtaClick}
-                                    className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-all shadow-lg hover:shadow-xl min-w-[200px] whitespace-nowrap", style.button)}
-                                >
-                                    {ctaText}
-                                </button>
-                            ) : ctaHref ? (
-                                <Link
-                                    href={ctaHref}
-                                    className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-all shadow-lg hover:shadow-xl min-w-[200px] whitespace-nowrap", style.button)}
-                                >
-                                    {ctaText}
-                                </Link>
-                            ) : null
-                        )}
+                    {/* Content Region */}
+                    <div className={cn(
+                        "flex flex-col",
+                        visual ? "md:col-span-7" : "md:col-span-8 md:col-start-3 text-center items-center",
+                        visual && visualPosition === "left" ? "md:pl-12" : (visual ? "md:pr-12" : "")
+                    )}>
+                        <div className={cn("inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wider mb-8 w-fit", style.pill)}>
+                            {label}
+                        </div>
+                        <h1 className="text-[2.75rem] leading-[1.1] sm:text-5xl md:text-6xl font-serif font-black text-slate-900 mb-8 tracking-tight">
+                            {title}
+                        </h1>
+                        <p className="text-lg md:text-xl text-slate-600 leading-10 md:leading-loose mb-10 font-light max-w-2xl">
+                            {subtitle}
+                        </p>
 
-                        {secondaryCtaText && (
-                            onSecondaryCtaClick ? (
-                                <button
-                                    onClick={onSecondaryCtaClick}
-                                    className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-colors min-w-[200px] whitespace-nowrap", style.secondary)}
-                                >
-                                    {secondaryCtaText} <ArrowRight className="w-4 h-4 ml-2" />
-                                </button>
-                            ) : secondaryCtaHref ? (
-                                <Link
-                                    href={secondaryCtaHref}
-                                    className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-colors min-w-[200px] whitespace-nowrap", style.secondary)}
-                                >
-                                    {secondaryCtaText} <ArrowRight className="w-4 h-4 ml-2" />
-                                </Link>
-                            ) : null
+                        {(ctaText || secondaryCtaText) && (
+                            <div className={cn("flex flex-col sm:flex-row gap-4", !visual && "justify-center")}>
+                                {ctaText && (
+                                    onCtaClick ? (
+                                        <button
+                                            onClick={onCtaClick}
+                                            className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-all shadow-lg hover:shadow-xl min-w-[200px] whitespace-nowrap", style.button)}
+                                        >
+                                            {ctaText}
+                                        </button>
+                                    ) : ctaHref ? (
+                                        <Link
+                                            href={ctaHref}
+                                            className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-all shadow-lg hover:shadow-xl min-w-[200px] whitespace-nowrap", style.button)}
+                                        >
+                                            {ctaText}
+                                        </Link>
+                                    ) : null
+                                )}
+
+                                {secondaryCtaText && (
+                                    onSecondaryCtaClick ? (
+                                        <button
+                                            onClick={onSecondaryCtaClick}
+                                            className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-colors min-w-[200px] whitespace-nowrap", style.secondary)}
+                                        >
+                                            {secondaryCtaText} <ArrowRight className="w-4 h-4 ml-2" />
+                                        </button>
+                                    ) : secondaryCtaHref ? (
+                                        <Link
+                                            href={secondaryCtaHref}
+                                            className={cn("inline-flex items-center justify-center px-8 py-4 rounded-full font-bold transition-colors min-w-[200px] whitespace-nowrap", style.secondary)}
+                                        >
+                                            {secondaryCtaText} <ArrowRight className="w-4 h-4 ml-2" />
+                                        </Link>
+                                    ) : null
+                                )}
+                            </div>
                         )}
                     </div>
-                )}
-            </GridColumn>
 
-            {visual && visualPosition === "right" && (
-                <GridColumn span={6} className="relative flex items-center justify-center md:justify-end mt-8 md:mt-0">
-                    {visual}
-                </GridColumn>
-            )}
-        </SectionGrid>
+                    {/* Visual Region - Right */}
+                    {visual && visualPosition === "right" && (
+                        <div className="md:col-span-5 relative flex items-center justify-center mt-12 md:mt-0">
+                            {visual}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 }

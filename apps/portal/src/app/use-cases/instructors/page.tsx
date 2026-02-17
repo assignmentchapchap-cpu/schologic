@@ -3,13 +3,13 @@ import { UseCasesHero } from "@/components/use-cases/UseCasesHero";
 import { SectionGrid, GridColumn } from "@/components/use-cases/SectionGrid";
 import { UseCaseCTA } from "@/components/use-cases/UseCaseCTA";
 import { InstructorVisualPlaceholder } from "@/components/use-cases/InstructorVisualPlaceholder";
-import dynamic from 'next/dynamic';
-
-const TAInsightsVisual = dynamic(() => import("@/components/landing/visuals/TAInsightsVisual").then(mod => mod.TAInsightsVisual), { ssr: false });
-const PracticumProcessVisual = dynamic(() => import("@/components/landing/visuals/PracticumProcessVisual").then(mod => mod.PracticumProcessVisual), { ssr: false });
-const ZTCIngestionVisual = dynamic(() => import("@/components/landing/visuals/ZTCIngestionVisual").then(mod => mod.ZTCIngestionVisual), { ssr: false });
-const DeanDashboardVisual = dynamic(() => import("@/components/landing/visuals/DeanDashboardVisual").then(mod => mod.DeanDashboardVisual), { ssr: false });
-const IntegrityCheckVisual = dynamic(() => import("@/components/landing/visuals/IntegrityCheckVisual").then(mod => mod.IntegrityCheckVisual), { ssr: false });
+import {
+    TAInsightsVisual,
+    PracticumProcessVisual,
+    ZTCIngestionVisual,
+    DeanDashboardVisual,
+    IntegrityCheckVisual
+} from "@/components/landing/visuals/LazyVisuals";
 import {
     Zap,
     Shield,
