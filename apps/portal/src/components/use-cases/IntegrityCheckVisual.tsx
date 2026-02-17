@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { BarChart, FileText, Download, AlertTriangle, Info, X, ExternalLink } from 'lucide-react';
 import Link from 'next/link';

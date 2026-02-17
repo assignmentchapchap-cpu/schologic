@@ -117,7 +117,7 @@ export const StudentMobileCarousel = () => {
                             These screenshots showcase the student mobile experience, including the dashboard and grade tracking views.
                         </p>
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            Schologic has been designed with the needs of students in mind. Through optimized mobile functions, our app helps ensure that no student misses an announcement, deadline, or resource.
+                            Schologic has been designed with the needs of students in mind. Through optimized mobile functions and <strong>instant updates on your dashboard</strong>, our app helps ensure that no student misses an announcement, deadline, or critical resource.
                         </p>
                     </div>
                     <button

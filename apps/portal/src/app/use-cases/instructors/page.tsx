@@ -24,14 +24,14 @@ import { JsonLdFAQPage } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
     title: "Schologic for Instructors | AI Grading & Retention Tools",
-    description: "Slash grading time by 80% with Schologic's AI Teaching Assistant. Detect AI writing, manage digital practicums, and boost retention with real-time analytics. The OS for modern faculty.",
-    keywords: ["AI grading assistant", "academic integrity software", "digital internship logbook", "student retention analytics", "plagiarism checker", "rubric generation", "higher education", "instructor LMS Kenya", "AI Teaching Assistant", "faculty workload reduction"]
+    description: "Slash grading time by up to 80% with Schologic's AI Assistant. Detect AI writing, manage digital practicums, and boost retention with real-time analytics. The OS for modern faculty.",
+    keywords: ["AI grading assistant", "academic integrity software", "digital internship logbook", "student retention analytics", "plagiarism checker", "rubric generation", "higher education", "instructor LMS Kenya", "AI Assistant", "faculty workload reduction", "TVET", "CUE compliance"]
 };
 
 const faqItems = [
     { question: "How long does setup take?", answer: "Under 10 minutes. Create your account, set up your first class, upload a rubric, and start grading. No IT department or institutional approval required for individual pilots." },
     { question: "Can I use my own rubrics?", answer: "Yes. Schologic supports fully custom rubrics. You define the criteria, point allocations, and descriptors. The AI applies your exact rubric consistently across all submissions." },
-    { question: "How accurate is the AI grading?", answer: "Our AI teaching assistant achieves high consistency with instructor grading. Every score comes with detailed rubric-level feedback, and you can review and adjust any grade before releasing." },
+    { question: "How accurate is the AI grading?", answer: "Our AI assistant achieves high consistency with instructor grading. Every score comes with detailed rubric-level feedback, and you can review and adjust any grade before releasing." },
     { question: "Does it detect AI-generated content?", answer: "Yes. Our built-in integrity engine detects AI-generated text, paraphrasing tools, and plagiarism — all in one scan. No need for separate third-party tools." },
     { question: "What if my institution isn't on Schologic yet?", answer: "Individual instructors can start a free pilot independently. Once you see the results, you can recommend institutional adoption through our pilot request process." },
 ];

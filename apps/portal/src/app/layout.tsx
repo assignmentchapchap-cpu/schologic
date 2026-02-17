@@ -23,7 +23,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Schologic LMS - Smart, Credible, and Flexible Higher Education, with AI",
-  description: "Cut grading time by 80%, eliminate textbook costs, and protect academic integrity — without switching between five different tools. Schologic LMS unifies AI grading, content detection, class management, and open educational resources into one platform designed for African universities and colleges.",
+  description: "Cut grading time by up to 80%, eliminate textbook costs, and protect academic integrity — without switching between five different tools. Schologic LMS unifies AI grading, content detection, class management, and open educational resources into one platform designed for African universities and colleges.",
 };
 
 import { ToastProvider } from "@/context/ToastContext";

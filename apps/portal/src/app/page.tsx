@@ -11,15 +11,15 @@ import { PracticumProcessVisual } from '@/components/use-cases/universities/Prac
 import { ZTCIngestionVisual } from '@/components/use-cases/ZTCIngestionVisual';
 import { StudentMobileCarousel } from '@/components/use-cases/colleges/StudentMobileCarousel';
 import { SystemEcosystemVisual } from '@/components/use-cases/universities/SystemEcosystemVisual';
+import { BackgroundGrid } from '@/components/use-cases/BackgroundGrid';
 import {
   FileText, Shield, Activity,
-  Sparkles, Clock, Users,
+  Sparkles, Users,
   MapPin, CheckCircle, Target,
   BookOpen, Globe, Repeat,
-  Smartphone, Calendar, // Removed Book (use BookOpen)
-  Lock, Eye, Share2, // Removed Key
-  FileCheck, // Added for QA (replaces Key)
-  GraduationCap // Added for Study (replaces Book if needed, or use BookOpen)
+  Smartphone, Calendar,
+  Lock, Eye, Share2,
+  FileCheck
 } from 'lucide-react';
 import Footer from '@/components/landing/Footer';
 import DemoSignupModal from '@/components/auth/DemoSignupModal';
@@ -48,10 +48,9 @@ function HomeContent() {
   }, [searchParams]);
 
   return (
-    <main className="min-h-screen bg-slate-900 selection:bg-indigo-500/30">
+    <main className="min-h-screen bg-white selection:bg-indigo-500/30">
       <Navbar onOpenDemo={() => setShowDemoModal(true)} />
 
-      {/* Section 1: The Authority Hook */}
       {/* Section 1: The Authority Hook */}
       <LightHero />
 
@@ -59,7 +58,7 @@ function HomeContent() {
       <FeaturesSection
         eyebrow="Evidence-Based Integrity"
         title="Protect Reputation with Multi-Model Forensics."
-        description="Detect AI-generated content with 99% accuracy. We strictly avoid 'black box' guessing by using a transparent, multi-stage analysis engine."
+        description="Detect AI-generated content with unparalleled transparency. We strictly avoid 'black box' guessing by using a multi-stage analysis engine."
         align="left"
         visual={<IntegrityCheckVisual />}
         visualScaleClass="scale-[0.95] md:scale-[0.75] group-hover:scale-[1.05] md:group-hover:scale-[0.8] origin-center"
@@ -72,7 +71,7 @@ function HomeContent() {
           {
             icon: Shield,
             title: "Multi-Model Scan",
-            description: "Files run against 3 specialized models (RoBERTa, OpenAI, context-aware) to catch distinct patterns."
+            description: "Files run against 3 specialized models (RoBERTa, AI Content Detector, OpenAI Base) to catch distinct patterns."
           },
           {
             icon: Activity,
@@ -84,9 +83,9 @@ function HomeContent() {
 
       {/* Section 3: AI Teaching Assistant */}
       <FeaturesSection
-        eyebrow="Faculty Retention Engine"
-        title="Scale Personalized Learning with 24/7 AI Tutors."
-        description="Reduce grading time by 80% without sacrificing quality. Our AI drafts feedback based on YOUR rubric, identifying at-risk students instantly."
+        eyebrow="Instructor Productivity Engine"
+        title="Scale Personalized Learning with 24/7 AI Assistants."
+        description="Reduce grading time by up to 80% without sacrificing quality. Our AI drafts feedback based on YOUR rubric—the ideal companion for distance learning environments."
         align="right"
         className="bg-slate-50"
         visual={<TAInsightsVisual />}
@@ -113,8 +112,8 @@ function HomeContent() {
       {/* Section 4: Practicum Management */}
       <FeaturesSection
         eyebrow="Field Placement Tracking"
-        title="Digitize the Entire Placement Lifecycle."
-        description="Replace paper logbooks with a verified digital trail. Track hours, approve logs, and evaluate competencies in real-time."
+        title="TVET & Industrial Attachment Management."
+        description="Digitize the entire placement lifecycle for Teaching Practice and Industrial Attachments. Replace paper logbooks with a verified digital trail for CUE compliance."
         align="left"
         className="bg-white"
         visual={<PracticumProcessVisual />}
@@ -128,7 +127,7 @@ function HomeContent() {
           {
             icon: CheckCircle,
             title: "Supervision Tracking",
-            description: "GPS-verified attendance logging and digital preceptor approvals."
+            description: "Automated log verification for supervisors and electronic supervisor reports."
           },
           {
             icon: Target,
@@ -141,8 +140,8 @@ function HomeContent() {
       {/* Section 5: Zero Textbook Cost */}
       <FeaturesSection
         eyebrow="OER Library Integration"
-        title="Eliminate Student Costs with Open Standards."
-        description="Import high-quality, peer-reviewed content from LibreTexts and OpenStax directly into your course with one click."
+        title="Eliminate Textbook Costs with Open Learning."
+        description="Import high-quality, peer-reviewed content from LibreTexts and OpenStax directly into your course with one click. Supporting open learning standards for every student."
         align="right"
         className="bg-slate-50"
         visual={<ZTCIngestionVisual />}
@@ -150,7 +149,7 @@ function HomeContent() {
         features={[
           {
             icon: BookOpen,
-            title: "Zero Student Cost",
+            title: "Zero Textbook Cost",
             description: "Replace expensive textbooks with free, high-quality OER materials."
           },
           {
@@ -168,9 +167,9 @@ function HomeContent() {
 
       {/* Section 6: Mobile First */}
       <FeaturesSection
-        eyebrow="Offline-First Learning"
+        eyebrow="Mobile Optimized Learning"
         title="Learning That Fits in Every Student's Pocket."
-        description="Designed for the reality of student life. A fully functional app that allows students to learn, submit, and track progress anywhere."
+        description="Designed for the reality of student life. A fully mobile-optimized app for online learning that allows students to submit assignments and track progress anywhere."
         align="left"
         className="bg-white"
         visual={<StudentMobileCarousel />}
@@ -182,9 +181,9 @@ function HomeContent() {
             description: "Dashboard, Grades, and Assignments available on any smartphone."
           },
           {
-            icon: BookOpen,
-            title: "AI Study Assistant",
-            description: "Personalized tutoring and content analysis available on mobile."
+            icon: Activity,
+            title: "Instant Updates",
+            description: "Real-time notifications on your dashboard for grades and announcements."
           },
           {
             icon: Calendar,
@@ -198,7 +197,7 @@ function HomeContent() {
       <FeaturesSection
         eyebrow="Enterprise Security"
         title="Granular Governance for Complex Institutions."
-        description="Ensure data privacy and compliance. Give Deans, HODs, and Admins the exact visibility they need without compromising security."
+        description="A unified LMS framework that ensures data privacy and compliance. Give Deans, HODs, and Admins the exact visibility they need without compromising security."
         align="right"
         className="bg-slate-50"
         visual={<SystemEcosystemVisual />}
@@ -206,8 +205,8 @@ function HomeContent() {
         features={[
           {
             icon: Eye,
-            title: "Vice Chancellor View",
-            description: "High-level dashboards for strategic policy and multi-campus oversight."
+            title: "Customized Dashboards",
+            description: "Context-aware views for Deans, HODs, and Administrators tailored to specific KPIs."
           },
           {
             icon: FileCheck,
@@ -223,36 +222,36 @@ function HomeContent() {
       />
 
       {/* Final Institutional CTA */}
-      <section id="pilot" className="py-24 bg-indigo-900 relative overflow-hidden border-t border-indigo-800">
-        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <section id="pilot" className="py-16 bg-slate-50 relative overflow-hidden border-t border-slate-200">
+        <BackgroundGrid />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="container mx-auto px-6 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-800/50 backdrop-blur-sm border border-indigo-500/30 text-indigo-200 text-sm font-bold mb-8 font-mono">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50/50 backdrop-blur-sm border border-amber-200/40 text-amber-700 text-sm font-bold mb-8 font-mono">
+            <Sparkles className="w-4 h-4 text-amber-500" />
             <span>INSTITUTIONAL PARTNERSHIP PROGRAM</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-serif font-black text-white mb-8 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-serif font-black text-slate-900 mb-8 tracking-tight">
             Ready to transform <br />
             Academic Excellence?
           </h2>
-          <p className="text-xl text-indigo-200 mb-10 max-w-2xl mx-auto font-light">
-            Join forward-thinking institutions using AI to offer smart, credible, and flexible higher education.
+          <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+            Join forward-thinking institutions using the Schologic LMS to offer smart, credible, and flexible higher education.
           </p>
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center sm:justify-center sm:gap-4 w-full px-1 sm:px-0">
             <button
               onClick={() => setShowPilotModal(true)}
-              className="px-2 py-3 sm:px-8 sm:py-4 bg-white text-indigo-900 rounded-lg font-bold text-base sm:text-lg hover:bg-indigo-50 transition-all shadow-xl shadow-indigo-900/40 active:scale-95 font-sans w-full sm:w-auto sm:min-w-[280px] whitespace-nowrap"
+              className="px-2 py-3 sm:px-8 sm:py-4 bg-indigo-600 text-white rounded-lg font-bold text-base sm:text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 font-sans w-full sm:w-auto sm:min-w-[280px] whitespace-nowrap"
             >
               Start <span className="hidden sm:inline">Your Institutional</span> Pilot
             </button>
 
             <button
               onClick={() => setShowInviteModal(true)}
-              className="px-2 py-3 sm:px-8 sm:py-4 bg-transparent border-2 border-indigo-400/30 text-indigo-100 rounded-lg font-bold text-base sm:text-lg hover:bg-indigo-800/50 hover:border-indigo-400/60 transition-all active:scale-95 font-sans flex items-center justify-center gap-1 sm:gap-2 w-full sm:w-auto sm:min-w-[280px] whitespace-nowrap"
+              className="px-2 py-3 sm:px-8 sm:py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-lg font-bold text-base sm:text-lg hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95 font-sans flex items-center justify-center gap-1 sm:gap-2 w-full sm:w-auto sm:min-w-[280px] whitespace-nowrap shadow-sm"
             >
-              <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />
               Invite <span className="hidden sm:inline">an</span> Instructor
             </button>
           </div>
@@ -287,7 +286,7 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
       <HomeContent />
     </Suspense>
   );

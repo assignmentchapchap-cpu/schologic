@@ -7,18 +7,18 @@ import { AITeachingAssistantFAQ } from '@/components/features/ai-teaching-assist
 import { RelatedFeatures } from '@/components/features/RelatedFeatures';
 
 export const metadata: Metadata = {
-    title: 'AI Teaching Assistant for Grading | Schologic LMS',
-    description: 'Cut grading time by 80% with Schologic\'s AI Teaching Assistant. Automate rubric-based feedback, generate balanced rubrics, and reduce instructor burnout across universities and colleges in Kenya.',
-    keywords: ['AI assistant', 'AI teaching assistant', 'AI grading', 'distance learning', 'Kenya', 'rubric generator', 'automated feedback', 'instructor burnout', 'grading automation'],
+    title: 'AI Assistant for Grading | Schologic LMS',
+    description: 'Cut grading time by up to 80% with Schologic\'s AI Assistant. Automate rubric-based feedback, generate balanced rubrics, and reduce instructor burnout across universities and colleges in Kenya.',
+    keywords: ['AI assistant', 'AI grading', 'distance learning', 'Kenya', 'rubric generator', 'automated feedback', 'instructor burnout', 'grading automation'],
     openGraph: {
-        title: 'AI Teaching Assistant for Grading | Schologic LMS',
-        description: 'Cut grading time by 80% with Schologic\'s AI Teaching Assistant. Automate rubric-based feedback and reduce instructor burnout.',
+        title: 'AI Assistant for Grading | Schologic LMS',
+        description: 'Cut grading time by up to 80% with Schologic\'s AI Assistant. Automate rubric-based feedback and reduce instructor burnout.',
     },
     other: {
         'application/ld+json': JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'SoftwareApplication',
-            'name': 'Schologic AI Teaching Assistant',
+            'name': 'Schologic AI Assistant',
             'applicationCategory': 'EducationalApplication',
             'operatingSystem': 'Web',
             'offers': { '@type': 'Offer', 'price': '0', 'priceCurrency': 'USD' },
@@ -37,8 +37,8 @@ export default function AITeachingAssistantPage() {
         <div className="bg-slate-950 min-h-screen pb-0">
             <FeatureHero
                 title="Your 24/7 Grading Partner"
-                description="Reduce grading time by 75% without sacrificing quality. Schologic TA drafts feedback, generates rubrics, and guides you through the portal—the ideal companion for distance learning environments."
-                label="AI Teaching Assistant"
+                description="Reduce grading time by up to 80% without sacrificing quality. Schologic TA drafts feedback, generates rubrics, and guides you through the portal—the ideal companion for distance learning environments."
+                label="AI Assistant"
                 align="center"
                 visual={<SchologicTA />}
                 ctaText="Start a Free Account"

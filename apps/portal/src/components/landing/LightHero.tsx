@@ -21,7 +21,7 @@ export function LightHero() {
                         </h1>
 
                         <p className="text-lg md:text-xl text-slate-600 leading-10 md:leading-loose mb-10 font-light max-w-2xl">
-                            Save <span className="text-slate-900">80% of learning management time</span> with Schologic LMS. We unify AI teacher assistance, AI content detection, practicum management, and open educational resources into <span className="text-slate-900">one powerful platform</span>.
+                            Save <span className="text-slate-900">up to 80% of administrative time</span> with the Schologic <strong>Learning Management System (LMS)</strong>. We unify AI Assistant tasks, digital forensics, and open educational resources into <span className="text-slate-900">one powerful platform</span>.
                         </p>
 
                         {/* CTAs + Assurances Wrapper (Constrained Width on Desktop) */}

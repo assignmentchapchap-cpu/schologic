@@ -136,10 +136,10 @@ export const SystemEcosystemVisual = () => {
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            This interactive diagram demonstrates the Role-Based Access Control (RBAC) permissions model for VCs, Admins, and Instructors.
+                            This interactive diagram demonstrates the granular permissions within our <strong>Customized Dashboards</strong> and institutional governance model.
                         </p>
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            While this visualization shows the generic framework of access distribution, we understand that each institution has unique requirements that we seek to understand and configure during the trial period.
+                            While this visualization shows the generic framework of access distribution across different roles, we understand that each institution has unique requirements that we seek to understand and configure during the trial period.
                         </p>
                     </div>
                     <button
