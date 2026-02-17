@@ -180,3 +180,51 @@ export function JsonLdWebPage({ name, description }: { name: string; description
         />
     );
 }
+
+/**
+ * Renders WebSite schema with SearchAction.
+ * Helps Google show a sitelinks searchbox.
+ */
+export function JsonLdWebSite() {
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "url": "https://schologic.com",
+        "name": "Schologic",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://schologic.com/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    };
+
+    return (
+        <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+    );
+}
+
+/**
+ * Renders BreadcrumbList schema.
+ */
+export function JsonLdBreadcrumbList({ items }: { items: { name: string; item: string }[] }) {
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": items.map((item, index) => ({
+            "@type": "ListItem",
+            "position": index + 1,
+            "name": item.name,
+            "item": `https://schologic.com${item.item}`
+        }))
+    };
+
+    return (
+        <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+    );
+}

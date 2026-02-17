@@ -22,8 +22,34 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://schologic.com'),
   title: "Schologic LMS - Smart, Credible, and Flexible Higher Education, with AI",
   description: "Cut grading time by up to 80%, eliminate textbook costs, and protect academic integrity — without switching between five different tools. Schologic LMS unifies AI grading, content detection, class management, and open educational resources into one platform designed for African universities and colleges.",
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Schologic LMS',
+    description: 'The operating system for academic integrity and digital learning in Africa.',
+    url: 'https://schologic.com',
+    siteName: 'Schologic',
+    images: [
+      {
+        url: '/images/updated screenshots/dashboard.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Schologic LMS Dashboard',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Schologic LMS',
+    description: 'The operating system for academic integrity and digital learning in Africa.',
+    images: ['/images/updated screenshots/dashboard.webp'],
+  },
 };
 
 import { ToastProvider } from "@/context/ToastContext";

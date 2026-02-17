@@ -14,7 +14,7 @@ import {
     DeanDashboardVisual,
     SystemEcosystemVisual
 } from "@/components/landing/visuals/LazyVisuals";
-import { JsonLdFAQPage } from "@/components/seo/JsonLd";
+import { JsonLdFAQPage, JsonLdBreadcrumbList } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
     title: 'University LMS Kenya | Academic Integrity & Multi-Campus Management | Schologic',
@@ -33,6 +33,11 @@ const faqItems = [
 export default function UniversitiesPage() {
     return (
         <div>
+            <JsonLdBreadcrumbList items={[
+                { name: 'Home', item: '/' },
+                { name: 'Use Cases', item: '/use-cases' },
+                { name: 'Universities', item: '/use-cases/universities' }
+            ]} />
             <JsonLdFAQPage items={faqItems} />
             {/* 1. Hero Section */}
             <UseCasesHero

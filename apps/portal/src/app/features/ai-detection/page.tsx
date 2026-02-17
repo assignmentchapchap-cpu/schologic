@@ -1,4 +1,5 @@
 import { FeatureHero } from '@/components/features/FeatureHero';
+import { JsonLdBreadcrumbList } from "@/components/seo/JsonLd";
 import IntegrityHub from '@/components/landing/IntegrityHub';
 import { AIDetectionFAQ } from '@/components/features/ai-detection/AIDetectionFAQ';
 import { RelatedFeatures } from '@/components/features/RelatedFeatures';
@@ -34,6 +35,11 @@ export const metadata: Metadata = {
 export default function AIDetectionPage() {
     return (
         <div className="bg-slate-950 min-h-screen pb-0">
+            <JsonLdBreadcrumbList items={[
+                { name: 'Home', item: '/' },
+                { name: 'Features', item: '/features' },
+                { name: 'AI Detection', item: '/features/ai-detection' }
+            ]} />
             <FeatureHero
                 title="Evidence-Based Integrity Analysis"
                 description="Schologic uses a multi-model approach to detect AI-generated content with unparalleled accuracy. We provide transparent, granular reporting so you can make informed decisions."
