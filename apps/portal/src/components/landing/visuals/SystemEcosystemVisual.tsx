@@ -1,43 +1,121 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Shield, Users, Database, Globe, Lock, Info, X } from 'lucide-react';
+import { Database, Shield, GraduationCap, Settings, BookOpen, User, Info, X, ArrowRight, Globe, Lock } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
+const roles = [
+    {
+        id: 'vc',
+        label: 'Vice Chancellor',
+        shortLabel: 'VC',
+        icon: Shield,
+        color: 'indigo',
+        sends: 'Policy & Strategy',
+        receives: 'Executive Insights',
+        permissions: ['View all campuses', 'Set academic policy', 'Accreditation reports'],
+    },
+    {
+        id: 'admin',
+        label: 'System Admin',
+        shortLabel: 'Admin',
+        icon: Settings,
+        color: 'slate',
+        sends: 'Config & Security',
+        receives: 'Audit Logs',
+        permissions: ['Manage users & roles', 'Security config', 'System health'],
+    },
+    {
+        id: 'hod',
+        label: 'Head of Dept',
+        shortLabel: 'HoD',
+        icon: GraduationCap,
+        color: 'emerald',
+        sends: 'Curriculum QA',
+        receives: 'Dept Analytics',
+        permissions: ['Curriculum compliance', 'Staff allocation', 'Grade oversight'],
+    },
+    {
+        id: 'instructor',
+        label: 'Instructor',
+        shortLabel: 'Instructor',
+        icon: BookOpen,
+        color: 'purple',
+        sends: 'Content & Grades',
+        receives: 'Class Analytics',
+        permissions: ['Create classes', 'Grade submissions', 'View own students'],
+    },
+    {
+        id: 'student',
+        label: 'Student',
+        shortLabel: 'Student',
+        icon: User,
+        color: 'blue',
+        sends: 'Submissions',
+        receives: 'Learning Materials',
+        permissions: ['Submit work', 'View grades', 'Access reader'],
+    },
+];
+
+const colorMap: Record<string, { bg: string; border: string; text: string; iconBg: string; ring: string }> = {
+    indigo: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', iconBg: 'bg-indigo-100', ring: 'ring-indigo-200' },
+    slate: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', iconBg: 'bg-slate-100', ring: 'ring-slate-200' },
+    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', iconBg: 'bg-emerald-100', ring: 'ring-emerald-200' },
+    purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', iconBg: 'bg-purple-100', ring: 'ring-purple-200' },
+    blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', iconBg: 'bg-blue-100', ring: 'ring-blue-200' },
+};
+
+function RoleNode({ role, isActive, onHover }: {
+    role: typeof roles[0];
+    isActive: boolean;
+    onHover: (id: string | null) => void;
+}) {
+    const colors = colorMap[role.color];
+    return (
+        <div
+            onMouseEnter={() => onHover(role.id)}
+            onMouseLeave={() => onHover(null)}
+            onClick={() => onHover(isActive ? null : role.id)}
+            className={cn(
+                "relative flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-xl border transition-all duration-300 cursor-pointer md:cursor-default bg-white",
+                isActive
+                    ? `${colors.border} shadow-md ring-2 ${colors.ring} scale-[1.03]`
+                    : "border-slate-100 hover:border-slate-200 text-slate-400"
+            )}
+        >
+            <div className={cn(
+                "w-8 h-8 md:w-9 md:h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                isActive ? colors.iconBg : "bg-slate-50"
+            )}>
+                <role.icon className={cn("w-4 h-4 transition-colors", isActive ? colors.text : "text-slate-400")} />
+            </div>
+            <div className="min-w-0">
+                <div className={cn("font-bold text-[10px] md:text-xs transition-colors truncate", isActive ? "text-slate-900" : "text-slate-600")}>
+                    {role.label}
+                </div>
+                <div className="text-[9px] md:text-[10px] text-slate-400 truncate">
+                    {isActive ? role.receives : role.sends}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export const SystemEcosystemVisual = () => {
-    const [activeLayer, setActiveLayer] = useState<'governance' | 'infrastructure' | 'access'>('governance');
+    const [activeRole, setActiveRole] = useState<string | null>(null);
     const [showDescription, setShowDescription] = useState(false);
 
-    const layers = {
-        governance: {
-            title: "Policy \u0026 Governance",
-            desc: "Centrally managed academic policies, grading rubrics, and institutional compliance standards.",
-            icon: Shield,
-            color: "text-indigo-600",
-            bg: "bg-indigo-50",
-            border: "border-indigo-100"
-        },
-        infrastructure: {
-            title: "Secure Infrastructure",
-            desc: "Encrypted data sovereignty layers with multi-campus redundancy and regional compliance.",
-            icon: Database,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
-            border: "border-emerald-100"
-        },
-        access: {
-            title: "Identity \u0026 Access",
-            desc: "Granular RBAC ensures users only access data relevant to their role and department.",
-            icon: Users,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
-            border: "border-amber-100"
-        }
-    };
+    const vc = roles[0];
+    const admin = roles[1];
+    const hod = roles[2];
+    const instructor = roles[3];
+    const student = roles[4];
+
+    const activeRoleData = roles.find(r => r.id === activeRole);
 
     return (
         <div
-            className="w-full relative bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
+            className="w-full relative bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden font-sans"
             role="img"
             aria-label="Relationship diagram showing institutional governance, secure infrastructure, and role-based access"
             data-nosnippet
@@ -59,9 +137,6 @@ export const SystemEcosystemVisual = () => {
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            This diagram showcases Schologic's institutional governance and data sovereignty framework.
-                        </p>
-                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
                             Schologic provides unified oversight without sacrificing local autonomy. Whether managing a single campus or a multi-institution system, our granular RBAC ensures that <strong>data sovereignty</strong> is maintained while enabling centralized policy enforcement.
                         </p>
                     </div>
@@ -76,8 +151,11 @@ export const SystemEcosystemVisual = () => {
 
             {/* Header */}
             <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                <div>
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Institutional Architecture</h3>
+                <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-md bg-amber-100 flex items-center justify-center">
+                        <Database className="w-3.5 h-3.5 text-amber-600" />
+                    </div>
+                    <span className="font-bold text-slate-900 text-[10px] md:text-sm uppercase tracking-wider">Role-Based Access Control</span>
                 </div>
                 <button
                     onClick={() => setShowDescription(!showDescription)}
@@ -85,80 +163,93 @@ export const SystemEcosystemVisual = () => {
                         "p-2 rounded-lg transition-all",
                         showDescription ? "bg-indigo-600 text-white" : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                     )}
-                    title="Show Description"
                 >
                     <Info className="w-5 h-5" />
                 </button>
             </div>
 
-            <div className="p-4 md:p-8">
-                {/* 3D-ish Stack */}
-                <div className="relative h-64 md:h-80 flex flex-col items-center justify-center">
-                    {(Object.keys(layers) as Array<keyof typeof layers>).map((key, i) => {
-                        const layer = layers[key];
-                        const isActive = activeLayer === key;
+            <div className="p-4 md:p-10 relative">
+                {/* SVG Connection Lines */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-40 md:opacity-100" preserveAspectRatio="none">
+                    {/* VC to Core */}
+                    <line x1="50%" y1="18%" x2="50%" y2="42%" stroke={activeRole === 'vc' ? '#6366f1' : '#cbd5e1'} strokeWidth="2" strokeDasharray="4 4" className="transition-all duration-300" />
+                    {/* Admin to Core */}
+                    <line x1="25%" y1="32%" x2="42%" y2="48%" stroke={activeRole === 'admin' ? '#64748b' : '#cbd5e1'} strokeWidth="2" strokeDasharray="4 4" className="transition-all duration-300" />
+                    {/* HoD to Core */}
+                    <line x1="75%" y1="32%" x2="58%" y2="48%" stroke={activeRole === 'hod' ? '#10b981' : '#cbd5e1'} strokeWidth="2" strokeDasharray="4 4" className="transition-all duration-300" />
+                    {/* Instructor to Core */}
+                    <line x1="25%" y1="72%" x2="42%" y2="56%" stroke={activeRole === 'instructor' ? '#a855f7' : '#cbd5e1'} strokeWidth="2" strokeDasharray="4 4" className="transition-all duration-300" />
+                    {/* Student to Core */}
+                    <line x1="75%" y1="72%" x2="58%" y2="56%" stroke={activeRole === 'student' ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" strokeDasharray="4 4" className="transition-all duration-300" />
+                </svg>
 
-                        return (
-                            <button
-                                key={key}
-                                onClick={() => setActiveLayer(key)}
-                                className={cn(
-                                    "absolute w-full max-w-[280px] md:max-w-sm aspect-[3/1] rounded-2xl border-2 transition-all duration-500 shadow-lg flex items-center px-4 md:px-8 gap-4 md:gap-6",
-                                    layer.bg,
-                                    layer.border,
-                                    isActive ? "z-30 scale-105 -translate-y-4" : "z-10 hover:z-20",
-                                    i === 0 ? "top-0 translate-y-0" : i === 1 ? "top-1/4 translate-y-2 md:translate-y-4" : "top-2/4 translate-y-4 md:translate-y-8"
-                                )}
-                                style={{
-                                    transform: `translateY(${i * (isActive ? -10 : 20)}px) rotateX(15deg) rotateZ(-2deg)`,
-                                    opacity: isActive ? 1 : 0.7 + (i * 0.1)
-                                }}
-                            >
-                                <div className={cn("p-2 md:p-3 rounded-xl bg-white shadow-sm", layer.color)}>
-                                    <layer.icon className="w-5 h-5 md:w-6 h-6" />
-                                </div>
-                                <div className="text-left">
-                                    <h4 className={cn("font-black text-xs md:text-sm uppercase tracking-tight", layer.color)}>
-                                        {layer.title}
-                                    </h4>
-                                    <p className="text-[10px] md:text-xs text-slate-500 font-medium leading-tight">
-                                        {isActive ? "Active Monitoring" : "Integrated Layer"}
-                                    </p>
-                                </div>
-                                {isActive && (
-                                    <div className="ml-auto animate-pulse">
-                                        <div className={cn("w-2 h-2 rounded-full", layer.color.replace('text', 'bg'))}></div>
-                                    </div>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
+                {/* Diamond Grid Layout */}
+                <div className="relative z-10 flex flex-col items-center gap-4 md:gap-8">
 
-                {/* Layer Details Section */}
-                <div className="mt-8 p-4 md:p-6 bg-slate-50 rounded-xl border border-slate-100 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <div className="flex items-start gap-4">
-                        <div className={cn("p-2 rounded-lg bg-white shadow-sm", layers[activeLayer].color)}>
-                            {React.createElement(layers[activeLayer].icon, { className: "w-5 h-5" })}
+                    {/* Row 1: VC (centered) */}
+                    <div className="w-48 md:w-56">
+                        <RoleNode role={vc} isActive={activeRole === 'vc'} onHover={setActiveRole} />
+                    </div>
+
+                    {/* Row 2: Admin + HoD (spread) */}
+                    <div className="w-full flex justify-between gap-2 md:px-2">
+                        <div className="flex-1 max-w-[48%]">
+                            <RoleNode role={admin} isActive={activeRole === 'admin'} onHover={setActiveRole} />
                         </div>
-                        <div>
-                            <h4 className="font-bold text-slate-900 mb-1">{layers[activeLayer].title}</h4>
-                            <p className="text-sm text-slate-500 leading-relaxed">
-                                {layers[activeLayer].desc}
-                            </p>
+                        <div className="flex-1 max-w-[48%]">
+                            <RoleNode role={hod} isActive={activeRole === 'hod'} onHover={setActiveRole} />
+                        </div>
+                    </div>
+
+                    {/* Row 3: CORE DATABASE (centered) */}
+                    <div className="flex flex-col items-center py-2 md:py-6">
+                        <div className={cn(
+                            "relative w-20 h-20 md:w-32 md:h-32 rounded-full flex items-center justify-center transition-all duration-500",
+                            activeRole ? "bg-amber-50 ring-4 ring-amber-100" : "bg-amber-50/50 ring-2 ring-amber-100/30"
+                        )}>
+                            <div className="absolute inset-0 rounded-full ring-2 ring-amber-200/30 animate-pulse"></div>
+                            <div className="relative flex flex-col items-center">
+                                <Database className="w-5 h-5 md:w-6 md:h-6 text-amber-600 mb-1" />
+                                <span className="text-[8px] md:text-[9px] font-black text-amber-700 uppercase tracking-wider text-center">Core Data</span>
+                            </div>
+                        </div>
+                        {/* Active role permission tooltip */}
+                        <div className={cn(
+                            "mt-3 transition-all duration-300 text-center",
+                            activeRoleData ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 h-0"
+                        )}>
+                            {activeRoleData && (
+                                <div className="inline-flex flex-wrap gap-1 justify-center max-w-xs px-4">
+                                    {activeRoleData.permissions.map((perm, i) => (
+                                        <span key={i} className="text-[8px] md:text-[9px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-bold uppercase tracking-tight whitespace-nowrap">
+                                            {perm}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Row 4: Instructor + Student (spread) */}
+                    <div className="w-full flex justify-between gap-2 md:px-2">
+                        <div className="flex-1 max-w-[48%]">
+                            <RoleNode role={instructor} isActive={activeRole === 'instructor'} onHover={setActiveRole} />
+                        </div>
+                        <div className="flex-1 max-w-[48%]">
+                            <RoleNode role={student} isActive={activeRole === 'student'} onHover={setActiveRole} />
                         </div>
                     </div>
                 </div>
 
-                {/* Footer Badges */}
-                <div className="mt-6 flex flex-wrap gap-2 md:gap-4 justify-center">
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                {/* Footer Stats Badges */}
+                <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap items-center justify-center gap-2 md:gap-4">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-widest">
                         <Globe className="w-3 h-3" />
-                        GDPR Compliant
+                        Regional Compliance
                     </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-widest">
                         <Lock className="w-3 h-3" />
-                        AES-256
+                        AES-256 Sovereignty
                     </div>
                 </div>
             </div>
