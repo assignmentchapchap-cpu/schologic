@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Users, FileText, CheckCircle, Upload, Mail, CheckSquare, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
+import { Users, FileText, CheckCircle, Upload, Mail, CheckSquare, ChevronRight, ChevronLeft, ChevronDown, Info, X } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const steps = [
@@ -45,20 +45,65 @@ const steps = [
 
 export const PracticumProcessVisual = () => {
     const [activeStep, setActiveStep] = useState(1);
+    const [showDescription, setShowDescription] = useState(false);
 
     return (
         <div
-            className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-emerald-100 overflow-hidden overflow-x-auto"
+            className="w-full relative bg-white rounded-2xl shadow-xl border border-emerald-100 overflow-hidden"
             role="img"
             aria-label="Diagram of the digital practicum supervision workflow and stages"
             data-nosnippet
         >
-            <div className="bg-emerald-50 p-4 border-b border-emerald-100 text-center">
-                <h3 className="text-emerald-800 font-bold mb-1">Practicum Workflow</h3>
-                <p className="text-emerald-600 text-xs uppercase tracking-wider font-semibold">Interactive Process</p>
+            {/* SEO Description Overlay */}
+            {showDescription && (
+                <div className="absolute inset-0 z-50 bg-white/98 backdrop-blur-sm p-6 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2 text-emerald-600">
+                            <Info className="w-5 h-5" />
+                            <h4 className="font-bold">Visual Description</h4>
+                        </div>
+                        <button
+                            onClick={() => setShowDescription(false)}
+                            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                        >
+                            <X className="w-5 h-5 text-slate-400" />
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                            This diagram outlines the digital practicum supervision workflow and its various stages.
+                        </p>
+                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                            The practicum process is streamlined to ensure that instructors can oversee field work remotely. This visualization shows the six key steps in practicum management, from placement to final grading.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setShowDescription(false)}
+                        className="w-full py-3 bg-slate-900 text-white rounded-lg font-bold text-sm"
+                    >
+                        Got it, back to visual
+                    </button>
+                </div>
+            )}
+
+            <div className="bg-emerald-50 p-4 border-b border-emerald-100 flex items-center justify-between">
+                <div className="flex-1 text-center pl-8">
+                    <h3 className="text-emerald-800 font-bold mb-1">Practicum Workflow</h3>
+                    <p className="text-emerald-600 text-xs uppercase tracking-wider font-semibold">Interactive Process</p>
+                </div>
+                <button
+                    onClick={() => setShowDescription(!showDescription)}
+                    className={cn(
+                        "p-2 rounded-lg transition-all shrink-0",
+                        showDescription ? "bg-emerald-600 text-white" : "bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
+                    )}
+                    title="Show Description"
+                >
+                    <Info className="w-5 h-5" />
+                </button>
             </div>
 
-            <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-12 md:gap-y-24 min-w-[300px]">
+            <div className="p-3 md:p-8 grid grid-cols-2 gap-3 md:gap-x-12 gap-y-8 md:gap-y-24 min-w-[280px]">
                 {/* Reorder steps for visual snake flow: 1, 2, 4, 3, 5, 6 */}
                 {/* Row 1: 1(L), 2(R) */}
                 {/* Row 2: 4(L), 3(R) -> Swapped to force standard L-to-R DOMan order */}
@@ -79,7 +124,7 @@ export const PracticumProcessVisual = () => {
                             <div
                                 onMouseEnter={() => setActiveStep(step.id)}
                                 className={cn(
-                                    "relative flex items-center gap-4 p-4 rounded-xl transition-all duration-300 cursor-default border z-10 bg-white h-full",
+                                    "relative flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl transition-all duration-300 cursor-default border z-10 bg-white h-full",
                                     isActive
                                         ? "shadow-md ring-1 ring-amber-200 border-amber-200 scale-[1.05]"
                                         : "hover:bg-slate-50 border-slate-100 hover:border-slate-200"
@@ -87,33 +132,33 @@ export const PracticumProcessVisual = () => {
                             >
                                 {/* Icon Bubble */}
                                 <div className={cn(
-                                    "relative z-10 w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300 shadow-sm",
+                                    "relative z-10 w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0 transition-colors duration-300 shadow-sm",
                                     isActive ? "bg-amber-100 text-amber-600" :
                                         isCompleted ? "bg-emerald-100 text-emerald-600" :
                                             "bg-slate-100 text-slate-400 group-hover:bg-slate-200"
                                 )}>
-                                    <step.icon className="w-5 h-5" />
+                                    <step.icon className="w-4 h-4 md:w-5 h-5" />
                                 </div>
 
                                 {/* Content */}
                                 <div className="flex-1 min-w-0 text-left">
-                                    <div className="flex justify-between items-center mb-1">
+                                    <div className="flex justify-between items-center mb-0.5 md:mb-1">
                                         <h4 className={cn(
-                                            "font-bold text-sm transition-colors",
-                                            isActive ? "text-amber-900" :
+                                            "font-bold text-[11px] md:text-sm transition-colors leading-tight",
+                                            isActive ? "text-slate-900" :
                                                 isCompleted ? "text-emerald-900" : "text-slate-600"
                                         )}>
                                             {step.title}
                                         </h4>
                                         {isActive && (
-                                            <span className="text-[10px] font-bold text-amber-600 bg-white px-2 py-0.5 rounded-full shadow-sm border border-amber-100 animate-in fade-in zoom-in duration-300 shrink-0">
+                                            <span className="text-[8px] md:text-[10px] font-bold text-amber-600 bg-white px-1.5 py-0.5 rounded-full shadow-sm border border-amber-100 animate-in fade-in zoom-in duration-300 shrink-0">
                                                 Active
                                             </span>
                                         )}
                                     </div>
 
                                     <p className={cn(
-                                        "text-xs leading-relaxed transition-all duration-300",
+                                        "text-[9px] md:text-xs leading-tight md:leading-relaxed transition-all duration-300 line-clamp-2 md:line-clamp-none",
                                         isActive ? "text-slate-600" : "text-slate-400"
                                     )}>
                                         {step.description}

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, X } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 const slides = [
     { src: '/images/mobile screenshots/student dashboard.webp', alt: 'Student Dashboard - Overview of courses, upcoming deadlines, and academic progress at a glance.' },
@@ -19,6 +20,8 @@ const AUTOPLAY_INTERVAL = 4000;
 export const StudentMobileCarousel = () => {
     const [current, setCurrent] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const [showDescription, setShowDescription] = useState(false);
+
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const touchStartX = useRef<number | null>(null);
 
@@ -94,6 +97,50 @@ export const StudentMobileCarousel = () => {
             aria-label="Student Mobile App Screenshots showing dashboard and grades"
             data-nosnippet
         >
+            {/* SEO Description Overlay */}
+            {showDescription && (
+                <div className="absolute inset-0 z-50 bg-white/98 backdrop-blur-sm p-6 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300 rounded-2xl">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2 text-indigo-600">
+                            <Info className="w-5 h-5" />
+                            <h4 className="font-bold">Visual Description</h4>
+                        </div>
+                        <button
+                            onClick={() => setShowDescription(false)}
+                            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                        >
+                            <X className="w-5 h-5 text-slate-400" />
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                            These screenshots showcase the student mobile experience, including the dashboard and grade tracking views.
+                        </p>
+                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                            Schologic has been designed with the needs of students in mind. Through optimized mobile functions, our app helps ensure that no student misses an announcement, deadline, or resource.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setShowDescription(false)}
+                        className="w-full py-3 bg-slate-900 text-white rounded-lg font-bold text-sm"
+                    >
+                        Got it, back to visual
+                    </button>
+                </div>
+            )}
+
+            {/* Info Toggle Button */}
+            <button
+                onClick={() => setShowDescription(!showDescription)}
+                className={cn(
+                    "absolute top-4 right-4 z-40 p-2 rounded-full shadow-lg transition-all",
+                    showDescription ? "bg-indigo-600 text-white" : "bg-white text-indigo-600 hover:bg-indigo-50 border border-slate-100"
+                )}
+                title="Show Description"
+            >
+                <Info className="w-5 h-5" />
+            </button>
+
             {/* Left Arrow */}
             <button
                 onClick={prev}
@@ -103,8 +150,8 @@ export const StudentMobileCarousel = () => {
                 <ChevronLeft className="w-5 h-5" />
             </button>
 
-            {/* Phone Frame - 280px for better legibility */}
-            <div className="relative mx-2 md:mx-12 w-[280px] shrink-0">
+            {/* Phone Frame - 320px for better legibility on mobile, 280px on desktop is fine but let's keep it consistent or proportional */}
+            <div className="relative mx-1 md:mx-12 w-[320px] md:w-[320px] shrink-0">
                 {/* Phone Body */}
                 <div className="relative bg-slate-900 rounded-[2.5rem] p-2 shadow-2xl border border-slate-700">
                     {/* Notch */}

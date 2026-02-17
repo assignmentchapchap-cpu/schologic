@@ -2,12 +2,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Globe, CheckCircle, ChevronDown, Database, Search, Menu, MessageSquare, Download, FileText, Plus, ChevronRight } from 'lucide-react';
+import { BookOpen, Globe, CheckCircle, ChevronDown, Database, Search, Menu, MessageSquare, Download, FileText, Plus, ChevronRight, Info, X } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 export const ZTCIngestionVisual = () => {
     const [activeSource, setActiveSource] = useState<'libretexts' | 'openstax'>('libretexts');
     const [progress, setProgress] = useState(0); // 0: Idle, 1: Download, 2: Import, 3: Assign, 4: Done
+    const [showDescription, setShowDescription] = useState(false);
 
     // Reset and trigger animation sequence on source change
     useEffect(() => {
@@ -25,11 +26,43 @@ export const ZTCIngestionVisual = () => {
 
     return (
         <div
-            className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans flex flex-col overflow-x-auto"
+            className="w-full relative bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans flex flex-col"
             role="img"
             aria-label="Universal OER Ingestion animation showing import process from LibreTexts and OpenStax"
             data-nosnippet
         >
+            {/* SEO Description Overlay */}
+            {showDescription && (
+                <div className="absolute inset-0 z-50 bg-white/98 backdrop-blur-sm p-6 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2 text-indigo-600">
+                            <Info className="w-5 h-5" />
+                            <h4 className="font-bold">Visual Description</h4>
+                        </div>
+                        <button
+                            onClick={() => setShowDescription(false)}
+                            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                        >
+                            <X className="w-5 h-5 text-slate-400" />
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                            This Universal OER Ingestion animation showcases the import process from global repositories like LibreTexts and OpenStax.
+                        </p>
+                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                            As indicated here, the process begins with searching for a resource and adding it to the Schologic LMS library, from where you can choose follow-up actions like course assignment or curriculum remixing.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setShowDescription(false)}
+                        className="w-full py-3 bg-slate-900 text-white rounded-lg font-bold text-sm"
+                    >
+                        Got it, back to visual
+                    </button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
@@ -38,13 +71,25 @@ export const ZTCIngestionVisual = () => {
                     </div>
                     <span className="font-semibold text-slate-700 text-sm">Universal OER Ingestion</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
-                    <CheckCircle className="w-3 h-3 text-emerald-600" />
-                    <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">IMSCC Verified</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowDescription(!showDescription)}
+                        className={cn(
+                            "p-2 rounded-lg transition-all",
+                            showDescription ? "bg-indigo-600 text-white" : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                        )}
+                        title="Show Description"
+                    >
+                        <Info className="w-5 h-5" />
+                    </button>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
+                        <CheckCircle className="w-3 h-3 text-emerald-600" />
+                        <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">IMSCC Verified</span>
+                    </div>
                 </div>
             </div>
 
-            <div className="p-4 md:p-6 bg-slate-50/50 flex-1 flex flex-col min-w-[500px]">
+            <div className="p-3 md:p-6 bg-slate-50/50 flex-1 flex flex-col">
 
                 {/* PHASE 1: SEARCH / SOURCE SELECTION */}
                 <div className="mb-4">
@@ -110,12 +155,12 @@ export const ZTCIngestionVisual = () => {
                 </div>
 
                 {/* PHASE 2-4: THE PIPELINE */}
-                <div className="flex-1 relative pl-8 md:pl-12 border-l-2 border-slate-200 ml-8 space-y-3 pb-2 pt-1">
+                <div className="flex-1 relative pl-6 md:pl-12 border-l-2 border-slate-200 ml-4 md:ml-8 space-y-3 pb-2 pt-1">
 
                     {/* Step 2: Download */}
                     <div className="relative group">
                         <div className={cn(
-                            "absolute -left-[61px] top-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-500 bg-white z-10",
+                            "absolute -left-[37px] md:-left-[61px] top-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-500 bg-white z-10",
                             progress >= 1 ? "border-indigo-500 scale-110" : "border-slate-200"
                         )}>
                             <div className={cn("w-2 h-2 rounded-full transition-colors duration-500", progress >= 1 ? "bg-indigo-500" : "bg-slate-200")}></div>
@@ -141,7 +186,7 @@ export const ZTCIngestionVisual = () => {
                     {/* Step 3: Import */}
                     <div className="relative group">
                         <div className={cn(
-                            "absolute -left-[61px] top-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-500 bg-white z-10",
+                            "absolute -left-[37px] md:-left-[61px] top-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-500 bg-white z-10",
                             progress >= 2 ? "border-indigo-500 scale-110" : "border-slate-200"
                         )}>
                             <div className={cn("w-2 h-2 rounded-full transition-colors duration-500", progress >= 2 ? "bg-indigo-500" : "bg-slate-200")}></div>
@@ -167,7 +212,7 @@ export const ZTCIngestionVisual = () => {
                     {/* Step 4: Assign */}
                     <div className="relative group">
                         <div className={cn(
-                            "absolute -left-[61px] top-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-500 bg-white z-10",
+                            "absolute -left-[37px] md:-left-[61px] top-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-500 bg-white z-10",
                             progress >= 3 ? "border-indigo-500 scale-110" : "border-slate-200"
                         )}>
                             <div className={cn("w-2 h-2 rounded-full transition-colors duration-500", progress >= 3 ? "bg-indigo-500" : "bg-slate-200")}></div>

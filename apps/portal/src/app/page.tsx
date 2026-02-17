@@ -62,7 +62,7 @@ function HomeContent() {
         description="Detect AI-generated content with 99% accuracy. We strictly avoid 'black box' guessing by using a transparent, multi-stage analysis engine."
         align="left"
         visual={<IntegrityCheckVisual />}
-        visualScaleClass="scale-[0.75] group-hover:scale-[0.8] origin-center"
+        visualScaleClass="scale-[0.95] md:scale-[0.75] group-hover:scale-[1.05] md:group-hover:scale-[0.8] origin-center"
         features={[
           {
             icon: FileText,
@@ -90,6 +90,7 @@ function HomeContent() {
         align="right"
         className="bg-slate-50"
         visual={<TAInsightsVisual />}
+        visualScaleClass="scale-[0.9] md:scale-[0.65] group-hover:scale-[0.95] md:group-hover:scale-[0.7] origin-center"
         features={[
           {
             icon: Sparkles,
@@ -117,6 +118,7 @@ function HomeContent() {
         align="left"
         className="bg-white"
         visual={<PracticumProcessVisual />}
+        visualScaleClass="scale-[0.9] md:scale-[0.65] group-hover:scale-[0.95] md:group-hover:scale-[0.7] origin-center"
         features={[
           {
             icon: MapPin,
@@ -144,7 +146,7 @@ function HomeContent() {
         align="right"
         className="bg-slate-50"
         visual={<ZTCIngestionVisual />}
-        visualScaleClass="scale-[0.65] group-hover:scale-[0.67] origin-center"
+        visualScaleClass="scale-[0.9] md:scale-[0.65] group-hover:scale-[0.95] md:group-hover:scale-[0.67] origin-center"
         features={[
           {
             icon: BookOpen,
@@ -172,7 +174,7 @@ function HomeContent() {
         align="left"
         className="bg-white"
         visual={<StudentMobileCarousel />}
-        visualScaleClass="scale-[0.75] group-hover:scale-[0.8] origin-center"
+        visualScaleClass="scale-[0.9] md:scale-[0.75] group-hover:scale-[0.95] md:group-hover:scale-[0.8] origin-center"
         features={[
           {
             icon: Smartphone,
@@ -200,7 +202,7 @@ function HomeContent() {
         align="right"
         className="bg-slate-50"
         visual={<SystemEcosystemVisual />}
-        visualScaleClass="scale-[0.75] group-hover:scale-[0.8] origin-center"
+        visualScaleClass="scale-[0.9] md:scale-[0.75] group-hover:scale-[0.95] md:group-hover:scale-[0.8] origin-center"
         features={[
           {
             icon: Eye,

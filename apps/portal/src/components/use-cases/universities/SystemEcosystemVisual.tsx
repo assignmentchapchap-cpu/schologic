@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Database, Shield, GraduationCap, Settings, BookOpen, User } from 'lucide-react';
+import { Database, Shield, GraduationCap, Settings, BookOpen, User, Info, X } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const roles = [
@@ -102,6 +102,7 @@ function RoleNode({ role, isActive, onHover }: {
 
 export const SystemEcosystemVisual = () => {
     const [activeRole, setActiveRole] = useState<string | null>(null);
+    const [showDescription, setShowDescription] = useState(false);
 
     const vc = roles[0];
     const admin = roles[1];
@@ -113,11 +114,43 @@ export const SystemEcosystemVisual = () => {
 
     return (
         <div
-            className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans"
+            className="w-full relative bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden font-sans"
             role="img"
             aria-label="Interactive Diagram showing Role-Based Access Control permissions for VCs, Admins, and Instructors"
             data-nosnippet
         >
+            {/* SEO Description Overlay */}
+            {showDescription && (
+                <div className="absolute inset-0 z-50 bg-white/98 backdrop-blur-sm p-6 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2 text-indigo-600">
+                            <Info className="w-5 h-5" />
+                            <h4 className="font-bold">Visual Description</h4>
+                        </div>
+                        <button
+                            onClick={() => setShowDescription(false)}
+                            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                        >
+                            <X className="w-5 h-5 text-slate-400" />
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                            This interactive diagram demonstrates the Role-Based Access Control (RBAC) permissions model for VCs, Admins, and Instructors.
+                        </p>
+                        <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                            While this visualization shows the generic framework of access distribution, we understand that each institution has unique requirements that we seek to understand and configure during the trial period.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setShowDescription(false)}
+                        className="w-full py-3 bg-slate-900 text-white rounded-lg font-bold text-sm"
+                    >
+                        Got it, back to visual
+                    </button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="bg-slate-50 px-6 py-3 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -126,9 +159,21 @@ export const SystemEcosystemVisual = () => {
                     </div>
                     <span className="font-semibold text-slate-700 text-sm">Role-Based Access Control</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">RBAC Active</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowDescription(!showDescription)}
+                        className={cn(
+                            "p-2 rounded-lg transition-all",
+                            showDescription ? "bg-indigo-600 text-white" : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                        )}
+                        title="Show Description"
+                    >
+                        <Info className="w-5 h-5" />
+                    </button>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">RBAC Active</span>
+                    </div>
                 </div>
             </div>
 
