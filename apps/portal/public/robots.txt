@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /login
+Disallow: /instructor/
+Disallow: /student/
+Disallow: /(auth)/
+
+Sitemap: https://schologic.com/sitemap.xml

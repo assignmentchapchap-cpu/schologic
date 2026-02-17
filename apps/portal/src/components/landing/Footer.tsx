@@ -111,10 +111,15 @@ export default function Footer() {
                         </FooterColumn>
                     </div>
 
-                    <div className="border-t border-slate-900 mt-12 pt-8 flex flex-col md:row items-center justify-between gap-4">
-                        <p className="text-slate-600 text-xs font-mono">
-                            © {new Date().getFullYear()} Schologic LMS. All rights reserved.
-                        </p>
+                    <div className="border-t border-slate-900 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
+                            <p className="text-slate-600 text-xs font-mono">
+                                © {new Date().getFullYear()} Schologic LMS. All rights reserved.
+                            </p>
+                            <Link href="/sitemap.xml" className="text-slate-600 text-[10px] uppercase tracking-widest hover:text-indigo-400 transition-colors">
+                                Sitemap
+                            </Link>
+                        </div>
                         <div className="flex gap-6">
                             <Github className="w-4 h-4 text-slate-600 hover:text-white transition-colors cursor-pointer" />
                             <Twitter className="w-4 h-4 text-slate-600 hover:text-white transition-colors cursor-pointer" />
