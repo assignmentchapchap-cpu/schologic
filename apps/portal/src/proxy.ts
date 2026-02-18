@@ -33,9 +33,33 @@ export async function proxy(request: NextRequest) {
     )
 
     const { data: { user } } = await supabase.auth.getUser()
-
-    // 2. Route Protection
     const path = request.nextUrl.pathname;
+
+    // 2. Global Account Status Check (Bypass for login/disabled/api)
+    const isPublicPath = path.startsWith('/login') || path.startsWith('/auth') || path.startsWith('/disabled') || path.startsWith('/api') || path === '/';
+
+    if (user && !isPublicPath) {
+        // If account is marked as inactive in metadata, redirect to disabled
+        if (user.user_metadata?.is_active === false) {
+            return NextResponse.redirect(new URL('/disabled', request.url))
+        }
+    }
+
+    // 3. Route Protection
+
+    // Superadmin Routes
+    if (path.startsWith('/admin')) {
+        if (!user) {
+            return NextResponse.redirect(new URL('/login?role=superadmin', request.url))
+        }
+
+        // Strict Superadmin Check
+        if (user.user_metadata?.role !== 'superadmin') {
+            // Non-admins attempting to access /admin are kicked to their respective dashboards
+            const dashboard = user.user_metadata?.role === 'student' ? '/student/dashboard' : '/instructor/dashboard';
+            return NextResponse.redirect(new URL(dashboard, request.url));
+        }
+    }
 
     // Instructor Routes
     if (path.startsWith('/instructor') && !path.startsWith('/instructor/login')) {

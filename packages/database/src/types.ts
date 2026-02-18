@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_usage_logs: {
+        Row: {
+          completion_tokens: number | null
+          created_at: string | null
+          endpoint: string
+          id: string
+          instructor_id: string | null
+          is_demo: boolean | null
+          model: string | null
+          prompt_tokens: number | null
+          provider: string | null
+          total_tokens: number | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          instructor_id?: string | null
+          is_demo?: boolean | null
+          model?: string | null
+          prompt_tokens?: number | null
+          provider?: string | null
+          total_tokens?: number | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          instructor_id?: string | null
+          is_demo?: boolean | null
+          model?: string | null
+          prompt_tokens?: number | null
+          provider?: string | null
+          total_tokens?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_logs_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_tags: {
         Row: {
           asset_id: string
@@ -328,6 +375,44 @@ export type Database = {
           },
         ]
       }
+      feedback: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          status: string | null
+          subject: string | null
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          subject?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          subject?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institutions: {
         Row: {
           id: string
@@ -394,32 +479,57 @@ export type Database = {
         }
         Relationships: []
       }
-      kb_embeddings: {
+      messages: {
         Row: {
           content: string
           created_at: string | null
-          embedding: string | null
           id: string
-          metadata: Json | null
-          updated_at: string | null
+          is_read: boolean | null
+          parent_id: string | null
+          receiver_id: string
+          sender_id: string
         }
         Insert: {
           content: string
           created_at?: string | null
-          embedding?: string | null
           id?: string
-          metadata?: Json | null
-          updated_at?: string | null
+          is_read?: boolean | null
+          parent_id?: string | null
+          receiver_id: string
+          sender_id: string
         }
         Update: {
           content?: string
           created_at?: string | null
-          embedding?: string | null
           id?: string
-          metadata?: Json | null
-          updated_at?: string | null
+          is_read?: boolean | null
+          parent_id?: string | null
+          receiver_id?: string
+          sender_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "messages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -598,6 +708,13 @@ export type Database = {
             columns: ["practicum_id"]
             isOneToOne: false
             referencedRelation: "practicums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practicum_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -806,6 +923,8 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          country: string | null
+          demo_converted_at: string | null
           email: string | null
           first_name: string | null
           full_name: string | null
@@ -813,8 +932,12 @@ export type Database = {
           id: string
           institution_id: string | null
           is_active: boolean | null
+          is_demo: boolean | null
           last_name: string | null
+          phone: string | null
           preferences: Json | null
+          professional_affiliation: string | null
+          referred_by: string | null
           registration_number: string | null
           role: string | null
           settings: Json | null
@@ -823,6 +946,8 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          country?: string | null
+          demo_converted_at?: string | null
           email?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -830,8 +955,12 @@ export type Database = {
           id: string
           institution_id?: string | null
           is_active?: boolean | null
+          is_demo?: boolean | null
           last_name?: string | null
+          phone?: string | null
           preferences?: Json | null
+          professional_affiliation?: string | null
+          referred_by?: string | null
           registration_number?: string | null
           role?: string | null
           settings?: Json | null
@@ -840,6 +969,8 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          country?: string | null
+          demo_converted_at?: string | null
           email?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -847,8 +978,12 @@ export type Database = {
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
+          is_demo?: boolean | null
           last_name?: string | null
+          phone?: string | null
           preferences?: Json | null
+          professional_affiliation?: string | null
+          referred_by?: string | null
           registration_number?: string | null
           role?: string | null
           settings?: Json | null
@@ -862,7 +997,41 @@ export type Database = {
             referencedRelation: "institutions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          recipient_email: string
+          sender_email: string
+          sender_name: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          recipient_email: string
+          sender_email: string
+          sender_name: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          recipient_email?: string
+          sender_email?: string
+          sender_name?: string
+          status?: string | null
+        }
+        Relationships: []
       }
       submissions: {
         Row: {
@@ -928,6 +1097,41 @@ export type Database = {
           },
         ]
       }
+      system_errors: {
+        Row: {
+          created_at: string | null
+          error_message: string
+          id: string
+          path: string | null
+          stack_trace: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message: string
+          id?: string
+          path?: string | null
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string
+          id?: string
+          path?: string | null
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_errors_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           id: string
@@ -952,19 +1156,6 @@ export type Database = {
       is_student_of_class: {
         Args: { lookup_class_id: string }
         Returns: boolean
-      }
-      match_kb_documents: {
-        Args: {
-          match_count?: number
-          match_threshold?: number
-          query_embedding: string
-        }
-        Returns: {
-          content: string
-          id: string
-          metadata: Json
-          similarity: number
-        }[]
       }
     }
     Enums: {

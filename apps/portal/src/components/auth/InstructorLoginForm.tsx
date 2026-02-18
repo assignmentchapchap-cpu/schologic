@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from "@schologic/database";
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowRight, ArrowLeft, ChevronDown, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { PasswordInput } from '@/components/ui/PasswordInput';
@@ -20,9 +20,25 @@ const isPasswordStrong = (pwd: string) => {
     const hasUpperCase = /[A-Z]/.test(pwd);
     const hasLowerCase = /[a-z]/.test(pwd);
     const hasNumber = /[0-9]/.test(pwd);
-    // Special char validation removed per user request
     return hasMinLength && hasUpperCase && hasLowerCase && hasNumber;
 };
+
+// Comprehensive country codes list
+const COUNTRY_CODES = [
+    { code: '+254', country: 'Kenya', digits: 9 },
+    { code: '+234', country: 'Nigeria', digits: 10 },
+    { code: '+27', country: 'South Africa', digits: 9 },
+    { code: '+256', country: 'Uganda', digits: 9 },
+    { code: '+255', country: 'Tanzania', digits: 9 },
+    { code: '+1', country: 'USA/Canada', digits: 10 },
+    { code: '+44', country: 'United Kingdom', digits: 10 },
+    { code: '+91', country: 'India', digits: 10 },
+    { code: '+61', country: 'Australia', digits: 9 },
+].sort((a, b) => {
+    if (a.code === '+254') return -1;
+    if (b.code === '+254') return 1;
+    return a.country.localeCompare(b.country);
+});
 
 export default function InstructorLoginForm() {
     const router = useRouter();
@@ -45,6 +61,14 @@ export default function InstructorLoginForm() {
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
+
+    // Phase 1 Enhanced Signup Fields
+    const [affiliatedInstitution, setAffiliatedInstitution] = useState('');
+    const [phone, setPhone] = useState('');
+    const [countryCode, setCountryCode] = useState('+254');
+    const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+    const [countrySearch, setCountrySearch] = useState('');
+    const [phoneTouched, setPhoneTouched] = useState(false);
 
     // Status State
     const [loading, setLoading] = useState(false);
@@ -96,7 +120,12 @@ export default function InstructorLoginForm() {
                             first_name: capFirst,
                             last_name: capLast,
                             full_name: `${capFirst} ${capLast}`.trim(),
-                            role: 'instructor'
+                            role: 'instructor',
+                            professional_affiliation: affiliatedInstitution,
+                            phone: `${countryCode} ${phone}`,
+                            country: COUNTRY_CODES.find(c => c.code === countryCode)?.country || 'Unknown',
+                            is_active: true,
+                            is_demo: false
                         }
                     }
                 });
@@ -256,6 +285,90 @@ export default function InstructorLoginForm() {
                         className="bg-slate-50"
                         fullWidth
                     />
+                </div>
+            )}
+
+            {isSignUp && !isReset && (
+                <div className="space-y-4">
+                    <Input
+                        placeholder="Affiliated Institution (School / Company)"
+                        value={affiliatedInstitution}
+                        onChange={(e) => setAffiliatedInstitution(e.target.value)}
+                        required={isSignUp}
+                        className="bg-slate-50"
+                        fullWidth
+                    />
+
+                    <div>
+                        <div className="flex gap-2">
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                                    className="flex items-center gap-2 h-full px-3 py-2.5 border border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors min-w-[85px]"
+                                >
+                                    <span className="font-mono text-xs font-bold">{countryCode}</span>
+                                    <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {showCountryDropdown && (
+                                    <div className="absolute bottom-full left-0 mb-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-30 overflow-hidden ring-1 ring-black/5 animate-in slide-in-from-bottom-2 duration-200">
+                                        <div className="p-2 border-b border-slate-100 bg-slate-50">
+                                            <div className="relative">
+                                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    value={countrySearch}
+                                                    onChange={(e) => setCountrySearch(e.target.value)}
+                                                    placeholder="Find country..."
+                                                    className="w-full pl-7 pr-3 py-1 text-[11px] border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                                                    autoFocus
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="max-h-40 overflow-y-auto">
+                                            {COUNTRY_CODES.filter(c =>
+                                                c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
+                                                c.code.includes(countrySearch)
+                                            ).map(c => (
+                                                <button
+                                                    key={c.code}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setCountryCode(c.code);
+                                                        setShowCountryDropdown(false);
+                                                        setCountrySearch('');
+                                                    }}
+                                                    className={`w-full px-4 py-2 text-left text-[11px] hover:bg-indigo-50 flex items-center justify-between transition-colors ${countryCode === c.code ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600'}`}
+                                                >
+                                                    <span>{c.country}</span>
+                                                    <span className="text-slate-400 font-mono">{c.code}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex-1">
+                                <Input
+                                    type="tel"
+                                    placeholder="Phone Number (e.g. 712345678)"
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value.replace(/[^\d]/g, ''))}
+                                    onBlur={() => setPhoneTouched(true)}
+                                    required={isSignUp}
+                                    className="bg-slate-50"
+                                    fullWidth
+                                />
+                            </div>
+                        </div>
+                        {phoneTouched && phone.length > 0 && phone.length !== (COUNTRY_CODES.find(c => c.code === countryCode)?.digits || 9) && (
+                            <p className="text-[10px] text-red-500 mt-1 ml-1 animate-in fade-in">
+                                Phone number should be {COUNTRY_CODES.find(c => c.code === countryCode)?.digits || 9} digits for this country.
+                            </p>
+                        )}
+                    </div>
                 </div>
             )}
 
