@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { Search, Send, Plus, MoreVertical, Check, User, ArrowLeft, Loader2 } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Search, Send, Plus, Check, User, ArrowLeft, Loader2, Users, CheckCircle2 } from 'lucide-react';
 import { useMessages } from '@/context/MessageContext';
 import { useUser } from '@/context/UserContext';
 import { createClient } from "@schologic/database";
@@ -28,16 +28,15 @@ type Message = {
 };
 
 export default function MessagingDashboard() {
-    const { messages, markAsRead, sendMessage, loading: messagesLoading } = useMessages();
+    const { messages, markAsRead, sendMessage, loading: messagesLoading, selectedConversationId, setSelectedConversationId, openNewMessage } = useMessages();
     const { user } = useUser();
     const supabase = createClient();
 
-    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const [replyContent, setReplyContent] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [profiles, setProfiles] = useState<Record<string, Profile>>({});
-    const [isNewMessageModalOpen, setIsNewMessageModalOpen] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Group messages into conversations
     const conversations = useMemo(() => {
@@ -46,21 +45,39 @@ export default function MessagingDashboard() {
         const groups: Record<string, any> = {};
 
         messages.forEach(msg => {
-            const partnerId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
-            if (!groups[partnerId]) {
-                groups[partnerId] = {
-                    partnerId,
+            // Determine the conversation key: either a partnerId or a broadcastId
+            let key: string;
+            let isBroadcastGroup = false;
+
+            if (msg.sender_id === user.id && msg.broadcast_id) {
+                key = `broadcast:${msg.broadcast_id}`;
+                isBroadcastGroup = true;
+            } else {
+                key = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+            }
+
+            if (!groups[key]) {
+                groups[key] = {
+                    key,
+                    partnerId: isBroadcastGroup ? null : key,
+                    broadcastId: isBroadcastGroup ? msg.broadcast_id : null,
+                    isBroadcast: isBroadcastGroup,
                     messages: [],
                     lastMessage: msg,
                     unreadCount: 0
                 };
             }
-            groups[partnerId].messages.push(msg);
-            if (new Date(msg.created_at || 0) > new Date(groups[partnerId].lastMessage.created_at || 0)) {
-                groups[partnerId].lastMessage = msg;
+            groups[key].messages.push(msg);
+
+            const msgDate = new Date(msg.created_at || 0).getTime();
+            const lastMsgDate = new Date(groups[key].lastMessage.created_at || 0).getTime();
+
+            if (msgDate > lastMsgDate) {
+                groups[key].lastMessage = msg;
             }
+
             if (!msg.is_read && msg.receiver_id === user.id) {
-                groups[partnerId].unreadCount++;
+                groups[key].unreadCount++;
             }
         });
 
@@ -73,7 +90,8 @@ export default function MessagingDashboard() {
     useEffect(() => {
         const fetchProfiles = async () => {
             const missingIds = conversations
-                .map(c => c.partnerId)
+                .filter(c => !c.isBroadcast && c.partnerId)
+                .map(c => c.partnerId as string)
                 .filter(id => !profiles[id]);
 
             if (missingIds.length === 0) return;
@@ -96,40 +114,79 @@ export default function MessagingDashboard() {
     }, [conversations]);
 
     const activeConversation = useMemo(() =>
-        conversations.find(c => c.partnerId === selectedConversationId),
+        conversations.find(c => c.key === selectedConversationId),
         [conversations, selectedConversationId]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        if (activeConversation?.messages) {
+            scrollToBottom();
+        }
+    }, [activeConversation?.messages]);
 
     const handleSendReply = async () => {
         if (!replyContent.trim() || !selectedConversationId || !user) return;
         setIsSending(true);
-        const lastMsgId = activeConversation?.lastMessage?.id || null;
-        const { error } = await sendMessage(selectedConversationId, replyContent.trim(), lastMsgId);
+
+        // RLS Fix: To reply, non-instructors/superadmins MUST provide a parent_id 
+        // for a message where they were the receiver. 
+        // Even for instructors, providing a parent_id is safer for threading.
+
+        // Find the most recent message in this thread where the current user was the RECIPIENT
+        const lastReceivedMessage = activeConversation?.messages
+            .find((m: Message) => m.receiver_id === user.id);
+
+        // If we found a message sent TO us, use it as parent. 
+        // Otherwise fallback to the absolute last message (appropriate for instructors).
+        const parentId = lastReceivedMessage?.id || activeConversation?.lastMessage?.id || null;
+
+        const { error } = await sendMessage(selectedConversationId, replyContent.trim(), null, parentId);
+
         if (!error) {
             setReplyContent('');
+        } else {
+            console.error('Messaging Error:', error);
+            alert(`Failed to send message: ${error.message || 'Unknown error'}. Please try again.`);
         }
         setIsSending(false);
     };
 
+    // Auto-mark as read when viewing conversation
+    useEffect(() => {
+        if (!selectedConversationId || !user || !activeConversation) return;
+
+        const unreadMessages = activeConversation.messages.filter(
+            (m: Message) => !m.is_read && m.receiver_id === user.id
+        );
+
+        if (unreadMessages.length > 0) {
+            unreadMessages.forEach((msg: Message) => markAsRead(msg.id));
+        }
+    }, [selectedConversationId, activeConversation?.unreadCount, user?.id]);
+
     if (messagesLoading && conversations.length === 0) {
         return (
-            <div className="flex h-[600px] items-center justify-center bg-white rounded-3xl border border-slate-100">
+            <div className="flex min-h-screen w-full items-center justify-center bg-white">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
             </div>
         );
     }
 
     return (
-        <div className="flex h-[700px] bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-xl shadow-slate-200/50">
+        <div className="flex w-full md:h-full bg-white relative">
             {/* Sidebar */}
             <div className={cn(
-                "w-full md:w-80 border-r border-slate-50 flex flex-col",
+                "w-full md:w-80 border-r border-slate-50 flex flex-col md:h-full",
                 selectedConversationId ? "hidden md:flex" : "flex"
             )}>
-                <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                <div className="sticky top-[64px] md:top-0 z-20 p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50 backdrop-blur-sm">
                     <h2 className="text-xl font-black text-slate-800 tracking-tight">Messages</h2>
                     {user?.role !== 'student' && (
                         <button
-                            onClick={() => setIsNewMessageModalOpen(true)}
+                            onClick={() => openNewMessage()}
                             className="p-2 bg-indigo-600 text-white rounded-xl hover:bg-slate-900 transition-colors shadow-lg shadow-indigo-600/20"
                         >
                             <Plus className="w-5 h-5" />
@@ -150,45 +207,60 @@ export default function MessagingDashboard() {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5">
                     {conversations.length === 0 ? (
                         <div className="p-8 text-center text-slate-400 text-sm">
                             <p>No conversations found.</p>
                         </div>
                     ) : (
                         conversations.map(conv => {
-                            const partner = profiles[conv.partnerId];
+                            const isBroadcast = conv.isBroadcast;
+                            const partner = conv.partnerId ? profiles[conv.partnerId] : null;
+                            const displayName = isBroadcast
+                                ? "Broadcast Group"
+                                : (partner?.full_name || 'Loading...');
+
                             return (
                                 <button
-                                    key={conv.partnerId}
-                                    onClick={() => setSelectedConversationId(conv.partnerId)}
+                                    key={conv.key}
+                                    onClick={() => setSelectedConversationId(conv.key)}
                                     className={cn(
-                                        "w-full p-4 rounded-3xl transition-all flex items-start gap-3 mb-1",
-                                        selectedConversationId === conv.partnerId
+                                        "w-full p-2.5 rounded-2xl transition-all flex items-start gap-2.5 mb-1",
+                                        selectedConversationId === conv.key
                                             ? "bg-indigo-50 text-indigo-900 shadow-sm"
                                             : "hover:bg-slate-50 text-slate-600"
                                     )}
                                 >
-                                    <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center shrink-0 border-2 border-white overflow-hidden shadow-sm">
-                                        <User className="w-6 h-6 text-indigo-600" />
+                                    <div className={cn(
+                                        "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-white overflow-hidden shadow-sm",
+                                        isBroadcast ? "bg-emerald-100" : "bg-indigo-100"
+                                    )}>
+                                        {isBroadcast ? (
+                                            <Users className="w-4 h-4 text-emerald-600" />
+                                        ) : (
+                                            <User className="w-4 h-4 text-indigo-600" />
+                                        )}
                                     </div>
                                     <div className="flex-1 text-left overflow-hidden">
-                                        <div className="flex justify-between items-baseline mb-1">
-                                            <h4 className="font-bold text-sm truncate">{partner?.full_name || 'Loading...'}</h4>
-                                            <span className="text-[10px] font-bold text-slate-400">
+                                        <div className="flex justify-between items-baseline mb-0.5">
+                                            <h4 className="font-bold text-xs truncate leading-none">{displayName}</h4>
+                                            <span className="text-[9px] font-bold text-slate-400">
                                                 {new Date(conv.lastMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                         {conv.lastMessage.subject && (
-                                            <p className="text-[10px] font-black uppercase text-indigo-500 mb-0.5 truncate tracking-tight">{conv.lastMessage.subject}</p>
+                                            <p className="text-[9px] font-black uppercase text-indigo-500 mb-0.5 truncate tracking-tight">{conv.lastMessage.subject}</p>
                                         )}
-                                        <p className="text-xs line-clamp-1 opacity-70 leading-relaxed italic">"{conv.lastMessage.content}"</p>
-                                        <div className="flex justify-between items-center mt-2">
-                                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-white/50 rounded-full border border-current text-indigo-400">
-                                                {partner?.role || 'User'}
+                                        <p className="text-[11px] line-clamp-1 opacity-70 leading-tight italic">"{conv.lastMessage.content}"</p>
+                                        <div className="flex justify-between items-center mt-1.5">
+                                            <span className={cn(
+                                                "text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 bg-white/50 rounded-full border border-current",
+                                                isBroadcast ? "text-emerald-500" : "text-indigo-400"
+                                            )}>
+                                                {isBroadcast ? `${conv.messages.length} Recipients` : (partner?.role || 'User')}
                                             </span>
                                             {conv.unreadCount > 0 && (
-                                                <span className="bg-indigo-600 text-white text-[10px] font-black min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">
+                                                <span className="bg-red-500 text-white text-[9px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-sm shadow-red-500/20">
                                                     {conv.unreadCount}
                                                 </span>
                                             )}
@@ -203,84 +275,85 @@ export default function MessagingDashboard() {
 
             {/* Main Thread */}
             <div className={cn(
-                "flex-1 flex flex-col bg-slate-50/30",
+                "flex-1 flex flex-col bg-slate-50/30 relative md:h-full md:overflow-hidden",
                 !selectedConversationId ? "hidden md:flex" : "flex"
             )}>
                 {selectedConversationId ? (
                     <>
-                        {/* Thread Header */}
-                        <div className="p-6 bg-white border-b border-slate-50 flex items-center gap-4">
+                        {/* Thread Header - Isolated on Desktop */}
+                        <div className="sticky top-[64px] md:static z-30 p-4 border-b border-slate-100 bg-white/95 backdrop-blur-sm flex items-center gap-3 shadow-sm md:shadow-none">
                             <button
                                 onClick={() => setSelectedConversationId(null)}
-                                className="md:hidden p-2 hover:bg-slate-50 rounded-xl"
+                                className="md:hidden p-2 -ml-2 hover:bg-slate-50 rounded-xl transition-colors"
                             >
                                 <ArrowLeft className="w-5 h-5 text-slate-600" />
                             </button>
-                            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
-                                <User className="w-5 h-5" />
+                            <div className={cn(
+                                "w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-lg",
+                                activeConversation?.isBroadcast ? "bg-emerald-600 shadow-emerald-600/20" : "bg-indigo-600 shadow-indigo-600/20"
+                            )}>
+                                {activeConversation?.isBroadcast ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
                             </div>
                             <div>
-                                <h3 className="font-bold text-slate-800">{profiles[selectedConversationId]?.full_name}</h3>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{profiles[selectedConversationId]?.role}</p>
-                            </div>
-                            <div className="ml-auto">
-                                <button className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400">
-                                    <MoreVertical className="w-5 h-5" />
-                                </button>
+                                <h3 className="font-bold text-sm text-slate-800">
+                                    {activeConversation?.isBroadcast ? "Broadcast Delivery Report" : profiles[selectedConversationId!]?.full_name}
+                                </h3>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                    {activeConversation?.isBroadcast ? `${activeConversation.messages.length} Recipients` : profiles[selectedConversationId!]?.role}
+                                </p>
                             </div>
                         </div>
 
-                        {/* Messages List */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                            {[...(activeConversation?.messages || [])].reverse().map((msg, idx) => {
+                        {/* Messages List - Independent Scroll Zone */}
+                        <div className="flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar md:pb-32">
+                            {(activeConversation?.isBroadcast
+                                ? [activeConversation.messages[0]] // Only show one for broadcast sent
+                                : [...(activeConversation?.messages || [])].reverse()
+                            ).map((msg, idx) => {
                                 const isOwn = msg.sender_id === user?.id;
                                 const isBroadcast = msg.broadcast_id !== null;
 
                                 // For broadcasts we sent, show aggregate report
                                 const broadcastStats = isOwn && isBroadcast ? {
-                                    total: messages.filter(m => m.broadcast_id === msg.broadcast_id).length,
-                                    read: messages.filter(m => m.broadcast_id === msg.broadcast_id && m.is_read).length
+                                    total: activeConversation.messages.length,
+                                    read: activeConversation.messages.filter((m: Message) => m.is_read).length
                                 } : null;
 
                                 return (
                                     <div
                                         key={msg.id}
                                         className={cn(
-                                            "flex flex-col max-w-[80%] animate-in fade-in slide-in-from-bottom-2",
+                                            "flex flex-col max-w-[85%] animate-in fade-in slide-in-from-bottom-2",
                                             isOwn ? "ml-auto items-end" : "items-start"
                                         )}
                                     >
                                         <div className={cn(
-                                            "p-4 rounded-3xl text-sm leading-relaxed shadow-sm",
+                                            "p-3 rounded-2xl text-xs leading-relaxed shadow-sm",
                                             isOwn
                                                 ? "bg-indigo-600 text-white rounded-br-none"
                                                 : "bg-white text-slate-700 border border-slate-100 rounded-bl-none"
                                         )}>
                                             {msg.subject && (
-                                                <div className="mb-2 pb-2 border-b border-current opacity-60">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Subject</p>
-                                                    <p className="font-black text-xs leading-none">{msg.subject}</p>
+                                                <div className="mb-1.5 pb-1.5 border-b border-current opacity-60">
+                                                    <p className="text-[8px] font-black uppercase tracking-widest leading-none mb-1">Subject</p>
+                                                    <p className="font-black text-[10px] leading-none">{msg.subject}</p>
                                                 </div>
                                             )}
                                             {msg.content}
                                         </div>
 
-                                        {broadcastStats && broadcastStats.total > 1 && (
-                                            <div className="mt-1 flex items-center gap-2 px-2 py-1 bg-indigo-50 rounded-full border border-indigo-100">
-                                                <div className="flex -space-x-1">
-                                                    {[...Array(Math.min(3, broadcastStats.read))].map((_, i) => (
-                                                        <div key={i} className="w-3 h-3 rounded-full bg-indigo-400 border border-white" />
-                                                    ))}
-                                                </div>
-                                                <span className="text-[9px] font-black text-indigo-600 uppercase">
-                                                    Read by {broadcastStats.read} of {broadcastStats.total} recipients
+                                        {broadcastStats && activeConversation.isBroadcast && (
+                                            <div className="mt-1.5 flex items-center gap-2 px-2.5 py-1 bg-white rounded-full border border-slate-100 shadow-sm">
+                                                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                                <span className="text-[9px] font-black text-slate-600 uppercase tracking-tight">
+                                                    Delivered to {broadcastStats.total} students • {broadcastStats.read} Read
                                                 </span>
                                             </div>
                                         )}
 
-                                        <div className="flex items-center gap-2 mt-2 px-1">
-                                            <span className="text-[10px] font-bold text-slate-400">
-                                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        <div className="flex items-center gap-2 mt-1.5 px-1">
+                                            <span className="text-[9px] font-bold text-slate-400">
+                                                {new Date(msg.created_at || '').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                             {isOwn && !isBroadcast && (
                                                 msg.is_read ? <Check className="w-3 h-3 text-indigo-400" /> : <Check className="w-3 h-3 text-slate-300" />
@@ -289,35 +362,47 @@ export default function MessagingDashboard() {
                                     </div>
                                 );
                             })}
+                            <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Reply Area */}
-                        <div className="p-6 bg-white border-t border-slate-50">
-                            <div className="flex gap-3 items-end">
-                                <div className="flex-1 relative">
-                                    <textarea
-                                        placeholder="Write your reply..."
-                                        value={replyContent}
-                                        onChange={(e) => setReplyContent(e.target.value)}
-                                        disabled={isSending}
-                                        className="w-full bg-slate-50 border-none rounded-2xl p-4 pr-12 text-sm focus:ring-2 focus:ring-indigo-500 transition-all resize-none h-14 min-h-[56px] custom-scrollbar"
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
-                                                e.preventDefault();
-                                                handleSendReply();
-                                            }
-                                        }}
-                                    />
-                                    <button
-                                        disabled={!replyContent.trim() || isSending}
-                                        onClick={handleSendReply}
-                                        className="absolute right-2 bottom-2 p-3 bg-indigo-600 text-white rounded-xl hover:bg-slate-900 transition-all disabled:opacity-50 disabled:bg-slate-300"
-                                    >
-                                        {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                    </button>
-                                </div>
+                        {/* Reply Area - Bounded Unit */}
+                        {!activeConversation?.isBroadcast && (
+                            <div className="sticky bottom-0 md:absolute md:bottom-0 md:left-0 md:right-0 z-40 p-4 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-8px_20px_rgba(0,0,0,0.05)] md:shadow-none">
+                                {user?.role?.toLowerCase() === 'student' && activeConversation?.lastMessage?.sender_id === user.id ? (
+                                    <div className="py-2 px-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-1">
+                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                                        <p className="text-[11px] font-bold text-slate-500 italic">
+                                            Waiting for instructor's response...
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2.5 items-end">
+                                        <div className="flex-1 relative">
+                                            <textarea
+                                                placeholder="Write your reply..."
+                                                value={replyContent}
+                                                onChange={(e) => setReplyContent(e.target.value)}
+                                                disabled={isSending}
+                                                className="w-full bg-slate-50 border-none rounded-xl p-3 pr-10 text-xs font-bold focus:ring-2 focus:ring-indigo-500 transition-all resize-none h-11 min-h-[44px] custom-scrollbar"
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleSendReply();
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                disabled={!replyContent.trim() || isSending}
+                                                onClick={handleSendReply}
+                                                className="absolute right-1.5 bottom-1.5 p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-slate-900 transition-all disabled:opacity-50 disabled:bg-slate-300"
+                                            >
+                                                {isSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        </div>
+                        )}
                     </>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-12 text-center bg-slate-50/20">
@@ -330,7 +415,7 @@ export default function MessagingDashboard() {
                             <Button
                                 variant="primary"
                                 className="mt-8 bg-indigo-600 hover:bg-slate-900 rounded-2xl h-14 px-8 font-black"
-                                onClick={() => setIsNewMessageModalOpen(true)}
+                                onClick={() => openNewMessage()}
                             >
                                 Start New Conversation
                             </Button>
@@ -339,10 +424,7 @@ export default function MessagingDashboard() {
                 )}
             </div>
 
-            <NewMessageModal
-                isOpen={isNewMessageModalOpen}
-                onClose={() => setIsNewMessageModalOpen(false)}
-            />
+            {/* NewMessageModal is now rendered globally by MessageProvider / Context */}
         </div>
     );
 }

@@ -69,14 +69,36 @@ export default function NewMessageModal({ isOpen, onClose }: NewMessageModalProp
         }
 
         const delay = setTimeout(async () => {
+            if (!user) return;
             setIsSearching(true);
+
+            // Join query: fetch students enrolled in classes where I am the instructor
             const { data } = await supabase
-                .from('profiles')
-                .select('id, full_name')
-                .ilike('full_name', `%${searchQuery}%`)
-                .eq('role', 'student')
-                .limit(5);
-            if (data) setSearchResults(data);
+                .from('enrollments')
+                .select(`
+                    student:profiles!enrollments_student_id_fkey (
+                        id,
+                        full_name
+                    ),
+                    class:classes!enrollments_class_id_fkey (
+                        instructor_id
+                    )
+                `)
+                .eq('class.instructor_id', user.id)
+                .ilike('student.full_name', `%${searchQuery}%`)
+                .limit(10);
+
+            if (data) {
+                // Ensure students exist and have IDs before deduplication
+                const studentsWithIds = data
+                    .map(e => (e as any).student)
+                    .filter((s): s is { id: string; full_name: string | null } => s !== null && !!s.id);
+
+                const uniqueIds = Array.from(new Set(studentsWithIds.map(s => s.id)));
+                const uniqueStudents = uniqueIds.map(id => studentsWithIds.find(s => s.id === id));
+
+                setSearchResults(uniqueStudents.filter(Boolean));
+            }
             setIsSearching(false);
         }, 500);
 
@@ -133,8 +155,8 @@ export default function NewMessageModal({ isOpen, onClose }: NewMessageModalProp
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-lg bg-white rounded-[32px] shadow-2xl border border-slate-100 flex flex-col overflow-hidden max-h-[600px] animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="w-full h-full md:h-auto md:max-w-lg bg-white md:rounded-[32px] shadow-2xl border-t md:border border-slate-100 flex flex-col overflow-hidden max-h-screen md:max-h-[600px] animate-in md:zoom-in-95 slide-in-from-bottom md:slide-in-from-transparent duration-300">
 
                 {/* Header with Mode Switches */}
                 <div className="p-6 border-b border-slate-50 bg-slate-50/50 flex flex-col gap-4">
@@ -315,14 +337,14 @@ export default function NewMessageModal({ isOpen, onClose }: NewMessageModalProp
 
                 {/* Footer Action */}
                 {!isSelectingClasses && (
-                    <div className="p-6 bg-white border-t border-slate-50">
+                    <div className="p-6 bg-white border-t border-slate-50 mt-auto">
                         <Button
                             fullWidth
                             isLoading={isSending}
                             disabled={!content.trim() || !subject.trim() || (mode === 'direct' && selectedStudents.length === 0) || (mode === 'class' && selectedClassIds.length === 0)}
                             onClick={handleSend}
                             className={cn(
-                                "h-14 rounded-2xl font-black text-sm transition-all",
+                                "h-14 md:h-14 rounded-2xl font-black text-sm transition-all",
                                 mode === 'admin' ? "bg-slate-900 shadow-xl shadow-slate-200" :
                                     mode === 'class' ? "bg-emerald-600 shadow-xl shadow-emerald-200" :
                                         "bg-indigo-600 shadow-xl shadow-indigo-200"

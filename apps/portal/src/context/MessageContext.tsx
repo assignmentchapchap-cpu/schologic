@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
 import { useUser } from './UserContext';
+import NewMessageModal from '@/components/messaging/NewMessageModal';
 
 type Message = {
     id: string;
@@ -22,6 +23,12 @@ type MessageContextType = {
     markAsRead: (id: string) => Promise<void>;
     sendMessage: (receiverId: string, content: string, subject?: string | null, parentId?: string | null, broadcastId?: string | null) => Promise<{ data: any; error: any }>;
     loading: boolean;
+    selectedConversationId: string | null;
+    setSelectedConversationId: (id: string | null) => void;
+    // Modal State
+    isNewMessageOpen: boolean;
+    openNewMessage: () => void;
+    closeNewMessage: () => void;
 };
 
 const MessageContext = createContext<MessageContextType>({
@@ -30,6 +37,11 @@ const MessageContext = createContext<MessageContextType>({
     markAsRead: async () => { },
     sendMessage: async () => ({ data: null, error: null }),
     loading: false,
+    selectedConversationId: null,
+    setSelectedConversationId: () => { },
+    isNewMessageOpen: false,
+    openNewMessage: () => { },
+    closeNewMessage: () => { },
 });
 
 export const useMessages = () => useContext(MessageContext);
@@ -38,6 +50,11 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+    const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
+    const openNewMessage = () => setIsNewMessageOpen(true);
+    const closeNewMessage = () => setIsNewMessageOpen(false);
+
     const supabase = createClient();
     const { user } = useUser();
 
@@ -45,6 +62,7 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
         if (!user) {
             setMessages([]);
             setUnreadCount(0);
+            setLoading(false);
             return;
         }
 
@@ -90,7 +108,8 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
             if (data) {
                 // Ensure the data matches our Message type
                 setMessages(data as Message[]);
-                setUnreadCount(data.filter((m: any) => !m.is_read).length);
+                // Fix: Only count unread messages where the current user is the receiver
+                setUnreadCount(data.filter((m: any) => !m.is_read && m.receiver_id === user.id).length);
             }
         } catch (error) {
             console.error(error);
@@ -126,8 +145,20 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <MessageContext.Provider value={{ messages, unreadCount, markAsRead, sendMessage, loading }}>
+        <MessageContext.Provider value={{
+            messages,
+            unreadCount,
+            markAsRead,
+            sendMessage,
+            loading,
+            selectedConversationId,
+            setSelectedConversationId,
+            isNewMessageOpen,
+            openNewMessage,
+            closeNewMessage
+        }}>
             {children}
+            <NewMessageModal isOpen={isNewMessageOpen} onClose={closeNewMessage} />
         </MessageContext.Provider>
     );
 }

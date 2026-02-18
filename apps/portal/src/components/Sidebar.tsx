@@ -13,6 +13,8 @@ import { useUser } from '@/context/UserContext';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useNavigationGuard } from '@/context/NavigationGuardContext';
+import MessageBell from './MessageBell';
+import FeedbackButton from './FeedbackButton';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -96,35 +98,35 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
     return (
         <>
             {/* Mobile Top Bar */}
-            <div className="md:hidden sticky top-0 z-40 bg-slate-900/95 backdrop-blur text-white p-3 flex items-center justify-between border-b border-slate-800 shadow-sm">
-                <div className="flex items-center gap-3">
+            <div className="md:hidden sticky top-0 z-40 bg-slate-900/95 backdrop-blur text-white p-3 border-b border-slate-800 shadow-sm flex items-center justify-between">
+                {/* Left: Branding */}
+                <div className="flex items-center gap-4">
                     <button
                         onClick={() => setIsMobileOpen(true)}
-                        className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                        className="p-1 hover:bg-slate-800 rounded-lg transition-colors"
                         aria-label="Open Menu"
                     >
                         <Menu className="h-6 w-6" />
                     </button>
-                    <Link href={role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard'} className="flex items-center gap-2">
-                        {/* Icon removed from mobile header to clear space - moved to sidebar */}
-                        <div className="flex flex-col">
-                            <span className="font-bold text-lg tracking-tight block leading-none text-white">Schologic LMS</span>
-                            <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block leading-none mt-1">{role}</span>
-                        </div>
+                    <Link href={role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard'} className="flex flex-col">
+                        <span className="font-bold text-lg tracking-tight block leading-none text-white">Schologic LMS</span>
+                        <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block leading-none mt-1">{role}</span>
                     </Link>
                 </div>
 
-                {/* Mobile Global Actions */}
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={handleMobileSearch}
-                        className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white"
-                    >
-                        <Search className="w-5 h-5" />
-                    </button>
-
-                    {/* +Class moved to Dashboard Body per request */}
-                    <NotificationBell variant="mobile" />
+                {/* Right Group: Feedback + Actions */}
+                <div className="flex items-center gap-4">
+                    <FeedbackButton variant="mobile" />
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleMobileSearch}
+                            className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white"
+                        >
+                            <Search className="w-5 h-5" />
+                        </button>
+                        <MessageBell variant="mobile" />
+                        <NotificationBell variant="mobile" />
+                    </div>
                 </div>
             </div>
 
@@ -154,7 +156,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                 <div className="flex h-full flex-col">
                     {/* Logo Area */}
                     <div className={cn(
-                        "flex items-center p-6 border-b border-slate-800 transition-all duration-300",
+                        "flex items-center p-6 md:p-4 border-b border-slate-800 transition-all duration-300",
                         isCollapsed ? "justify-center px-4" : "justify-end md:justify-between gap-3"
                     )}>
                         <Link
@@ -181,7 +183,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 space-y-2 px-3 py-6 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-700">
+                    <nav className="flex-1 space-y-2 px-3 py-6 md:py-2 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-700">
                         {links.map((link) => {
                             const isActive = pathname === link.href || (link.href !== '/profile' && pathname?.startsWith(link.href));
                             const isRestricted = isDemo && (link.href === '/instructor/lab' || link.href === '/instructor/settings');
@@ -234,7 +236,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                     </nav>
 
                     {/* Footer / User */}
-                    <div className="p-4 border-t border-slate-800">
+                    <div className="p-4 md:p-3 border-t border-slate-800">
                         <button
                             onClick={handleSignOut}
                             className={cn(

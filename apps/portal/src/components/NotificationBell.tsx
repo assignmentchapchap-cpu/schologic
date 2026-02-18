@@ -42,8 +42,8 @@ export default function NotificationBell({ variant = 'default', className }: { v
 
             {isOpen && (
                 <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="fixed inset-0 z-40 bg-black/5 backdrop-blur-[1px] md:hidden" onClick={() => setIsOpen(false)} />
+                    <div className="fixed inset-x-4 top-20 md:absolute md:inset-auto md:right-0 md:mt-2 w-auto md:w-80 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         <div className="p-4 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
                             <h3 className="font-bold text-slate-800 text-sm">Notifications</h3>
                             {unreadCount > 0 && (

@@ -45,7 +45,23 @@ export async function proxy(request: NextRequest) {
         }
     }
 
-    // 3. Route Protection
+    // 3. Role Fetching (Priority to secure app_metadata, fallback to user_metadata or DB)
+    let userRole = user?.app_metadata?.role || user?.user_metadata?.role;
+
+    // If user is logged in but role is missing from both JWT claims, fetch from profiles table
+    if (user && !userRole) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (profile?.role) {
+            userRole = profile.role;
+        }
+    }
+
+    // 4. Route Protection
 
     // Superadmin Routes
     if (path.startsWith('/admin')) {
@@ -54,10 +70,14 @@ export async function proxy(request: NextRequest) {
         }
 
         // Strict Superadmin Check
-        if (user.user_metadata?.role !== 'superadmin') {
-            // Non-admins attempting to access /admin are kicked to their respective dashboards
-            const dashboard = user.user_metadata?.role === 'student' ? '/student/dashboard' : '/instructor/dashboard';
-            return NextResponse.redirect(new URL(dashboard, request.url));
+        if (userRole !== 'superadmin') {
+            // Safe fallback: If not a student, redirect to login or a safe place instead of defaulting to instructor
+            if (userRole === 'student') {
+                return NextResponse.redirect(new URL('/student/dashboard', request.url));
+            } else if (userRole === 'instructor') {
+                return NextResponse.redirect(new URL('/instructor/dashboard', request.url));
+            }
+            return NextResponse.redirect(new URL('/login', request.url));
         }
     }
 
@@ -68,8 +88,13 @@ export async function proxy(request: NextRequest) {
         }
 
         // Strict Role Check: Redirect Students to Student Dashboard
-        if (user.user_metadata?.role === 'student') {
+        if (userRole === 'student') {
             return NextResponse.redirect(new URL('/student/dashboard', request.url));
+        }
+
+        // Block non-instructors (excluding superadmins)
+        if (userRole !== 'instructor' && userRole !== 'superadmin') {
+            return NextResponse.redirect(new URL('/login', request.url));
         }
 
         // Block Demo Users from /instructor/lab and /instructor/settings
@@ -88,10 +113,14 @@ export async function proxy(request: NextRequest) {
         }
 
         // Strict Role Check: Redirect Instructors to Instructor Dashboard
-        // ALLOWED FOR TESTING: Instructors can access student routes
-        // if (user.user_metadata?.role === 'instructor') {
-        //    return NextResponse.redirect(new URL('/instructor/dashboard', request.url));
-        // }
+        if (userRole === 'instructor') {
+            return NextResponse.redirect(new URL('/instructor/dashboard', request.url));
+        }
+
+        // Block non-students (excluding superadmins - keep flexibility for admins)
+        if (userRole !== 'student' && userRole !== 'superadmin') {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
     }
 
     return response

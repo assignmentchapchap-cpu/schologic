@@ -29,10 +29,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const fetchUser = async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-            if (user?.user_metadata?.is_demo === true || user?.email?.endsWith('@schologic.demo')) {
-                setIsDemo(true);
+            if (user) {
+                // Resolve role: app_metadata (secure) > user_metadata > default
+                const role = user.app_metadata?.role || user.user_metadata?.role || 'student';
+                (user as any).role = role;
+                setUser(user);
+                setIsDemo(!!(user.user_metadata?.is_demo === true || user.email?.endsWith('@schologic.demo')));
             } else {
+                setUser(null);
                 setIsDemo(false);
             }
         } catch (error) {
@@ -47,13 +51,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         fetchUser();
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-                setUser(session?.user ?? null);
-                if (session?.user?.user_metadata?.is_demo === true || session?.user?.email?.endsWith('@schologic.demo')) {
-                    setIsDemo(true);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                const user = session?.user ?? null;
+                if (user) {
+                    const role = user.app_metadata?.role || user.user_metadata?.role || 'student';
+                    (user as any).role = role;
+                    setUser(user);
+                    setIsDemo(!!(user.user_metadata?.is_demo === true || user.email?.endsWith('@schologic.demo')));
                 } else {
-                    setIsDemo(false);
+                    setUser(null);
                 }
                 setLoading(false);
             } else if (event === 'SIGNED_OUT') {

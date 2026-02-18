@@ -563,9 +563,11 @@ function DashboardContent() {
 
                         {/* New Class Button - Visible on both Mobile & Desktop for unified UI */}
                         <Button
+                            variant="success"
+                            size="md"
                             onClick={() => router.push('/instructor/classes?new=true')}
-                            className="flex bg-slate-900 hover:bg-slate-800 h-12 w-full sm:w-auto"
-                            leftIcon={<Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+                            className="flex w-full sm:w-auto font-bold shadow-md shadow-emerald-600/10"
+                            leftIcon={<Plus className="w-5 h-5 group-hover:scale-110 transition-transform text-white" />}
                             data-tour="create-class-btn"
                         >
                             New Class
