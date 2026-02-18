@@ -481,6 +481,7 @@ export type Database = {
       }
       messages: {
         Row: {
+          broadcast_id: string | null
           content: string
           created_at: string | null
           id: string
@@ -488,8 +489,10 @@ export type Database = {
           parent_id: string | null
           receiver_id: string
           sender_id: string
+          subject: string | null
         }
         Insert: {
+          broadcast_id?: string | null
           content: string
           created_at?: string | null
           id?: string
@@ -497,8 +500,10 @@ export type Database = {
           parent_id?: string | null
           receiver_id: string
           sender_id: string
+          subject?: string | null
         }
         Update: {
+          broadcast_id?: string | null
           content?: string
           created_at?: string | null
           id?: string
@@ -506,6 +511,7 @@ export type Database = {
           parent_id?: string | null
           receiver_id?: string
           sender_id?: string
+          subject?: string | null
         }
         Relationships: [
           {

@@ -106,9 +106,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                         <Menu className="h-6 w-6" />
                     </button>
                     <Link href={role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard'} className="flex items-center gap-2">
-                        <div className="relative w-8 h-8 rounded-lg overflow-hidden shrink-0">
-                            <Image src="/logo.png" alt="Schologic LMS" fill className="object-cover" />
-                        </div>
+                        {/* Icon removed from mobile header to clear space - moved to sidebar */}
                         <div className="flex flex-col">
                             <span className="font-bold text-lg tracking-tight block leading-none text-white">Schologic LMS</span>
                             <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block leading-none mt-1">{role}</span>
@@ -117,22 +115,15 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                 </div>
 
                 {/* Mobile Global Actions */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <button
                         onClick={handleMobileSearch}
                         className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-300 hover:text-white"
                     >
                         <Search className="w-5 h-5" />
                     </button>
-                    {role === 'instructor' && (
-                        <Link
-                            href="/instructor/classes?new=true"
-                            className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-lg shadow-indigo-900/20"
-                        >
-                            <Plus className="w-3.5 h-3.5" />
-                            Class
-                        </Link>
-                    )}
+
+                    {/* +Class moved to Dashboard Body per request */}
                     <NotificationBell variant="mobile" />
                 </div>
             </div>
@@ -168,7 +159,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                     )}>
                         <Link
                             href={role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard'}
-                            className={cn("hidden md:flex items-center gap-3 overflow-hidden hover:opacity-80 transition-opacity cursor-pointer")}
+                            className={cn("flex items-center gap-3 overflow-hidden hover:opacity-80 transition-opacity cursor-pointer")}
                         >
                             <div className="relative w-10 h-10 shrink-0">
                                 <Image src="/logo.png" alt="Schologic LMS" fill className="object-cover rounded-xl" />

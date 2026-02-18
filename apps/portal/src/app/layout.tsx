@@ -57,6 +57,7 @@ import DemoBanner from '@/components/DemoBanner';
 import { UniversalReaderProvider } from '@/components/providers/UniversalReaderProvider';
 import { UserProvider } from "@/context/UserContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { MessageProvider } from "@/context/MessageContext";
 import { JsonLdOrganization } from "@/components/seo/JsonLd";
 
 
@@ -75,9 +76,11 @@ export default function RootLayout({
           <UserProvider>
             <UniversalReaderProvider>
               <NotificationProvider>
-                <DemoBanner />
-                <JsonLdOrganization />
-                {children}
+                <MessageProvider>
+                  <DemoBanner />
+                  <JsonLdOrganization />
+                  {children}
+                </MessageProvider>
               </NotificationProvider>
             </UniversalReaderProvider>
           </UserProvider>

@@ -103,8 +103,10 @@ CREATE TABLE IF NOT EXISTS messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   sender_id UUID REFERENCES profiles(id) NOT NULL,
   receiver_id UUID REFERENCES profiles(id) NOT NULL,
+  subject TEXT, -- New subject column
   content TEXT NOT NULL,
   parent_id UUID REFERENCES messages(id),
+  broadcast_id UUID, -- For grouping bulk messages for reports
   is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -147,10 +149,17 @@ ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
 
 -- Messages Policies
 -- 1. Everyone can read messages where they are sender or receiver
+DROP POLICY IF EXISTS "Users can view own messages" ON messages;
 CREATE POLICY "Users can view own messages" ON messages
   FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
 
+DROP POLICY IF EXISTS "Users can mark own messages as read" ON messages;
+CREATE POLICY "Users can mark own messages as read" ON messages
+  FOR UPDATE USING (auth.uid() = receiver_id)
+  WITH CHECK (auth.uid() = receiver_id);
+
 -- 2. Insert Policy (Role-Based Logic)
+DROP POLICY IF EXISTS "Messaging permissions" ON messages;
 CREATE POLICY "Messaging permissions" ON messages
   FOR INSERT WITH CHECK (
     -- Superadmin can message anyone
@@ -171,18 +180,42 @@ CREATE POLICY "Messaging permissions" ON messages
         )
       )
     )
-    -- Students cannot initiate messages (Insert policy restricts them)
+    OR
+    -- Students (and others) can REPLY to messages sent TO them
+    (
+      parent_id IS NOT NULL
+      AND
+      EXISTS (
+        SELECT 1 FROM messages m
+        WHERE m.id = parent_id AND m.receiver_id = auth.uid()
+      )
+    )
   );
 
 -- Admin Overrides (Allow Superadmins to see everything)
+DROP POLICY IF EXISTS "Superadmin manage all profiles" ON profiles;
 CREATE POLICY "Superadmin manage all profiles" ON profiles FOR ALL USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'superadmin');
+
+DROP POLICY IF EXISTS "Superadmin full access to telemetry" ON api_usage_logs;
 CREATE POLICY "Superadmin full access to telemetry" ON api_usage_logs FOR SELECT USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'superadmin');
+
+DROP POLICY IF EXISTS "Superadmin full access to errors" ON system_errors;
 CREATE POLICY "Superadmin full access to errors" ON system_errors FOR SELECT USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'superadmin');
+
+DROP POLICY IF EXISTS "Superadmin full access to messages" ON messages;
 CREATE POLICY "Superadmin full access to messages" ON messages FOR SELECT USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'superadmin');
+
+DROP POLICY IF EXISTS "Superadmin manage feedback" ON feedback;
 CREATE POLICY "Superadmin manage feedback" ON feedback FOR ALL USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'superadmin');
+
+DROP POLICY IF EXISTS "Superadmin full access to referrals" ON referrals;
 CREATE POLICY "Superadmin full access to referrals" ON referrals FOR SELECT USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'superadmin');
+
+DROP POLICY IF EXISTS "Superadmin manage pilot requests" ON pilot_requests;
 CREATE POLICY "Superadmin manage pilot requests" ON pilot_requests FOR ALL USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'superadmin');
 
 -- Feedback Policy (Users can see and insert own feedback)
+DROP POLICY IF EXISTS "Users manage own feedback" ON feedback;
 CREATE POLICY "Users manage own feedback" ON feedback
-  FOR ALL USING (auth.uid() = user_id);
+  FOR ALL USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);

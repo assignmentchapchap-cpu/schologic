@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import NotificationBell from '@/components/NotificationBell';
+import MessageBell from '@/components/MessageBell';
+import FeedbackButton from '@/components/FeedbackButton';
 import StudentCalendar from '@/components/student/StudentCalendar';
 import GlobalAssignmentsCard from '@/components/student/GlobalAssignmentsCard';
 import { useToast } from '@/context/ToastContext';
@@ -362,7 +364,9 @@ function DashboardContent() {
                             </Button>
                         </form>
 
-                        <div className="hidden md:block">
+                        <div className="hidden md:flex items-center gap-3">
+                            <FeedbackButton />
+                            <MessageBell className="h-12 w-12 flex items-center justify-center p-0" />
                             <NotificationBell className="h-12 w-12" />
                         </div>
                     </div>

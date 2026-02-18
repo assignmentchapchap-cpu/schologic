@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import NotificationBell from '@/components/NotificationBell';
+import MessageBell from '@/components/MessageBell';
+import FeedbackButton from '@/components/FeedbackButton';
 import AIStatsCard from '@/components/AIStatsCard';
 import AIInsightsModal from '@/components/AIInsightsModal';
 import DashboardCalendar from './components/DashboardCalendar';
@@ -559,17 +561,19 @@ function DashboardContent() {
                             )}
                         </div>
 
-                        {/* New Class Button */}
+                        {/* New Class Button - Visible on both Mobile & Desktop for unified UI */}
                         <Button
                             onClick={() => router.push('/instructor/classes?new=true')}
-                            className="hidden md:flex bg-slate-900 hover:bg-slate-800 h-12"
+                            className="flex bg-slate-900 hover:bg-slate-800 h-12 w-full sm:w-auto"
                             leftIcon={<Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />}
                             data-tour="create-class-btn"
                         >
                             New Class
                         </Button>
 
-                        <div className="hidden md:block">
+                        <div className="hidden md:flex items-center gap-3">
+                            <FeedbackButton />
+                            <MessageBell className="h-12 w-12 flex items-center justify-center p-0" />
                             <NotificationBell className="h-12 w-12 flex items-center justify-center p-0" />
                         </div>
                     </div>
