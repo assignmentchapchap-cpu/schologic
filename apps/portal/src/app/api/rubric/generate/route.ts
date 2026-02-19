@@ -21,21 +21,23 @@ export async function POST(req: Request) {
         const supabase = createSessionClient(cookieStore);
         const { data: { user } } = await supabase.auth.getUser();
 
-        const rubric = await generateRubric({
+        const { rubric, usage } = await generateRubric({
             title,
             description,
             max_points,
             apiKey
         });
 
-        // Log AI usage (fire-and-forget)
+        // Log AI usage with real token counts (fire-and-forget)
         if (user) {
             logAiUsage({
                 instructorId: user.id,
                 endpoint: '/api/rubric/generate',
                 provider: 'publicai',
                 model: 'swiss-ai/apertus-70b-instruct',
-                totalTokens: 0, // Rubric generation input is minimal; actual usage tracked by provider
+                promptTokens: usage.promptTokens,
+                completionTokens: usage.completionTokens,
+                totalTokens: usage.totalTokens,
                 isDemo: user.user_metadata?.is_demo === true,
             });
         }

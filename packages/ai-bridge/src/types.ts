@@ -70,6 +70,13 @@ export interface DetectionResponse {
     label: string;
 }
 
+// Real token usage returned by PublicAI (OpenAI-compatible format)
+export interface AiUsage {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+}
+
 export interface GradingRequest {
     instructions: string;
     submission_text: string;

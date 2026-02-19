@@ -1,5 +1,12 @@
 
-export async function summarizeText(text: string, apiKey: string, context?: string): Promise<string[]> {
+import { AiUsage } from './types';
+
+export interface SummarizeResponse {
+    points: string[];
+    usage: AiUsage;
+}
+
+export async function summarizeText(text: string, apiKey: string, context?: string): Promise<SummarizeResponse> {
     if (!text) throw new Error("No text provided for summarization");
     if (!apiKey) throw new Error("Missing AI API Key");
 
@@ -59,15 +66,20 @@ export async function summarizeText(text: string, apiKey: string, context?: stri
     }
 
     const data = await response.json();
+
+    // Capture real token usage from PublicAI response
+    const usage: AiUsage = {
+        promptTokens: data.usage?.prompt_tokens ?? 0,
+        completionTokens: data.usage?.completion_tokens ?? 0,
+        totalTokens: data.usage?.total_tokens ?? 0,
+    };
+
     try {
         const contentStr = data.choices[0].message.content;
         const contentObj = JSON.parse(contentStr);
-        // Convert to markdown list string to maintain signature compatibility for now, 
-        // OR return the array. The action expects a string wrapper or we change the signature.
-        // Let's change the return type to string[] for better typing.
-        return contentObj.points;
+        return { points: contentObj.points, usage };
     } catch (e) {
         console.error("Failed to parse AI response", e);
-        return ["Summary unavailable."];
+        return { points: ["Summary unavailable."], usage };
     }
 }

@@ -2,7 +2,7 @@ import { analyzeSubmission } from "@schologic/ai-bridge";
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createSessionClient } from '@schologic/database';
-import { logAiUsage, estimateTokens } from '@/lib/logAiUsage';
+import { logAiUsage } from '@/lib/logAiUsage';
 import { logSystemError } from '@/lib/logSystemError';
 
 export async function POST(req: Request) {
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
         console.log("Analyzing submission via AI Bridge for:", assignment_title);
 
-        const analysis = await analyzeSubmission({
+        const { analysis, usage } = await analyzeSubmission({
             instructions,
             submission_text,
             score,
@@ -43,15 +43,16 @@ export async function POST(req: Request) {
             apiKey
         });
 
-        // Log AI usage (fire-and-forget)
+        // Log AI usage with real token counts (fire-and-forget)
         if (user) {
-            const estimatedTokens = estimateTokens(submission_text || '');
             logAiUsage({
                 instructorId: user.id,
                 endpoint: '/api/assistant',
                 provider: 'publicai',
                 model: 'swiss-ai/apertus-70b-instruct',
-                totalTokens: estimatedTokens,
+                promptTokens: usage.promptTokens,
+                completionTokens: usage.completionTokens,
+                totalTokens: usage.totalTokens,
                 isDemo: user.user_metadata?.is_demo === true,
             });
         }

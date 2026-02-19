@@ -1,6 +1,16 @@
-import { GradingRequest, GradingResult } from './types';
+import { GradingRequest, GradingResult, AiUsage } from './types';
 
-export async function analyzeSubmission(request: GradingRequest): Promise<GradingResult> {
+export interface GradingResponse {
+    analysis: GradingResult;
+    usage: AiUsage;
+}
+
+export interface RubricResponse {
+    rubric: any[];
+    usage: AiUsage;
+}
+
+export async function analyzeSubmission(request: GradingRequest): Promise<GradingResponse> {
     const {
         instructions,
         submission_text,
@@ -137,6 +147,13 @@ export async function analyzeSubmission(request: GradingRequest): Promise<Gradin
     const data = await response.json();
     let content = data.choices[0].message.content;
 
+    // Capture real token usage from PublicAI response
+    const usage: AiUsage = {
+        promptTokens: data.usage?.prompt_tokens ?? 0,
+        completionTokens: data.usage?.completion_tokens ?? 0,
+        totalTokens: data.usage?.total_tokens ?? 0,
+    };
+
     // Robust cleanup
     content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
     const startIndex = content.indexOf('{');
@@ -173,10 +190,10 @@ export async function analyzeSubmission(request: GradingRequest): Promise<Gradin
         analysis.score = totalCalculatedScore;
     }
 
-    return analysis;
+    return { analysis, usage };
 }
 
-export async function generateRubric(request: any): Promise<any[]> {
+export async function generateRubric(request: any): Promise<RubricResponse> {
     const { title, description, max_points, apiKey } = request;
 
     if (!apiKey) throw new Error("Missing AI API Key");
@@ -242,6 +259,13 @@ export async function generateRubric(request: any): Promise<any[]> {
 
     const data = await response.json();
     let content = data.choices[0].message.content;
+
+    // Capture real token usage from PublicAI response
+    const usage: AiUsage = {
+        promptTokens: data.usage?.prompt_tokens ?? 0,
+        completionTokens: data.usage?.completion_tokens ?? 0,
+        totalTokens: data.usage?.total_tokens ?? 0,
+    };
 
     content = content.replace(/```json/g, '').replace(/```/g, '').trim();
     const startIndex = content.indexOf('[');
@@ -317,5 +341,5 @@ export async function generateRubric(request: any): Promise<any[]> {
         }))
     }));
 
-    return finalRubric;
+    return { rubric: finalRubric, usage };
 }

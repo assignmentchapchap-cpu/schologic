@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Mail, MessageSquare, Shield, LogOut, Menu, X, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Home, Users, Mail, MessageSquare, Shield, LogOut, Menu, X, ChevronLeft, ChevronRight, AlertTriangle, Zap } from 'lucide-react';
+
 import { useState, useEffect } from 'react';
 import { createClient } from '@schologic/database';
 import { useRouter } from 'next/navigation';
@@ -24,10 +25,12 @@ interface AdminSidebarProps {
 const NAV_LINKS = [
     { label: 'Dashboard', icon: Home, href: '/admin/dashboard', color: 'text-indigo-400' },
     { label: 'Users', icon: Users, href: '/admin/users', color: 'text-amber-400' },
+    { label: 'AI Usage', icon: Zap, href: '/admin/ai-usage', color: 'text-violet-400' },
     { label: 'Messaging', icon: MessageSquare, href: '/admin/messages', color: 'text-emerald-400' },
     { label: 'Feedback', icon: Mail, href: '/admin/feedback', color: 'text-blue-400' },
     { label: 'Security Audit', icon: AlertTriangle, href: '/admin/security', color: 'text-rose-400' },
 ];
+
 
 export default function AdminSidebar({ isCollapsed = false, onToggleCollapse }: AdminSidebarProps) {
     const { user } = useUser();

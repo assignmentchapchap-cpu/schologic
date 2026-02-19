@@ -2,6 +2,10 @@
 
 import { extractTextFromFile } from '@schologic/doc-engine';
 import { summarizeText } from '@schologic/ai-bridge';
+import { cookies } from 'next/headers';
+import { createSessionClient } from '@schologic/database';
+import { logAiUsage } from '@/lib/logAiUsage';
+
 
 export interface SummarizeOptions {
     context?: string;
@@ -119,12 +123,32 @@ export async function generateSummary(fileUrl: string, mimeType: string, options
         const apiKey = process.env.PUBLICAI_API_KEY;
         if (!apiKey) return { error: 'Server misconfiguration: No API Key', summary: null };
 
-        const summary = await summarizeText(text, apiKey, options?.context);
+        // Extract user session for usage tracking
+        const cookieStore = await cookies();
+        const supabase = createSessionClient(cookieStore);
+        const { data: { user } } = await supabase.auth.getUser();
 
-        return { error: null, summary };
+        const { points, usage } = await summarizeText(text, apiKey, options?.context);
+
+        // Log AI usage with real token counts (fire-and-forget)
+        if (user) {
+            logAiUsage({
+                instructorId: user.id,
+                endpoint: '/actions/summarize',
+                provider: 'publicai',
+                model: 'swiss-ai/apertus-70b-instruct',
+                promptTokens: usage.promptTokens,
+                completionTokens: usage.completionTokens,
+                totalTokens: usage.totalTokens,
+                isDemo: user.user_metadata?.is_demo === true,
+            });
+        }
+
+        return { error: null, summary: points };
 
     } catch (error: any) {
         console.error('[Summarize] Error:', error);
         return { error: error.message || 'Failed to generate summary', summary: null };
     }
 }
+
