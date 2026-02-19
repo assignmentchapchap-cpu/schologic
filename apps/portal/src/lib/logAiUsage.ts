@@ -9,6 +9,7 @@ const supabaseAdmin = createClient(
 
 interface AiUsagePayload {
     instructorId: string;
+    studentId?: string; // Set when a student triggers the AI call (e.g. submission analysis)
     endpoint: string;
     provider: string;
     model: string;
@@ -26,6 +27,7 @@ export async function logAiUsage(payload: AiUsagePayload): Promise<void> {
     try {
         await supabaseAdmin.from('api_usage_logs').insert({
             instructor_id: payload.instructorId,
+            student_id: payload.studentId ?? null,
             endpoint: payload.endpoint,
             provider: payload.provider,
             model: payload.model,

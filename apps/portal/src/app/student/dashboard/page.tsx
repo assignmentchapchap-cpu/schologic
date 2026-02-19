@@ -18,6 +18,7 @@ import GlobalAssignmentsCard from '@/components/student/GlobalAssignmentsCard';
 import { useToast } from '@/context/ToastContext';
 import { useUser } from '@/context/UserContext';
 import { cn } from '@/lib/utils';
+import { verifyUnifiedInvite, enrollStudent, enrollStudentInPracticum } from '@/app/actions/student';
 
 
 type EnrollmentWithClass = {
@@ -176,93 +177,45 @@ function DashboardContent() {
         if (!joinCode) return;
         setJoining(true);
 
-        const cleanCode = joinCode.trim().toUpperCase();
-
         try {
             if (!user) {
                 router.push('/login?role=student');
                 return;
             }
 
-            // 1. Try to find a CLASS first
-            const { data: cls, error: clsErr } = await supabase
-                .from('classes')
-                .select('id, is_locked, name, instructor_id, instructor:profiles!instructor_id(settings, email), enrollments(count)')
-                .eq('invite_code', cleanCode)
-                .single();
+            // 1. Verify the code via server action (uses service-role, bypasses RLS)
+            const verifyResult = await verifyUnifiedInvite(joinCode);
 
-            if (!clsErr && cls) {
-                if (cls.is_locked) throw new Error("Class is locked");
+            if (verifyResult.error) {
+                showToast(verifyResult.error, 'error');
+                return;
+            }
 
-                // Demo Limit Check
-                if (cls.instructor?.email?.endsWith('@schologic.demo')) {
-                    const currentCount = cls.enrollments?.[0]?.count || 0;
-                    if (currentCount >= 10) {
-                        throw new Error("Demo Class Full: This demo class is limited to 10 students.");
-                    }
+            const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student';
+            const regNumber = user.user_metadata?.registration_number || '';
+
+            if (verifyResult.type === 'class') {
+                // 2a. Enroll in class via server action
+                const result = await enrollStudent(user.id, verifyResult.id, fullName, regNumber);
+                if (result.error) {
+                    showToast(result.error, 'error');
+                    return;
                 }
-
-                // Ensure Profile Exists
-                await supabase.from('profiles').upsert({
-                    id: user.id,
-                    email: user.email,
-                    role: 'student',
-                    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'
-                }, { onConflict: 'id', ignoreDuplicates: true });
-
-                // Insert Enrollment
-                const { error: enrollErr } = await supabase
-                    .from('enrollments')
-                    .insert([{ student_id: user.id, class_id: cls.id }]);
-
-                if (enrollErr) {
-                    if (enrollErr.code === '23505') throw new Error("Already joined this class");
-                    throw enrollErr;
-                }
-
-                showToast(`Joined ${cls.name}!`, 'success');
+                showToast(`Joined ${verifyResult.name}!`, 'success');
                 setJoinCode('');
                 fetchDashboardData();
-                return;
-            }
 
-            // 2. If no class, try to find a PRACTICUM
-            const { data: prac, error: pracErr } = await supabase
-                .from('practicums')
-                .select('id, title, instructor_id')
-                .eq('invite_code', cleanCode)
-                .single();
-
-            if (!pracErr && prac) {
-                // Ensure Profile Exists
-                await supabase.from('profiles').upsert({
-                    id: user.id,
-                    email: user.email,
-                    role: 'student',
-                    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'
-                }, { onConflict: 'id', ignoreDuplicates: true });
-
-                // Create practicum enrollment
-                const { error: pEnrollErr } = await supabase
-                    .from('practicum_enrollments')
-                    .insert([{
-                        practicum_id: prac.id,
-                        student_id: user.id,
-                        status: 'draft' // Initial status is now DRAFT (Incomplete)
-                    }]);
-
-                if (pEnrollErr) {
-                    if (pEnrollErr.code === '23505') throw new Error("Already joined this practicum");
-                    throw pEnrollErr;
+            } else if (verifyResult.type === 'practicum') {
+                // 2b. Enroll in practicum via server action
+                const result = await enrollStudentInPracticum(user.id, verifyResult.id, fullName, regNumber);
+                if (result.error) {
+                    showToast(result.error, 'error');
+                    return;
                 }
-
                 showToast(`Cohort Joined! Please complete your registration.`, 'success');
                 setJoinCode('');
-                router.push(`/student/practicum/${prac.id}/setup`);
-                return;
+                router.push(`/student/practicum/${verifyResult.id}/setup`);
             }
-
-            throw new Error("Invalid join code");
 
         } catch (err: unknown) {
             showToast(err instanceof Error ? err.message : 'An error occurred', 'error');

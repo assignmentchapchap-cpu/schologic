@@ -34,7 +34,11 @@ export function cleanText(text: string): string {
     return cleaned;
 }
 
-export async function checkAIContent(text: string, config?: { model?: string, granularity?: string, scoring_method?: string }): Promise<AnalysisResult> {
+export async function checkAIContent(
+    text: string,
+    config?: { model?: string, granularity?: string, scoring_method?: string },
+    classId?: string
+): Promise<AnalysisResult> {
     const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -42,7 +46,8 @@ export async function checkAIContent(text: string, config?: { model?: string, gr
             text,
             model: config?.model,
             granularity: config?.granularity,
-            method: config?.scoring_method
+            method: config?.scoring_method,
+            classId, // For instructor attribution when called from student submission
         }),
     });
 

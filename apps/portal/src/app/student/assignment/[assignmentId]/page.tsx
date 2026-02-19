@@ -155,12 +155,12 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
                 }
             }
 
-            // 2. Run AI Analysis
+            // 2. Run AI Analysis (pass class_id so the route attributes cost to the instructor)
             const analysis = await checkAIContent(cleaned, {
                 model: effectiveSettings.model,
                 granularity: effectiveSettings.granularity,
                 scoring_method: effectiveSettings.scoring_method
-            });
+            }, assignment.class_id ?? undefined);
 
             // 2. Save to DB
             const { data: { user } } = await supabase.auth.getUser();

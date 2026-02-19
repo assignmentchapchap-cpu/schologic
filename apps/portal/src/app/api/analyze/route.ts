@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { analyzeText, MODELS } from '@schologic/ai-bridge';
 import { cookies } from 'next/headers';
 import { createSessionClient } from '@schologic/database';
+import { createClient } from '@supabase/supabase-js';
 import { logAiUsage, estimateTokens } from '@/lib/logAiUsage';
 import { logSystemError } from '@/lib/logSystemError';
 
 export async function POST(req: NextRequest) {
     try {
-        const { text, model, granularity, method } = await req.json();
+        const { text, model, granularity, method, classId } = await req.json();
 
         if (!text) {
             return NextResponse.json({ error: "No text provided" }, { status: 400 });
@@ -39,8 +40,34 @@ export async function POST(req: NextRequest) {
         // Log AI usage (fire-and-forget)
         if (user) {
             const estimatedTokens = estimateTokens(text);
+
+            // If classId is provided, this was triggered by a student submission.
+            // Attribute cost to the class instructor; log the student separately.
+            let instructorId = user.id; // Default: caller is the instructor (lab flow)
+            let studentId: string | undefined = undefined;
+
+            if (classId) {
+                // Look up the class instructor using service-role (bypasses RLS)
+                const adminClient = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+                    { auth: { autoRefreshToken: false, persistSession: false } }
+                );
+                const { data: cls } = await adminClient
+                    .from('classes')
+                    .select('instructor_id')
+                    .eq('id', classId)
+                    .single();
+
+                if (cls?.instructor_id) {
+                    instructorId = cls.instructor_id; // Cost owner = class instructor
+                    studentId = user.id;               // Track who triggered the call
+                }
+            }
+
             logAiUsage({
-                instructorId: user.id,
+                instructorId,
+                studentId,
                 endpoint: '/api/analyze',
                 provider: 'huggingface',
                 model: selectedModel,

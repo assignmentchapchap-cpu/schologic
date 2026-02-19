@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@schologic/database';
-import { Zap, RefreshCw, TrendingUp, BarChart2, Users, ChevronRight, X, ArrowUpRight, Activity } from 'lucide-react';
+import { Zap, RefreshCw, TrendingUp, BarChart2, Users, ChevronRight, ChevronDown, ChevronUp, X, ArrowUpRight, Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import { format, subDays } from 'date-fns';
 
@@ -10,6 +10,7 @@ import { format, subDays } from 'date-fns';
 interface UsageLog {
     id: string;
     instructor_id: string | null;
+    student_id: string | null;
     endpoint: string;
     provider: string;
     model: string;
@@ -25,6 +26,14 @@ interface InstructorProfile {
     full_name: string | null;
     email: string | null;
     is_demo: boolean | null;
+}
+
+interface StudentStat {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    calls: number;
+    totalTokens: number;
 }
 
 interface ModelStat {
@@ -46,6 +55,7 @@ interface InstructorStat {
     promptTokens: number;
     completionTokens: number;
     byEndpoint: { endpoint: string; calls: number; tokens: number }[];
+    byStudent: StudentStat[];
 }
 
 interface DailyPoint { date: string; tokens: number; calls: number; }
@@ -91,15 +101,25 @@ export default function AiUsagePage() {
     const [loading, setLoading] = useState(true);
     const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
     const [selectedInstructor, setSelectedInstructor] = useState<InstructorStat | null>(null);
+    const [chartCollapsed, setChartCollapsed] = useState(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
-        const [logsRes, profilesRes] = await Promise.all([
-            supabase.from('api_usage_logs').select('*').order('created_at', { ascending: true }),
-            supabase.from('profiles').select('id, full_name, email, is_demo').in('role', ['instructor', 'superadmin']),
-        ]);
-        setLogs((logsRes.data ?? []) as UsageLog[]);
-        setProfiles((profilesRes.data ?? []) as InstructorProfile[]);
+        // Step 1: fetch all logs
+        const logsRes = await supabase.from('api_usage_logs').select('*').order('created_at', { ascending: true });
+        const fetchedLogs = (logsRes.data ?? []) as UsageLog[];
+        setLogs(fetchedLogs);
+
+        // Step 2: fetch profiles for ALL user IDs that appear in logs
+        // (instructors via instructor_id, students via student_id — one batched fetch)
+        const instructorIds = fetchedLogs.map(l => l.instructor_id).filter(Boolean) as string[];
+        const studentIds = fetchedLogs.map(l => l.student_id).filter(Boolean) as string[];
+        const allIds = [...new Set([...instructorIds, ...studentIds])];
+        if (allIds.length > 0) {
+            const profilesRes = await supabase.from('profiles').select('id, full_name, email, is_demo').in('id', allIds);
+            setProfiles((profilesRes.data ?? []) as InstructorProfile[]);
+        }
+
         setLastRefreshed(new Date());
         setLoading(false);
     }, []);
@@ -173,6 +193,7 @@ export default function AiUsagePage() {
                 is_demo: p?.is_demo ?? null,
                 calls: 0, totalTokens: 0, promptTokens: 0, completionTokens: 0,
                 byEndpoint: [],
+                byStudent: [],
             };
         }
         const stat = instructorMap[l.instructor_id];
@@ -184,6 +205,24 @@ export default function AiUsagePage() {
         const ep = stat.byEndpoint.find(e => e.endpoint === l.endpoint);
         if (ep) { ep.calls++; ep.tokens += l.total_tokens ?? 0; }
         else stat.byEndpoint.push({ endpoint: l.endpoint, calls: 1, tokens: l.total_tokens ?? 0 });
+
+        // Aggregate per-student usage (only logs with a student_id are student-triggered)
+        if (l.student_id) {
+            const sp = profileMap[l.student_id];
+            const existing = stat.byStudent.find(s => s.id === l.student_id);
+            if (existing) {
+                existing.calls++;
+                existing.totalTokens += l.total_tokens ?? 0;
+            } else {
+                stat.byStudent.push({
+                    id: l.student_id,
+                    full_name: sp?.full_name ?? null,
+                    email: sp?.email ?? null,
+                    calls: 1,
+                    totalTokens: l.total_tokens ?? 0,
+                });
+            }
+        }
     });
     const instructorStats = Object.values(instructorMap).sort((a, b) => b.totalTokens - a.totalTokens);
 
@@ -225,42 +264,58 @@ export default function AiUsagePage() {
             </div>
 
             {/* ── Section 2: Daily Trend Chart ──────────────────────── */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="font-bold text-slate-800 text-lg">Token Burn — Last 30 Days</h2>
-                    <span className="text-xs text-slate-400 bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg">Daily</span>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                    <div>
+                        <h2 className="font-bold text-slate-800 text-lg">Token Burn — Last 30 Days</h2>
+                        <p className="text-xs text-slate-400 mt-0.5">Daily token consumption trend</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-400 bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg">Daily</span>
+                        <button
+                            onClick={() => setChartCollapsed(c => !c)}
+                            className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600"
+                            aria-label={chartCollapsed ? 'Expand chart' : 'Collapse chart'}
+                        >
+                            {chartCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                        </button>
+                    </div>
                 </div>
-                {totalTokens === 0 ? (
-                    <div className="h-48 flex items-center justify-center text-slate-400 text-sm">No usage data yet</div>
-                ) : (
-                    <ResponsiveContainer width="100%" height={220}>
-                        <BarChart data={dailyData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                            <XAxis
-                                dataKey="date"
-                                tick={{ fontSize: 10, fill: '#94a3b8' }}
-                                tickLine={false}
-                                axisLine={false}
-                                interval={4}
-                            />
-                            <YAxis
-                                tick={{ fontSize: 10, fill: '#94a3b8' }}
-                                tickLine={false}
-                                axisLine={false}
-                                tickFormatter={v => formatTokens(v)}
-                                width={45}
-                            />
-                            <Tooltip
-                                formatter={(v) => [formatTokens(v as number), 'Tokens']}
-                                contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }}
-                            />
-                            <Bar dataKey="tokens" radius={[4, 4, 0, 0]} maxBarSize={32}>
-                                {dailyData.map((_, i) => (
-                                    <Cell key={i} fill={_.tokens > 0 ? '#7c3aed' : '#e2e8f0'} />
-                                ))}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
+                {!chartCollapsed && (
+                    <div className="p-6">
+                        {totalTokens === 0 ? (
+                            <div className="h-48 flex items-center justify-center text-slate-400 text-sm">No usage data yet</div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height={220}>
+                                <BarChart data={dailyData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                    <XAxis
+                                        dataKey="date"
+                                        tick={{ fontSize: 10, fill: '#94a3b8' }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        interval={4}
+                                    />
+                                    <YAxis
+                                        tick={{ fontSize: 10, fill: '#94a3b8' }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={v => formatTokens(v)}
+                                        width={45}
+                                    />
+                                    <Tooltip
+                                        formatter={(v) => [formatTokens(v as number), 'Tokens']}
+                                        contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }}
+                                    />
+                                    <Bar dataKey="tokens" radius={[4, 4, 0, 0]} maxBarSize={32}>
+                                        {dailyData.map((_, i) => (
+                                            <Cell key={i} fill={_.tokens > 0 ? '#7c3aed' : '#e2e8f0'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
+                    </div>
                 )}
             </div>
 
@@ -335,7 +390,7 @@ export default function AiUsagePage() {
                                             {(ins.full_name ?? ins.email ?? '?')[0].toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-bold text-slate-800 truncate">{ins.full_name ?? 'Unnamed'}</p>
+                                            <p className="text-sm font-bold text-slate-800 truncate">{ins.full_name ?? ins.email ?? 'Unnamed'}</p>
                                             <div className="flex items-center gap-1.5">
                                                 <p className="text-xs text-slate-400 truncate">{ins.email}</p>
                                                 {ins.is_demo && (
@@ -372,7 +427,7 @@ export default function AiUsagePage() {
                                     {(selectedInstructor.full_name ?? selectedInstructor.email ?? '?')[0].toUpperCase()}
                                 </div>
                                 <div>
-                                    <p className="font-bold text-slate-800">{selectedInstructor.full_name ?? 'Unnamed'}</p>
+                                    <p className="font-bold text-slate-800">{selectedInstructor.full_name ?? selectedInstructor.email ?? 'Unnamed'}</p>
                                     <p className="text-xs text-slate-400">{selectedInstructor.email}</p>
                                 </div>
                             </div>
@@ -404,7 +459,7 @@ export default function AiUsagePage() {
                         </div>
 
                         {/* Breakdown by Feature */}
-                        <div className="p-6">
+                        <div className="p-6 border-b border-slate-100">
                             <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide">Usage by Feature</h3>
                             <div className="space-y-3">
                                 {selectedInstructor.byEndpoint.sort((a, b) => b.tokens - a.tokens).map(ep => {
@@ -432,6 +487,55 @@ export default function AiUsagePage() {
                                     <p className="text-slate-400 text-sm text-center py-4">No feature breakdown available</p>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Student Breakdown */}
+                        <div className="p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Users className="w-4 h-4 text-slate-500" />
+                                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Student Breakdown</h3>
+                                <span className="ml-auto text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold">
+                                    {selectedInstructor.byStudent.length} students
+                                </span>
+                            </div>
+                            {selectedInstructor.byStudent.length === 0 ? (
+                                <div className="bg-slate-50 rounded-xl p-6 text-center">
+                                    <p className="text-slate-400 text-sm">No student-triggered AI calls yet</p>
+                                    <p className="text-slate-300 text-xs mt-1">Calls from student submissions will appear here</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {selectedInstructor.byStudent
+                                        .sort((a, b) => b.totalTokens - a.totalTokens)
+                                        .map((s, i) => {
+                                            const pct = selectedInstructor.totalTokens > 0
+                                                ? Math.round((s.totalTokens / selectedInstructor.totalTokens) * 100) : 0;
+                                            return (
+                                                <div key={s.id} className="bg-slate-50 rounded-xl p-3 flex items-center gap-3">
+                                                    <div
+                                                        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                                                        style={{ backgroundColor: MODEL_COLORS[i % MODEL_COLORS.length] }}
+                                                    >
+                                                        {(s.full_name ?? s.email ?? '?')[0].toUpperCase()}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-xs font-bold text-slate-700 truncate">{s.full_name ?? s.email ?? 'Unknown'}</p>
+                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                            <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
+                                                                <div className="h-full bg-indigo-400 rounded-full" style={{ width: `${pct}%` }} />
+                                                            </div>
+                                                            <span className="text-[10px] text-slate-400 shrink-0">{s.calls} calls</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right shrink-0">
+                                                        <p className="text-xs font-bold text-slate-600">{formatTokens(s.totalTokens)}</p>
+                                                        <p className="text-[10px] text-slate-400">{pct}%</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                </div>
+                            )}
                         </div>
 
                         {/* View User Profile Link */}
