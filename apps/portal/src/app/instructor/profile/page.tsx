@@ -83,22 +83,26 @@ export default function InstructorProfilePage() {
                 // Fallback if no profile data found but user is logged in
                 setProfile({
                     id: user.id,
-                    email: user.email ?? null,
-                    role: 'instructor',
-                    title: null,
-                    first_name: null,
-                    last_name: null,
-                    honorific: null,
-                    full_name: null,
-                    institution_id: null,
-                    bio: null,
                     avatar_url: null,
+                    bio: null,
+                    country: null,
+                    demo_converted_at: null,
+                    email: user.email ?? null,
+                    first_name: null,
+                    full_name: null,
+                    honorific: null,
+                    institution_id: null,
+                    is_active: true,
+                    is_demo: false,
+                    last_name: null,
+                    phone: null,
                     preferences: null,
+                    professional_affiliation: null,
+                    referred_by: null,
                     registration_number: null,
+                    role: 'instructor',
                     settings: null,
-                    is_active: true
-
-
+                    title: null,
                 });
 
                 // Populate form from metadata if available

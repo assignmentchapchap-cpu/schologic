@@ -44,6 +44,7 @@ declare module 'lucide-react' {
     export const ChevronRight: LucideIcon;
     export const ChevronUp: LucideIcon;
     export const Clock: LucideIcon;
+    export const ClipboardList: LucideIcon;
     export const Cloud: LucideIcon;
     export const CloudLightning: LucideIcon;
     export const CloudOff: LucideIcon;
@@ -174,6 +175,8 @@ declare module 'lucide-react' {
     export const Unlock: LucideIcon;
     export const Upload: LucideIcon;
     export const User: LucideIcon;
+    export const UserCheck: LucideIcon;
+    export const UserX: LucideIcon;
     export const Users: LucideIcon;
     export const Video: LucideIcon;
     export const Volume: LucideIcon;

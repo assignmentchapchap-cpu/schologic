@@ -68,10 +68,10 @@ export async function proxy(request: NextRequest) {
     // 4. Route Protection
 
     // Superadmin Routes
-    if (path.startsWith('/admin')) {
+    if (path.startsWith('/admin') && !path.startsWith('/admin/login')) {
         if (!user) {
             logSecurityEvent({ eventType: 'unauthorized_access', path, targetRole: 'superadmin', ipAddress, userAgent });
-            return NextResponse.redirect(new URL('/login?role=superadmin', request.url))
+            return NextResponse.redirect(new URL('/admin/login', request.url))
         }
 
         // Strict Superadmin Check
