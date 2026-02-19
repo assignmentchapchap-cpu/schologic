@@ -71,6 +71,12 @@ export async function upgradeDemoAccount(newEmail: string) {
 
     if (updateUserError) throw updateUserError;
 
+    // Sync demo conversion to profiles table (for dashboard KPI queries)
+    await supabaseAdmin.from('profiles').update({
+      is_demo: false,
+      demo_converted_at: new Date().toISOString()
+    }).eq('id', userId);
+
     return { success: true };
 
   } catch (error: any) {

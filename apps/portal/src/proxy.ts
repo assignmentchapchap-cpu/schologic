@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { logSecurityEvent } from '@/lib/logSecurityEvent'
 
 export async function proxy(request: NextRequest) {
     let response = NextResponse.next({
@@ -34,6 +35,8 @@ export async function proxy(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
     const path = request.nextUrl.pathname;
+    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || undefined;
+    const userAgent = request.headers.get('user-agent') || undefined;
 
     // 2. Global Account Status Check (Bypass for login/disabled/api)
     const isPublicPath = path.startsWith('/login') || path.startsWith('/auth') || path.startsWith('/disabled') || path.startsWith('/api') || path === '/';
@@ -41,6 +44,7 @@ export async function proxy(request: NextRequest) {
     if (user && !isPublicPath) {
         // If account is marked as inactive in metadata, redirect to disabled
         if (user.user_metadata?.is_active === false) {
+            logSecurityEvent({ eventType: 'deactivated_access', path, userId: user.id, ipAddress, userAgent });
             return NextResponse.redirect(new URL('/disabled', request.url))
         }
     }
@@ -66,12 +70,13 @@ export async function proxy(request: NextRequest) {
     // Superadmin Routes
     if (path.startsWith('/admin')) {
         if (!user) {
+            logSecurityEvent({ eventType: 'unauthorized_access', path, targetRole: 'superadmin', ipAddress, userAgent });
             return NextResponse.redirect(new URL('/login?role=superadmin', request.url))
         }
 
         // Strict Superadmin Check
         if (userRole !== 'superadmin') {
-            // Safe fallback: If not a student, redirect to login or a safe place instead of defaulting to instructor
+            logSecurityEvent({ eventType: 'role_mismatch', path, userId: user.id, userRole, targetRole: 'superadmin', ipAddress, userAgent });
             if (userRole === 'student') {
                 return NextResponse.redirect(new URL('/student/dashboard', request.url));
             } else if (userRole === 'instructor') {
@@ -84,16 +89,19 @@ export async function proxy(request: NextRequest) {
     // Instructor Routes
     if (path.startsWith('/instructor') && !path.startsWith('/instructor/login')) {
         if (!user) {
+            logSecurityEvent({ eventType: 'unauthorized_access', path, targetRole: 'instructor', ipAddress, userAgent });
             return NextResponse.redirect(new URL('/login?role=instructor', request.url))
         }
 
         // Strict Role Check: Redirect Students to Student Dashboard
         if (userRole === 'student') {
+            logSecurityEvent({ eventType: 'role_mismatch', path, userId: user.id, userRole, targetRole: 'instructor', ipAddress, userAgent });
             return NextResponse.redirect(new URL('/student/dashboard', request.url));
         }
 
         // Block non-instructors (excluding superadmins)
         if (userRole !== 'instructor' && userRole !== 'superadmin') {
+            logSecurityEvent({ eventType: 'role_mismatch', path, userId: user.id, userRole, targetRole: 'instructor', ipAddress, userAgent });
             return NextResponse.redirect(new URL('/login', request.url));
         }
 
@@ -102,6 +110,7 @@ export async function proxy(request: NextRequest) {
         const isRestrictedRoute = path.startsWith('/instructor/lab') || path.startsWith('/instructor/settings');
 
         if (isRestrictedRoute && isDemoUser) {
+            logSecurityEvent({ eventType: 'demo_restricted', path, userId: user.id, userRole, ipAddress, userAgent });
             return NextResponse.redirect(new URL('/instructor/dashboard?demo_restricted=true', request.url))
         }
     }
@@ -109,16 +118,19 @@ export async function proxy(request: NextRequest) {
     // Student Routes
     if (path.startsWith('/student') && !path.startsWith('/student/login')) {
         if (!user) {
+            logSecurityEvent({ eventType: 'unauthorized_access', path, targetRole: 'student', ipAddress, userAgent });
             return NextResponse.redirect(new URL('/login?role=student', request.url))
         }
 
         // Strict Role Check: Redirect Instructors to Instructor Dashboard
         if (userRole === 'instructor') {
+            logSecurityEvent({ eventType: 'role_mismatch', path, userId: user.id, userRole, targetRole: 'student', ipAddress, userAgent });
             return NextResponse.redirect(new URL('/instructor/dashboard', request.url));
         }
 
         // Block non-students (excluding superadmins - keep flexibility for admins)
         if (userRole !== 'student' && userRole !== 'superadmin') {
+            logSecurityEvent({ eventType: 'role_mismatch', path, userId: user.id, userRole, targetRole: 'student', ipAddress, userAgent });
             return NextResponse.redirect(new URL('/login', request.url));
         }
     }
