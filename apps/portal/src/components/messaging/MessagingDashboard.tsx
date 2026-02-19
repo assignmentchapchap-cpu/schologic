@@ -8,6 +8,7 @@ import { createClient } from "@schologic/database";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import NewMessageModal from '@/components/messaging/NewMessageModal';
+import { getRoleLabel, getWaitingMessage } from '@/lib/identity';
 
 type Profile = {
     id: string;
@@ -257,7 +258,7 @@ export default function MessagingDashboard() {
                                                 "text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 bg-white/50 rounded-full border border-current",
                                                 isBroadcast ? "text-emerald-500" : "text-indigo-400"
                                             )}>
-                                                {isBroadcast ? `${conv.messages.length} Recipients` : (partner?.role || 'User')}
+                                                {isBroadcast ? `${conv.messages.length} Recipients` : getRoleLabel(partner?.role)}
                                             </span>
                                             {conv.unreadCount > 0 && (
                                                 <span className="bg-red-500 text-white text-[9px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-sm shadow-red-500/20">
@@ -299,7 +300,7 @@ export default function MessagingDashboard() {
                                     {activeConversation?.isBroadcast ? "Broadcast Delivery Report" : profiles[selectedConversationId!]?.full_name}
                                 </h3>
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                    {activeConversation?.isBroadcast ? `${activeConversation.messages.length} Recipients` : profiles[selectedConversationId!]?.role}
+                                    {activeConversation?.isBroadcast ? `${activeConversation.messages.length} Recipients` : getRoleLabel(profiles[selectedConversationId!]?.role)}
                                 </p>
                             </div>
                         </div>
@@ -372,7 +373,9 @@ export default function MessagingDashboard() {
                                     <div className="py-2 px-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-1">
                                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                                         <p className="text-[11px] font-bold text-slate-500 italic">
-                                            Waiting for instructor's response...
+                                            {getWaitingMessage(activeConversation?.messages[0]?.sender_id === user.id
+                                                ? activeConversation?.messages[0]?.receiver_id
+                                                : activeConversation?.messages[0]?.sender_id)}
                                         </p>
                                     </div>
                                 ) : (

@@ -15,6 +15,7 @@ import { twMerge } from 'tailwind-merge';
 import { useNavigationGuard } from '@/context/NavigationGuardContext';
 import MessageBell from './MessageBell';
 import FeedbackButton from './FeedbackButton';
+import { getRoleLabel } from '@/lib/identity';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -110,7 +111,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                     </button>
                     <Link href={role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard'} className="flex flex-col">
                         <span className="font-bold text-lg tracking-tight block leading-none text-white">Schologic LMS</span>
-                        <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block leading-none mt-1">{role}</span>
+                        <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block leading-none mt-1">{getRoleLabel(role)}</span>
                     </Link>
                 </div>
 
@@ -170,7 +171,7 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                                 <span className="text-xl font-bold text-white whitespace-nowrap">
                                     Schologic LMS
                                 </span>
-                                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{role}</p>
+                                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{getRoleLabel(role)}</p>
                             </div>
                         </Link>
                         {/* Close Button Mobile */}

@@ -6,6 +6,7 @@ import {
     Users, UserCheck, UserX, Zap, GraduationCap, BookOpen,
     ClipboardList, AlertTriangle, Shield, TrendingUp, ArrowUpRight, Briefcase, RefreshCw
 } from 'lucide-react';
+import { getRoleLabel } from '@/lib/identity';
 
 // ─── Types ────────────────────────────────────────────────────────────
 interface KPIData {
@@ -252,7 +253,7 @@ export default function AdminDashboardPage() {
                                         u.role === 'superadmin' ? 'bg-rose-100 text-rose-700' :
                                             'bg-emerald-100 text-emerald-700'
                                         }`}>
-                                        {u.role}
+                                        {getRoleLabel(u.role)}
                                     </span>
                                 </div>
                             </div>

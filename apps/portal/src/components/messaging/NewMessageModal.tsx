@@ -18,7 +18,7 @@ type Mode = 'direct' | 'admin' | 'class';
 export default function NewMessageModal({ isOpen, onClose }: NewMessageModalProps) {
     const { user } = useUser();
     if (user?.role === 'student') return null;
-    const { sendMessage } = useMessages();
+    const { sendMessage, newMessageOptions } = useMessages();
     const supabase = createClient();
 
     const [mode, setMode] = useState<Mode>('direct');
@@ -37,6 +37,33 @@ export default function NewMessageModal({ isOpen, onClose }: NewMessageModalProp
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [availableClasses, setAvailableClasses] = useState<any[]>([]);
     const [admins, setAdmins] = useState<any[]>([]);
+
+    // Handle pre-fill options
+    useEffect(() => {
+        if (isOpen && newMessageOptions) {
+            // First reset to clear any stale state from previous manual use
+            resetForm();
+
+            // Apply pre-fills
+            setMode('direct'); // Always use direct mode for feedback responses
+            if (newMessageOptions.subject) {
+                setSubject(newMessageOptions.subject);
+            }
+            if (newMessageOptions.recipientId) {
+                const fetchRecipient = async () => {
+                    const { data } = await supabase
+                        .from('profiles')
+                        .select('id, full_name, role')
+                        .eq('id', newMessageOptions.recipientId as string)
+                        .single();
+                    if (data) {
+                        setSelectedStudents([data]);
+                    }
+                };
+                fetchRecipient();
+            }
+        }
+    }, [isOpen, newMessageOptions, supabase]);
 
     useEffect(() => {
         if (!isOpen || !user) return;
@@ -72,27 +99,41 @@ export default function NewMessageModal({ isOpen, onClose }: NewMessageModalProp
             if (!user) return;
             setIsSearching(true);
 
-            // Join query: fetch students enrolled in classes where I am the instructor
-            const { data } = await supabase
-                .from('enrollments')
-                .select(`
-                    student:profiles!enrollments_student_id_fkey (
-                        id,
-                        full_name
-                    ),
-                    class:classes!enrollments_class_id_fkey (
-                        instructor_id
-                    )
-                `)
-                .eq('class.instructor_id', user.id)
-                .ilike('student.full_name', `%${searchQuery}%`)
-                .limit(10);
+            let data;
+            if (user.role === 'superadmin') {
+                // Universal Search for Admins: Search all profiles
+                const { data: results } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, role')
+                    .neq('id', user.id) // Don't message yourself
+                    .ilike('full_name', `%${searchQuery}%`)
+                    .limit(10);
+                data = results?.map(p => ({ student: p }));
+            } else {
+                // Restricted Search for Instructors: Only their students
+                const { data: results } = await supabase
+                    .from('enrollments')
+                    .select(`
+                        student:profiles!enrollments_student_id_fkey (
+                            id,
+                            full_name,
+                            role
+                        ),
+                        class:classes!enrollments_class_id_fkey (
+                            instructor_id
+                        )
+                    `)
+                    .eq('class.instructor_id', user.id)
+                    .ilike('student.full_name', `%${searchQuery}%`)
+                    .limit(10);
+                data = results;
+            }
 
             if (data) {
-                // Ensure students exist and have IDs before deduplication
+                // Extract and deduplicate profiles from search results
                 const studentsWithIds = data
                     .map(e => (e as any).student)
-                    .filter((s): s is { id: string; full_name: string | null } => s !== null && !!s.id);
+                    .filter((s): s is { id: string; full_name: string | null; role: string | null } => s !== null && !!s.id);
 
                 const uniqueIds = Array.from(new Set(studentsWithIds.map(s => s.id)));
                 const uniqueStudents = uniqueIds.map(id => studentsWithIds.find(s => s.id === id));

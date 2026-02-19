@@ -46,7 +46,7 @@ export default function AdminLoginPage() {
 
             if (role !== 'superadmin') {
                 await supabase.auth.signOut();
-                throw new Error('Access denied. Superadmin credentials required.');
+                throw new Error('Access denied. Platform Admin credentials required.');
             }
 
             router.push('/admin/dashboard');

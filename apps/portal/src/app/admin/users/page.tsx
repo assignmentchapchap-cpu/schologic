@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@schologic/database';
 import { Plus, Search, XCircle, CheckCircle, Lock, ShieldCheck, X } from 'lucide-react';
 import { addUser, suspendUser, reactivateUser, changeUserRole, resetUserPassword } from '@/app/actions/adminUsers';
+import { getRoleLabel } from '@/lib/identity';
 
 // ─── Types ────────────────────────────────────────────────────────────
 interface UserRow {
@@ -151,7 +152,7 @@ export default function UsersPage() {
                     <option value="all">All Roles</option>
                     <option value="instructor">Instructors</option>
                     <option value="student">Students</option>
-                    <option value="superadmin">Superadmins</option>
+                    <option value="superadmin">Platform Admins</option>
                 </select>
                 <select
                     value={statusFilter}
@@ -194,7 +195,7 @@ export default function UsersPage() {
                                                 <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${u.role === 'superadmin' ? 'bg-rose-100 text-rose-700' :
                                                     u.role === 'instructor' ? 'bg-indigo-100 text-indigo-700' :
                                                         'bg-emerald-100 text-emerald-700'
-                                                    }`}>{u.role}</span>
+                                                    }`}>{getRoleLabel(u.role)}</span>
                                                 {u.is_demo && <span className="text-[10px] uppercase font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Demo</span>}
                                             </div>
                                         </td>
@@ -257,7 +258,7 @@ export default function UsersPage() {
                             >
                                 <option value="instructor">Instructor</option>
                                 <option value="student">Student</option>
-                                <option value="superadmin">Superadmin</option>
+                                <option value="superadmin">Platform Admin</option>
                             </select>
                         </div>
                         {actionError && <p className="text-sm text-red-600 font-medium">{actionError}</p>}
@@ -300,7 +301,7 @@ export default function UsersPage() {
                                 >
                                     <option value="instructor">Instructor</option>
                                     <option value="student">Student</option>
-                                    <option value="superadmin">Superadmin</option>
+                                    <option value="superadmin">Platform Admin</option>
                                 </select>
                             </div>
                         )}

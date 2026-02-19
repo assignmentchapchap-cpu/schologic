@@ -7,6 +7,8 @@ import { Home, Users, Mail, MessageSquare, Shield, LogOut, Menu, X, ChevronLeft,
 import { useState, useEffect } from 'react';
 import { createClient } from '@schologic/database';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/context/UserContext';
+import { getRoleLabel } from '@/lib/identity';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -28,6 +30,7 @@ const NAV_LINKS = [
 ];
 
 export default function AdminSidebar({ isCollapsed = false, onToggleCollapse }: AdminSidebarProps) {
+    const { user } = useUser();
     const pathname = usePathname();
     const router = useRouter();
     const supabase = createClient();
@@ -57,7 +60,7 @@ export default function AdminSidebar({ isCollapsed = false, onToggleCollapse }: 
                     </button>
                     <Link href="/admin/dashboard" className="flex flex-col">
                         <span className="font-bold text-lg tracking-tight block leading-none text-white">Schologic LMS</span>
-                        <span className="text-xs text-rose-400 font-medium uppercase tracking-wider block leading-none mt-1">superadmin</span>
+                        <span className="text-xs text-rose-400 font-medium uppercase tracking-wider block leading-none mt-1">{getRoleLabel(user?.role)}</span>
                     </Link>
                 </div>
             </div>
@@ -102,7 +105,7 @@ export default function AdminSidebar({ isCollapsed = false, onToggleCollapse }: 
                                 <span className="text-xl font-bold text-white whitespace-nowrap">
                                     Schologic LMS
                                 </span>
-                                <p className="text-xs text-rose-400 font-medium uppercase tracking-wider">superadmin</p>
+                                <p className="text-xs text-rose-400 font-medium uppercase tracking-wider">{getRoleLabel(user?.role)}</p>
                             </div>
                         </Link>
                         {/* Close Button Mobile */}

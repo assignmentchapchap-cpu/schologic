@@ -27,7 +27,8 @@ type MessageContextType = {
     setSelectedConversationId: (id: string | null) => void;
     // Modal State
     isNewMessageOpen: boolean;
-    openNewMessage: () => void;
+    newMessageOptions: { recipientId?: string; subject?: string } | null;
+    openNewMessage: (options?: { recipientId?: string; subject?: string }) => void;
     closeNewMessage: () => void;
 };
 
@@ -40,6 +41,7 @@ const MessageContext = createContext<MessageContextType>({
     selectedConversationId: null,
     setSelectedConversationId: () => { },
     isNewMessageOpen: false,
+    newMessageOptions: null,
     openNewMessage: () => { },
     closeNewMessage: () => { },
 });
@@ -52,8 +54,17 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
-    const openNewMessage = () => setIsNewMessageOpen(true);
-    const closeNewMessage = () => setIsNewMessageOpen(false);
+    const [newMessageOptions, setNewMessageOptions] = useState<{ recipientId?: string; subject?: string } | null>(null);
+
+    const openNewMessage = (options?: { recipientId?: string; subject?: string }) => {
+        setNewMessageOptions(options || null);
+        setIsNewMessageOpen(true);
+    };
+
+    const closeNewMessage = () => {
+        setIsNewMessageOpen(false);
+        setNewMessageOptions(null);
+    };
 
     const supabase = createClient();
     const { user } = useUser();
@@ -154,6 +165,7 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
             selectedConversationId,
             setSelectedConversationId,
             isNewMessageOpen,
+            newMessageOptions,
             openNewMessage,
             closeNewMessage
         }}>

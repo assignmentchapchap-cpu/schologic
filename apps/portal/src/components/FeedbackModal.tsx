@@ -35,7 +35,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 user_id: user.id,
                 content: content.trim(),
                 type: type,
-                status: 'pending'
+                status: 'new'
             });
 
             if (submitError) throw submitError;

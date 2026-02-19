@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
-import { User } from '@supabase/supabase-js';
+import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 type UserContextType = {
     user: User | null;
@@ -30,9 +30,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                // Resolve role: app_metadata (secure) > user_metadata > default
-                const role = user.app_metadata?.role || user.user_metadata?.role || 'student';
-                (user as any).role = role;
+                // Resolve role: app_metadata (secure) > user_metadata
+                let role = user.app_metadata?.role || user.user_metadata?.role;
+
+                if (!role) {
+                    // Fallback to profiles table for consistency with proxy.ts
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', user.id)
+                        .single();
+                    role = profile?.role;
+                }
+
+                (user as any).role = role || 'student';
                 setUser(user);
                 setIsDemo(!!(user.user_metadata?.is_demo === true || user.email?.endsWith('@schologic.demo')));
             } else {
@@ -51,12 +62,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         fetchUser();
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
                 const user = session?.user ?? null;
                 if (user) {
-                    const role = user.app_metadata?.role || user.user_metadata?.role || 'student';
-                    (user as any).role = role;
+                    let role = user.app_metadata?.role || user.user_metadata?.role;
+
+                    if (!role) {
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('role')
+                            .eq('id', user.id)
+                            .single();
+                        role = profile?.role;
+                    }
+
+                    (user as any).role = role || 'student';
                     setUser(user);
                     setIsDemo(!!(user.user_metadata?.is_demo === true || user.email?.endsWith('@schologic.demo')));
                 } else {
