@@ -55,6 +55,10 @@ export async function POST(req: Request) {
         const userId = userData.user.id;
 
         // 2. Create Instructor Profile
+        // IMPORTANT: is_demo and is_active must be set explicitly here.
+        // The trigger (handle_new_user) runs first and sets is_demo correctly,
+        // but this upsert executes after and overwrites the row — so every field
+        // must be declared or the column defaults (false) win.
         const { error: profileError } = await supabaseAdmin
             .from('profiles')
             .upsert({
@@ -63,26 +67,19 @@ export async function POST(req: Request) {
                 role: 'instructor',
                 full_name: fullName,
                 title: title,
-                // Assuming schema supports these, otherwise they are just in metadata
-                // based on previous analysis, we need to be careful. 
-                // We will try to rely on metadata mostly if columns miss, 
-                // but user said to update profile.
+                is_demo: true,
+                is_active: true,
+                // Enable practicum management in the same upsert to avoid a
+                // separate round-trip and a race condition.
+                preferences: {
+                    enable_practicum_management: true,
+                },
             });
 
         if (profileError) {
-            // Fallback: Just proceed, sometimes profile trigger handles it.
+            // Non-fatal: trigger may have created the row; log and continue.
             console.error("Profile Upsert Error (non-fatal):", profileError);
         }
-
-        // 2b. Enable practicum management for demo instructor
-        await supabaseAdmin
-            .from('profiles')
-            .update({
-                preferences: {
-                    enable_practicum_management: true
-                }
-            })
-            .eq('id', userId);
 
         // 3. Create Seed Data
         // A. Class
