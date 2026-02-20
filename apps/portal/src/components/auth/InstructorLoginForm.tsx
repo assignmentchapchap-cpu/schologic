@@ -14,7 +14,6 @@ import DemoSignupModal from '@/components/auth/DemoSignupModal';
 type AuthStage = 'credentials' | 'otp_signup' | 'otp_reset' | 'new_password';
 
 // Password Validation Helper
-// Password Validation Helper
 const isPasswordStrong = (pwd: string) => {
     const hasMinLength = pwd.length >= 6;
     const hasUpperCase = /[A-Z]/.test(pwd);
@@ -47,13 +46,16 @@ export default function InstructorLoginForm() {
     // URL State
     const isSignUp = searchParams.get('view') === 'signup';
     const isReset = searchParams.get('view') === 'reset';
+    const isVerifyReset = searchParams.get('view') === 'verify_reset';
 
     // Local State
-    const [authStage, setAuthStage] = useState<AuthStage>('credentials');
+    const [authStage, setAuthStage] = useState<AuthStage>(
+        isVerifyReset ? 'otp_reset' : 'credentials'
+    );
     const [showDemoModal, setShowDemoModal] = useState(false);
 
     // Form Fields
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(searchParams.get('email') || '');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [firstName, setFirstName] = useState('');
@@ -73,7 +75,9 @@ export default function InstructorLoginForm() {
     // Status State
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [successMsg, setSuccessMsg] = useState<string | null>(null);
+    const [successMsg, setSuccessMsg] = useState<string | null>(
+        isVerifyReset ? 'Please enter the code sent to your email.' : null
+    );
 
     const supabase = createClient();
 
@@ -182,7 +186,7 @@ export default function InstructorLoginForm() {
             // For signup, we can call signUp again (it resends if user exists and unverified) or resendOtp
             // For recovery, resendPasswordForEmail
 
-            if (isReset) {
+            if (isReset || isVerifyReset) {
                 const { error } = await supabase.auth.resetPasswordForEmail(email);
                 if (error) throw error;
             } else {
@@ -380,10 +384,10 @@ export default function InstructorLoginForm() {
                 required
                 className="bg-slate-50"
                 fullWidth
-                disabled={loading}
+                disabled={loading || isVerifyReset}
             />
 
-            {!isReset && (
+            {!isReset && !isVerifyReset && (
                 <div className="space-y-4">
                     <PasswordInput
                         placeholder="Password"
@@ -492,7 +496,7 @@ export default function InstructorLoginForm() {
     const getTitle = () => {
         if (authStage === 'new_password') return 'Set New Password';
         if (authStage.startsWith('otp')) return 'Check Your Email';
-        if (isReset) return 'Reset Password';
+        if (isReset || isVerifyReset) return 'Reset Password';
         if (isSignUp) return 'Create Instructor Account';
         return 'Instructor Login';
     };
@@ -513,7 +517,7 @@ export default function InstructorLoginForm() {
 
             {authStage === 'credentials' && (
                 <div className="flex flex-col gap-3 text-center text-sm text-slate-600 border-t border-slate-100 pt-6 mt-6">
-                    {!isReset ? (
+                    {!isReset && !isVerifyReset ? (
                         <>
                             <div>
                                 {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
@@ -558,7 +562,7 @@ export default function InstructorLoginForm() {
                 </div>
             )}
 
-            {!isReset && authStage === 'credentials' && (
+            {!isReset && !isVerifyReset && authStage === 'credentials' && (
                 <>
                     <div className="relative my-6">
                         <div className="absolute inset-0 flex items-center">

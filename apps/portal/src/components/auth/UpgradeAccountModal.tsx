@@ -54,7 +54,7 @@ export default function UpgradeAccountModal({ isOpen, onClose }: UpgradeAccountM
             await supabase.auth.signOut();
 
             showToast('Upgrade initiated! Please check your email for the code.', 'success');
-            router.push(`/login?view=reset&email=${encodeURIComponent(email)}`);
+            router.push(`/login?view=verify_reset&email=${encodeURIComponent(email)}`);
             onClose();
 
         } catch (error: any) {
