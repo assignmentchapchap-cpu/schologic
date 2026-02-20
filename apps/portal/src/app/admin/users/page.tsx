@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@schologic/database';
+import UserAnalyticsCards from '@/components/admin/UserAnalyticsCards';
+import { subDays, startOfYear, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import {
     Plus, Search, XCircle, CheckCircle, Lock, ShieldCheck, X,
     Users, GraduationCap, ChevronRight, RefreshCw,
@@ -134,15 +136,27 @@ export default function UsersPage() {
     const [instructors, setInstructors] = useState<UserRow[]>([]);
     const [students, setStudents] = useState<UserRow[]>([]);
     const [loading, setLoading] = useState(true);
-    const [tab, setTab] = useState<'instructors' | 'students'>('instructors');
+    const [tab, setTab] = useState<'overview' | 'instructors' | 'students'>('overview');
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [dateRangeKey, setDateRangeKey] = useState('30d');
     const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
 
     // Detail panels
     const [selectedInstructor, setSelectedInstructor] = useState<InstructorDetail | null>(null);
     const [selectedStudent, setSelectedStudent] = useState<StudentDetail | null>(null);
     const [detailLoading, setDetailLoading] = useState(false);
+
+    // Derived Date Range
+    const getDateRange = () => {
+        const end = endOfDay(new Date());
+        let start = subDays(end, 30);
+        if (dateRangeKey === '24h') start = subDays(end, 1);
+        if (dateRangeKey === '7d') start = subDays(end, 7);
+        if (dateRangeKey === '90d') start = subDays(end, 90);
+        if (dateRangeKey === 'ytd') start = startOfYear(end);
+        return { start, end };
+    };
 
     // Action modals
     const [showAddModal, setShowAddModal] = useState(false);
@@ -324,13 +338,20 @@ export default function UsersPage() {
     const filtered = baseList.filter(u => {
         const q = search.toLowerCase();
         const matchSearch = !search || (u.full_name ?? '').toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q);
+
         const matchStatus =
             statusFilter === 'all' ? true
                 : statusFilter === 'active' ? u.is_active !== false
                     : statusFilter === 'suspended' ? u.is_active === false
                         : statusFilter === 'demo' ? u.is_demo === true
                             : true;
-        return matchSearch && matchStatus;
+
+        // Date Filter
+        const { start, end } = getDateRange();
+        const createdAt = u.created_at ? new Date(u.created_at) : null;
+        const matchDate = createdAt ? isWithinInterval(createdAt, { start, end }) : false;
+
+        return matchSearch && matchStatus && matchDate;
     });
 
     const closePanel = () => { setSelectedInstructor(null); setSelectedStudent(null); };
@@ -347,6 +368,17 @@ export default function UsersPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3 mt-3 md:mt-0">
+                    <select
+                        value={dateRangeKey}
+                        onChange={e => setDateRangeKey(e.target.value)}
+                        className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-rose-500"
+                    >
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d">Last 30 Days</option>
+                        <option value="90d">Last 90 Days</option>
+                        <option value="ytd">Year to Date</option>
+                    </select>
                     <button
                         onClick={fetchUsers}
                         className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
@@ -367,6 +399,7 @@ export default function UsersPage() {
             {/* Tabs */}
             <div className="flex gap-1 mb-6 bg-white border border-slate-200 rounded-xl p-1 w-fit shadow-sm">
                 {([
+                    { key: 'overview', label: 'Overview', icon: Users, count: null },
                     { key: 'instructors', label: 'Instructors', icon: GraduationCap, count: instructors.length },
                     { key: 'students', label: 'Students', icon: Users, count: students.length },
                 ] as const).map(t => (
@@ -388,102 +421,108 @@ export default function UsersPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-3 mb-6">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder={`Search ${tab}...`}
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition-all"
-                    />
+            {tab !== 'overview' && (
+                <div className="flex flex-col md:flex-row gap-3 mb-6">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder={`Search ${tab}...`}
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none transition-all"
+                        />
+                    </div>
+                    <select
+                        value={statusFilter}
+                        onChange={e => setStatusFilter(e.target.value)}
+                        className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none"
+                    >
+                        <option value="all">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                        {tab === 'instructors' && <option value="demo">Demo</option>}
+                    </select>
                 </div>
-                <select
-                    value={statusFilter}
-                    onChange={e => setStatusFilter(e.target.value)}
-                    className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none"
-                >
-                    <option value="all">All Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="suspended">Suspended</option>
-                    {tab === 'instructors' && <option value="demo">Demo</option>}
-                </select>
-            </div>
+            )}
 
-            {/* Table */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                {loading ? (
-                    <div className="p-12 flex items-center justify-center">
-                        <div className="w-8 h-8 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin" />
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200">
-                                    <th className="px-6 py-3 text-left font-bold text-slate-600 uppercase tracking-wider text-xs">User</th>
-                                    <th className="px-6 py-3 text-left font-bold text-slate-600 uppercase tracking-wider text-xs hidden md:table-cell">Status</th>
-                                    <th className="px-6 py-3 text-left font-bold text-slate-600 uppercase tracking-wider text-xs hidden lg:table-cell">Joined</th>
-                                    <th className="px-6 py-3 text-right font-bold text-slate-600 uppercase tracking-wider text-xs">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {filtered.map(u => (
-                                    <tr
-                                        key={u.id}
-                                        onClick={() => tab === 'instructors' ? openInstructor(u) : openStudent(u)}
-                                        className="hover:bg-rose-50/40 transition-colors cursor-pointer group"
-                                    >
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-sm shrink-0">
-                                                    {(u.full_name ?? u.email ?? '?')[0].toUpperCase()}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <p className="font-semibold text-slate-800">{u.full_name || 'No Name'}</p>
-                                                        <RoleBadge role={u.role} />
-                                                        {u.is_demo && <DemoBadge />}
-                                                        {u.demo_converted_at && (
-                                                            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase">Converted</span>
-                                                        )}
+            {/* Content Area */}
+            {tab === 'overview' ? (
+                <UserAnalyticsCards range={dateRangeKey as any} onRangeChange={setDateRangeKey} />
+            ) : (
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    {loading ? (
+                        <div className="p-12 flex items-center justify-center">
+                            <div className="w-8 h-8 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin" />
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-200">
+                                        <th className="px-6 py-3 text-left font-bold text-slate-600 uppercase tracking-wider text-xs">User</th>
+                                        <th className="px-6 py-3 text-left font-bold text-slate-600 uppercase tracking-wider text-xs hidden md:table-cell">Status</th>
+                                        <th className="px-6 py-3 text-left font-bold text-slate-600 uppercase tracking-wider text-xs hidden lg:table-cell">Joined</th>
+                                        <th className="px-6 py-3 text-right font-bold text-slate-600 uppercase tracking-wider text-xs">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {filtered.map(u => (
+                                        <tr
+                                            key={u.id}
+                                            onClick={() => tab === 'instructors' ? openInstructor(u) : openStudent(u)}
+                                            className="hover:bg-rose-50/40 transition-colors cursor-pointer group"
+                                        >
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-sm shrink-0">
+                                                        {(u.full_name ?? u.email ?? '?')[0].toUpperCase()}
                                                     </div>
-                                                    <p className="text-xs text-slate-400">{u.email}</p>
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <p className="font-semibold text-slate-800">{u.full_name || 'No Name'}</p>
+                                                            <RoleBadge role={u.role} />
+                                                            {u.is_demo && <DemoBadge />}
+                                                            {u.demo_converted_at && (
+                                                                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase">Converted</span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-slate-400">{u.email}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 hidden md:table-cell">
-                                            <StatusBadge isActive={u.is_active} />
-                                        </td>
-                                        <td className="px-6 py-4 hidden lg:table-cell text-xs text-slate-400">
-                                            {fmtDate(u.created_at)}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                                                {u.is_active === false
-                                                    ? <button onClick={() => openAction(u, 'reactivate')} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Reactivate"><CheckCircle className="w-4 h-4" /></button>
-                                                    : <button onClick={() => openAction(u, 'suspend')} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Suspend"><XCircle className="w-4 h-4" /></button>
-                                                }
-                                                <button onClick={() => openAction(u, 'role')} className="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors" title="Change Role"><ShieldCheck className="w-4 h-4" /></button>
-                                                <button onClick={() => openAction(u, 'password')} className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title="Reset Password"><Lock className="w-4 h-4" /></button>
-                                                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-rose-400 transition-colors ml-1" />
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {filtered.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center text-slate-400">
-                                            No {tab} found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
+                                            </td>
+                                            <td className="px-6 py-4 hidden md:table-cell">
+                                                <StatusBadge isActive={u.is_active} />
+                                            </td>
+                                            <td className="px-6 py-4 hidden lg:table-cell text-xs text-slate-400">
+                                                {fmtDate(u.created_at)}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
+                                                    {u.is_active === false
+                                                        ? <button onClick={() => openAction(u, 'reactivate')} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Reactivate"><CheckCircle className="w-4 h-4" /></button>
+                                                        : <button onClick={() => openAction(u, 'suspend')} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Suspend"><XCircle className="w-4 h-4" /></button>
+                                                    }
+                                                    <button onClick={() => openAction(u, 'role')} className="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors" title="Change Role"><ShieldCheck className="w-4 h-4" /></button>
+                                                    <button onClick={() => openAction(u, 'password')} className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title="Reset Password"><Lock className="w-4 h-4" /></button>
+                                                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-rose-400 transition-colors ml-1" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {filtered.length === 0 && (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-12 text-center text-slate-400">
+                                                No {tab} found
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* ── Instructor Detail Panel ───────────────────────────────────── */}
             {(selectedInstructor || (detailLoading && tab === 'instructors')) && (
