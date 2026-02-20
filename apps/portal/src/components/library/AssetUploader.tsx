@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Upload, File, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { uploadFileAsset } from '@/app/actions/library';
 import { useToast } from '@/context/ToastContext';
+import { logClientError } from '@/app/actions/logError';
 
 interface AssetUploaderProps {
     onClose: () => void;
@@ -52,6 +53,7 @@ export default function AssetUploader({ onClose, onSuccess }: AssetUploaderProps
             const message = err instanceof Error ? err.message : 'Upload failed';
             setError(message);
             showToast(message, 'error'); // Show specific error
+            logClientError("Asset Upload Error: " + message, err instanceof Error ? err.stack : undefined, 'AssetUploader');
         } finally {
             setUploading(false);
         }

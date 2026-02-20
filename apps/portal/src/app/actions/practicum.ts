@@ -7,6 +7,7 @@ import { Resend } from 'resend';
 import { Database } from "@schologic/database";
 import crypto from 'crypto';
 import { SupervisorReport } from '@/types/practicum';
+import { logSystemError } from '@/lib/logSystemError';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -32,6 +33,7 @@ function getAdminClient() {
  * Does NOT update database status; pure side-effect.
  */
 export async function sendSupervisorVerificationEmail(logId: string) {
+    let studentIdContext: string | undefined;
     try {
         const headerStore = await headers();
 
@@ -48,6 +50,8 @@ export async function sendSupervisorVerificationEmail(logId: string) {
             console.error("Fetch Log Error Details:", { logId, logError, log });
             throw new Error(`Could not fetch log details for ID: ${logId}. DB Error: ${logError?.message}`);
         }
+
+        studentIdContext = log.student_id;
 
         // 2. Fetch Student Profile
         const { data: studentProfile, error: studentError } = await supabaseAdmin
@@ -123,6 +127,12 @@ export async function sendSupervisorVerificationEmail(logId: string) {
 
     } catch (error: any) {
         console.error("Supervisor Email Error:", error);
+        await logSystemError({
+            path: 'practicum.ts/sendSupervisorVerificationEmail',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack,
+            userId: studentIdContext
+        });
         return { success: false, error: error.message };
     }
 }
@@ -170,6 +180,11 @@ export async function verifyLogAction(
 
     } catch (error: any) {
         console.error("Verification Action Error:", error);
+        await logSystemError({
+            path: 'practicum.ts/verifyLogAction',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack
+        });
         return { success: false, error: error.message };
     }
 }
@@ -331,6 +346,11 @@ export async function requestSupervisorReports(practicumId: string, studentIds: 
 
     } catch (error: any) {
         console.error("Request Report Error:", error);
+        await logSystemError({
+            path: 'practicum.ts/requestSupervisorReports',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack
+        });
         return { success: false, error: error.message };
     }
 }
@@ -370,6 +390,11 @@ export async function submitSupervisorReport(
 
     } catch (error: any) {
         console.error("Submit Report Error:", error);
+        await logSystemError({
+            path: 'practicum.ts/submitSupervisorReport',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack
+        });
         return { success: false, error: error.message };
     }
 }

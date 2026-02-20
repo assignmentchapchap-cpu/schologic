@@ -12,6 +12,7 @@ import ReportView from '@/components/ReportView';
 import RubricComponent from '@/components/RubricComponent';
 import { ClassSettings, RubricItem, QuizData, QuizSubmission, isQuizData } from '@/types/json-schemas';
 import QuizTaker from '@/components/student/QuizTaker';
+import { logClientError } from '@/app/actions/logError';
 
 type AssignmentDetails = Database['public']['Tables']['assignments']['Row'] & {
     classes: {
@@ -88,8 +89,9 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
             if (subRes.data) {
                 setSubmission(subRes.data);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error loading data", error);
+            logClientError("Error loading assignment data: " + (error.message || String(error)), error.stack, `/student/assignment/${assignmentId}`);
             // alert("Error loading assignment.");
         } finally {
             setLoading(false);
@@ -189,7 +191,9 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
 
         } catch (error: unknown) {
             console.error("Submission Error", error);
-            showToast("Submission failed: " + (error instanceof Error ? error.message : String(error)), 'error');
+            const msg = error instanceof Error ? error.message : String(error);
+            showToast("Submission failed: " + msg, 'error');
+            logClientError("Student Submission Error: " + msg, error instanceof Error ? error.stack : undefined, `/student/assignment/${assignmentId}`);
         } finally {
             setAnalyzing(false);
         }
@@ -240,7 +244,9 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
                 await handleSubmission(text);
             }
         } catch (err: unknown) {
-            showToast("Error processing file: " + (err instanceof Error ? err.message : String(err)), 'error');
+            const msg = err instanceof Error ? err.message : String(err);
+            showToast("Error processing file: " + msg, 'error');
+            logClientError("File Upload Processing Error: " + msg, err instanceof Error ? err.stack : undefined, `/student/assignment/${assignmentId}`);
         } finally {
             setUploading(false);
         }
@@ -287,7 +293,9 @@ function AssignmentSubmitPage({ assignmentId }: { assignmentId: string }) {
 
         } catch (error: unknown) {
             console.error("Quiz Submission Error", error);
-            showToast("Submission failed: " + (error instanceof Error ? error.message : String(error)), 'error');
+            const msg = error instanceof Error ? error.message : String(error);
+            showToast("Submission failed: " + msg, 'error');
+            logClientError("Quiz Submission Error: " + msg, error instanceof Error ? error.stack : undefined, `/student/assignment/${assignmentId}`);
         } finally {
             setQuizSubmitting(false);
         }

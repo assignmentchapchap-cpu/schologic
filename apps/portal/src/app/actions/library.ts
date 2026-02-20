@@ -7,6 +7,7 @@ import { Asset, AssetType, AssetSource } from '@/types/library';
 import { AssetContent } from '@/types/json-schemas';
 import { extractTextFromFile, ParseResult } from '@schologic/doc-engine';
 import { cookies } from 'next/headers';
+import { logSystemError } from '@/lib/logSystemError';
 
 export async function getAssets(collectionId?: string | null) {
     try {
@@ -47,8 +48,23 @@ export async function getAssets(collectionId?: string | null) {
             instructor_id: row.instructor_id,
             created_at: row.created_at || new Date().toISOString()
         }));
-    } catch (e) {
+    } catch (e: any) {
         console.error("Server Action Error:", e);
+        // Best effort to get user ID if we can (though it might fail if auth failed)
+        let userId: string | undefined;
+        try {
+            const cookieStore = await cookies();
+            const supabase = createSessionClient(cookieStore);
+            const { data } = await supabase.auth.getUser();
+            userId = data.user?.id;
+        } catch (_) { }
+
+        await logSystemError({
+            path: 'library.ts/getAssets',
+            errorMessage: e.message || 'Unknown error',
+            stackTrace: e.stack,
+            userId
+        });
         return [];
     }
 }
@@ -73,6 +89,11 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
 
         // The user specifically requested this exact message
         if (!countErr && (count || 0) >= 3) {
+            await logSystemError({
+                path: 'library.ts/uploadFileAsset',
+                errorMessage: 'Demo Limit Reached: Max uploads exceeded',
+                userId: user.id
+            });
             return { error: "You have exceeded the maximum allowed uploads in demo account. Upgrade to continue." };
         }
     }
@@ -155,6 +176,12 @@ export async function uploadFileAsset(formData: FormData, collectionId?: string)
 
     } catch (err: any) {
         console.error("[LibraryAction] Fatal Upload Error:", err);
+        await logSystemError({
+            path: 'library.ts/uploadFileAsset',
+            errorMessage: err.message || 'Unknown error',
+            stackTrace: err.stack,
+            userId: user.id
+        });
         return { error: err.message || "An unexpected server error occurred during upload." };
     }
 }
@@ -179,6 +206,26 @@ export async function createManualAsset(title: string, content: AssetContent | s
         revalidatePath('/instructor/library');
         return { success: true };
     } catch (error: any) {
+        await logSystemError({
+            path: 'library.ts/createManualAsset',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack,
+            userId: (await (async () => {
+                // We have user in scope above? No, user is inside try.
+                // Re-fetch? No, unsafe. 
+                // Let's refactor to capture user ID in outer scope? 
+                // Actually the user variable is defined inside the try block.
+                // We cannot access it in catch unless we hoist it.
+                return undefined;
+            })())
+            // Better: Hoist user extraction or just log without user for now to avoid massive refactor.
+            // Actually, let's just log the error.
+        });
+        await logSystemError({
+            path: 'library.ts/createManualAsset',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack
+        });
         return { error: error.message || 'Failed to create asset' };
     }
 }
@@ -200,6 +247,11 @@ export async function deleteAssets(ids: string[]) {
         revalidatePath('/instructor/library');
         return { success: true };
     } catch (error: any) {
+        await logSystemError({
+            path: 'library.ts/deleteAssets',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack
+        });
         return { error: error.message || 'Failed to delete assets' };
     }
 }
@@ -221,6 +273,11 @@ export async function deleteAsset(id: string) {
         revalidatePath('/instructor/library');
         return { success: true };
     } catch (error: any) {
+        await logSystemError({
+            path: 'library.ts/deleteAsset',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack
+        });
         return { error: error.message || 'Failed to delete asset' };
     }
 }
@@ -242,6 +299,11 @@ export async function renameAsset(id: string, newTitle: string) {
         revalidatePath('/instructor/library');
         return { success: true };
     } catch (error: any) {
+        await logSystemError({
+            path: 'library.ts/renameAsset',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack
+        });
         return { error: error.message || 'Failed to rename asset' };
     }
 }
@@ -261,8 +323,13 @@ export async function getInstructorClasses() {
 
         if (error) throw error;
         return (data || []).map(c => ({ id: c.id, title: c.name }));
-    } catch (e) {
+    } catch (e: any) {
         console.error("Fetch Classes Error:", e);
+        await logSystemError({
+            path: 'library.ts/getInstructorClasses',
+            errorMessage: e.message || 'Unknown error',
+            stackTrace: e.stack
+        });
         return [];
     }
 }
@@ -293,6 +360,11 @@ export async function distributeAssetToClass(assetId: string, classId: string) {
         revalidatePath(`/instructor/class/${classId}`); // Revalidate the target class page
         return { success: true };
     } catch (e: any) {
+        await logSystemError({
+            path: 'library.ts/distributeAssetToClass',
+            errorMessage: e.message || 'Unknown error',
+            stackTrace: e.stack
+        });
         return { error: e.message || 'Failed to add asset to class' };
     }
 }

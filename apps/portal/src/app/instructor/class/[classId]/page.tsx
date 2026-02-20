@@ -27,6 +27,7 @@ import AIInsightsModal from '@/components/AIInsightsModal';
 import { useReader } from '@/context/UniversalReaderContext';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { Asset } from '@/types/library';
+import { logClientError } from '@/app/actions/logError';
 
 type ClassData = Database['public']['Tables']['classes']['Row'] & { settings?: ClassSettings | null };
 type Assignment = Database['public']['Tables']['assignments']['Row'] & Partial<{ assignment_type: string | null }>;
@@ -408,8 +409,9 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             }
 
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching class data", error);
+            logClientError("Error fetching class data: " + (error.message || String(error)), error.stack, `/instructor/class/${classId}`);
         } finally {
             setLoading(false);
         }
@@ -547,10 +549,10 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
             setAutoGenerateRubric(false);
             setIsGeneratingRubric(false);
-            setNewAssignment({ title: '', description: '', due_date: '', max_points: 100, short_code: '', word_count: 500, reference_style: 'APA' });
-            setAutoGenerateRubric(false);
         } catch (err: unknown) {
-            showToast("Error saving assignment: " + (err instanceof Error ? err.message : 'Unknown error'), 'error');
+            const msg = err instanceof Error ? err.message : 'Unknown error';
+            showToast("Error saving assignment: " + msg, 'error');
+            logClientError("Assignment Creation Error: " + msg, err instanceof Error ? err.stack : undefined, `/instructor/class/${classId}`);
         }
     };
 
@@ -595,6 +597,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
             const msg = err?.message || (typeof err === 'string' ? err : 'Unknown error');
             const details = err?.details || err?.hint || '';
             showToast(`Error adding resource: ${msg} ${details}`, 'error');
+            logClientError("Resource Creation Error: " + msg, err?.stack, `/instructor/class/${classId}`);
         }
     };
 
@@ -625,6 +628,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
         } catch (err: any) {
             console.error("Link Error", err);
             showToast("Failed to link asset", "error");
+            logClientError("Link Asset Error: " + (err.message || String(err)), err.stack, `/instructor/class/${classId}`);
         }
     };
 
@@ -679,9 +683,10 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
             setShowSettingsModal(false);
             showToast("Class Settings Saved!", 'success');
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error saving settings", err);
             showToast("Failed to save settings", 'error');
+            logClientError("Save Settings Error: " + (err.message || String(err)), err.stack, `/instructor/class/${classId}`);
         } finally {
             setSavingSettings(false);
         }

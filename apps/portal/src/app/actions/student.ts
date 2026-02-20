@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { logSystemError } from '@/lib/logSystemError';
 
 // Admin client for checking constraints without RLS
 const supabaseAdmin = createClient(
@@ -40,6 +41,11 @@ export async function verifyClassInvite(code: string) {
 
     } catch (error: any) {
         console.error("Verify Invite Error:", error);
+        await logSystemError({
+            path: 'student.ts/verifyClassInvite',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack
+        });
         return { error: 'Failed to verify invite code' };
     }
 }
@@ -79,6 +85,12 @@ export async function enrollStudent(studentId: string, classId: string, fullName
         return { success: true };
     } catch (error: any) {
         console.error("Enrollment Exception:", error);
+        await logSystemError({
+            path: 'student.ts/enrollStudent',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack,
+            userId: studentId
+        });
         return { error: 'An unexpected error occurred during enrollment' };
     }
 }
@@ -126,6 +138,11 @@ export async function verifyUnifiedInvite(code: string) {
 
     } catch (error: any) {
         console.error("Verify Unified Invite Error:", error);
+        await logSystemError({
+            path: 'student.ts/verifyUnifiedInvite',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack
+        });
         return { error: 'Failed to verify invite code' };
     }
 }
@@ -179,6 +196,12 @@ export async function enrollStudentInPracticum(studentId: string, practicumId: s
         return { success: true };
     } catch (error: any) {
         console.error("Enrollment Exception:", error);
+        await logSystemError({
+            path: 'student.ts/enrollStudentInPracticum',
+            errorMessage: error.message || 'Unknown error',
+            stackTrace: error.stack,
+            userId: studentId
+        });
         return { error: 'An unexpected error occurred during enrollment' };
     }
 }

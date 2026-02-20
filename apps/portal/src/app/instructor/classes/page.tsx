@@ -4,6 +4,7 @@
 import { useToast } from '@/context/ToastContext';
 import { createClient } from "@schologic/database";
 import { Plus, Users, Calendar, ArrowRight, X, GraduationCap, AlertCircle, FileText, Clock, Home, ChevronDown } from 'lucide-react';
+import { logClientError } from '@/app/actions/logError';
 import { useEffect, useState, Suspense } from 'react';
 import { isDateFuture, isDateAfter } from '@/lib/date-utils';
 import Link from 'next/link';
@@ -46,7 +47,10 @@ function ClassesContent() {
                 .order('created_at', { ascending: false });
 
             if (data) setClasses(data as unknown as ClassItem[]);
-            if (error) console.error("Error fetching classes:", error);
+            if (error) {
+                console.error("Error fetching classes:", error);
+                logClientError("Error fetching classes: " + error.message, undefined, '/instructor/classes');
+            }
             setLoading(false);
         };
         getData();
@@ -102,7 +106,9 @@ function ClassesContent() {
             // Demo Limit Check (Max 1 additional class, total 2)
             if (user?.user_metadata?.is_demo) {
                 if (classes.length >= 2) {
-                    showToast("Demo Limit: You can only create 1 additional class.", 'error');
+                    const msg = "Demo Limit: You can only create 1 additional class.";
+                    showToast(msg, 'error');
+                    logClientError("Demo Limit Reached: Max classes exceeded", undefined, '/instructor/classes');
                     setIsSubmitting(false);
                     return;
                 }
@@ -146,6 +152,7 @@ function ClassesContent() {
             console.error('Error creating class:', error);
             const message = error?.message || 'Failed to create class.';
             showToast(message, 'error');
+            logClientError(message, error?.stack, '/instructor/classes');
         } finally {
             setIsSubmitting(false);
         }
