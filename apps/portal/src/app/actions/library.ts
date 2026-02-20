@@ -209,21 +209,6 @@ export async function createManualAsset(title: string, content: AssetContent | s
         await logSystemError({
             path: 'library.ts/createManualAsset',
             errorMessage: error.message || 'Unknown error',
-            stackTrace: error.stack,
-            userId: (await (async () => {
-                // We have user in scope above? No, user is inside try.
-                // Re-fetch? No, unsafe. 
-                // Let's refactor to capture user ID in outer scope? 
-                // Actually the user variable is defined inside the try block.
-                // We cannot access it in catch unless we hoist it.
-                return undefined;
-            })())
-            // Better: Hoist user extraction or just log without user for now to avoid massive refactor.
-            // Actually, let's just log the error.
-        });
-        await logSystemError({
-            path: 'library.ts/createManualAsset',
-            errorMessage: error.message || 'Unknown error',
             stackTrace: error.stack
         });
         return { error: error.message || 'Failed to create asset' };

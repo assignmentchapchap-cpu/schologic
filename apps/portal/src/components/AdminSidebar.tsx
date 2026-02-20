@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Mail, MessageSquare, Shield, LogOut, Menu, X, ChevronLeft, ChevronRight, AlertTriangle, Zap } from 'lucide-react';
+import { Home, Users, Mail, MessageSquare, Shield, LogOut, Menu, X, ChevronLeft, ChevronRight, AlertTriangle, Zap, Terminal } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@schologic/database';
@@ -28,6 +28,7 @@ const NAV_LINKS = [
     { label: 'AI Usage', icon: Zap, href: '/admin/ai-usage', color: 'text-violet-400' },
     { label: 'Messaging', icon: MessageSquare, href: '/admin/messages', color: 'text-emerald-400' },
     { label: 'Feedback', icon: Mail, href: '/admin/feedback', color: 'text-blue-400' },
+    { label: 'System Errors', icon: Terminal, href: '/admin/errors', color: 'text-fuchsia-400' },
     { label: 'Security Audit', icon: AlertTriangle, href: '/admin/security', color: 'text-rose-400' },
 ];
 

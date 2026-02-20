@@ -22,6 +22,22 @@ export async function getSystemErrors(
     const supabase = createClient();
 
     try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { data: [], total: 0, error: "Unauthorized" };
+        }
+
+        // Get user profile to check role
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError || !profile?.role || !['superadmin', 'admin'].includes(profile.role as string)) {
+            return { data: [], total: 0, error: "Forbidden: Insufficient permissions" };
+        }
+
         // Calculate range
         const from = (page - 1) * limit;
         const to = from + limit - 1;
