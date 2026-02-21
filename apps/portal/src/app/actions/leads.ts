@@ -2,6 +2,7 @@
 
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
+import { logSystemError } from '@/lib/logSystemError';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -194,6 +195,7 @@ export async function submitPilotRequest(data: PilotRequestData) {
   } catch (error: unknown) {
     console.error('Pilot Request Error:', error);
     const message = error instanceof Error ? error.message : 'Failed to submit request';
+    await logSystemError({ path: '/actions/leads/submitPilotRequest', errorMessage: message, stackTrace: error instanceof Error ? error.stack : undefined });
     return { error: message };
   }
 }
@@ -209,7 +211,24 @@ export interface ShareDemoData {
 
 export async function submitDemoInvite(data: ShareDemoData) {
   try {
-    // 1. Send Invitation to Recipient
+    // 1. Insert into database
+    const { error: dbError } = await supabaseAdmin
+      .from('instructor_invites')
+      .insert({
+        sender_name: data.senderName,
+        sender_email: data.senderEmail,
+        recipient_name: data.recipientName,
+        recipient_email: data.recipientEmail,
+        recipient_phone: data.recipientPhone,
+        message: data.message || null,
+      });
+
+    if (dbError) {
+      console.error('DB Insert Error (Instructor Invite):', dbError);
+      throw new Error('Failed to log invitation');
+    }
+
+    // 2. Send Invitation to Recipient
     await resend.emails.send({
       from: 'Schologic Invite <onboarding@schologic.com>',
       to: data.recipientEmail,
@@ -258,7 +277,7 @@ export async function submitDemoInvite(data: ShareDemoData) {
       `
     });
 
-    // 2. Send Lead Notification to Admin
+    // 3. Send Lead Notification to Admin
     await resend.emails.send({
       from: 'Schologic System <onboarding@schologic.com>',
       to: 'info@schologic.com',
@@ -313,7 +332,7 @@ export async function submitDemoInvite(data: ShareDemoData) {
       `
     });
 
-    // 3. Send Confirmation to Sender (CC)
+    // 4. Send Confirmation to Sender (CC)
     await resend.emails.send({
       from: 'Schologic Team <onboarding@schologic.com>',
       to: data.senderEmail,
@@ -346,6 +365,7 @@ export async function submitDemoInvite(data: ShareDemoData) {
   } catch (error: unknown) {
     console.error('Share Demo Error:', error);
     const message = error instanceof Error ? error.message : 'Failed to send invitation';
+    await logSystemError({ path: '/actions/leads/submitDemoInvite', errorMessage: message, stackTrace: error instanceof Error ? error.stack : undefined });
     return { error: message };
   }
 }
@@ -359,7 +379,22 @@ export interface ContactFormData {
 
 export async function submitContactForm(data: ContactFormData) {
   try {
-    // 1. Send notification to admin
+    // 1. Insert into database
+    const { error: dbError } = await supabaseAdmin
+      .from('contact_submissions')
+      .insert({
+        name: data.name,
+        email: data.email,
+        subject: data.subject,
+        message: data.message,
+      });
+
+    if (dbError) {
+      console.error('DB Insert Error (Contact Form):', dbError);
+      throw new Error('Failed to log contact submission');
+    }
+
+    // 2. Send notification to admin
     await resend.emails.send({
       from: 'Schologic Contact <onboarding@schologic.com>',
       to: 'info@schologic.com',
@@ -397,7 +432,7 @@ export async function submitContactForm(data: ContactFormData) {
       `
     });
 
-    // 2. Send acknowledgement to sender
+    // 3. Send acknowledgement to sender
     await resend.emails.send({
       from: 'Schologic Team <onboarding@schologic.com>',
       to: data.email,
@@ -438,6 +473,7 @@ export async function submitContactForm(data: ContactFormData) {
   } catch (error: unknown) {
     console.error('Contact Form Error:', error);
     const message = error instanceof Error ? error.message : 'Failed to send message';
+    await logSystemError({ path: '/actions/leads/submitContactForm', errorMessage: message, stackTrace: error instanceof Error ? error.stack : undefined });
     return { error: message };
   }
 }

@@ -1012,11 +1012,41 @@ export type Database = {
           },
         ]
       }
-      referrals: {
+      contact_submissions: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          message: string
+          name: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          message: string
+          name: string
+          subject: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          subject?: string
+        }
+        Relationships: []
+      }
+      instructor_invites: {
         Row: {
           created_at: string | null
           id: string
           recipient_email: string
+          recipient_name: string | null
+          recipient_phone: string | null
+          message: string | null
           sender_email: string
           sender_name: string
           status: string | null
@@ -1025,6 +1055,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           recipient_email: string
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          message?: string | null
           sender_email: string
           sender_name: string
           status?: string | null
@@ -1033,6 +1066,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           recipient_email?: string
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          message?: string | null
           sender_email?: string
           sender_name?: string
           status?: string | null
