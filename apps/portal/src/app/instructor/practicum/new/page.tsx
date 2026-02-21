@@ -14,6 +14,7 @@ import {
 } from '@schologic/practicum-core';
 import { ArrowLeft, ArrowRight, Check, Calendar, Settings, FileText, Loader2 } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
+import { invalidateInstructorPracticums } from '@/app/actions/instructorPracticums';
 
 // Generate unique codes
 const generateCode = (prefix: string) => {
@@ -136,6 +137,9 @@ export default function NewPracticumPage() {
             }).select().single();
 
             if (error) throw error;
+
+            // Trigger active invalidation for practicums list
+            await invalidateInstructorPracticums(user.id);
 
             showToast('Practicum cohort created successfully!', 'success');
             router.push(`/instructor/practicum/${data.id}`);

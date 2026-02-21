@@ -2,6 +2,7 @@
 
 import { createSessionClient } from "@schologic/database";
 import { cookies } from "next/headers";
+import { fetchWithCache } from "@/lib/cache";
 
 export type SystemErrorLog = {
     id: string;
@@ -57,30 +58,34 @@ export async function getSystemErrors(
             { auth: { autoRefreshToken: false, persistSession: false } }
         );
 
-        let query = supabaseAdmin
-            .from('system_errors')
-            .select(`
-                *,
-                users:profiles(email)
-            `, { count: 'exact' })
-            .order('created_at', { ascending: false })
-            .range(from, to);
+        const cacheKey = `admin:errors:p${page}:l${limit}:s${search || 'none'}`;
 
-        if (search) {
-            query = query.or(`error_message.ilike.%${search}%,path.ilike.%${search}%`);
-        }
+        return fetchWithCache(cacheKey, async () => {
+            let query = supabaseAdmin
+                .from('system_errors')
+                .select(`
+                    *,
+                    users:profiles(email)
+                `, { count: 'exact' })
+                .order('created_at', { ascending: false })
+                .range(from, to);
 
-        const { data, error, count } = await query;
+            if (search) {
+                query = query.or(`error_message.ilike.%${search}%,path.ilike.%${search}%`);
+            }
 
-        if (error) {
-            console.error("Error fetching system errors:", error);
-            return { data: [], total: 0, error: error.message };
-        }
+            const { data, error, count } = await query;
 
-        return {
-            data: data as unknown as SystemErrorLog[],
-            total: count || 0
-        };
+            if (error) {
+                console.error("Error fetching system errors:", error);
+                throw new Error(error.message);
+            }
+
+            return {
+                data: data as unknown as SystemErrorLog[],
+                total: count || 0
+            };
+        }, 600); // 10 minutes cache
 
     } catch (err: any) {
         console.error("Unexpected error in getSystemErrors:", err);

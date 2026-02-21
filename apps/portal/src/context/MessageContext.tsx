@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
 import { useUser } from './UserContext';
 import NewMessageModal from '@/components/messaging/NewMessageModal';
+import { getInboxMessages, invalidateInboxMessages } from '@/app/actions/messaging';
 
 type Message = {
     id: string;
@@ -109,12 +110,7 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     const fetchMessages = async () => {
         if (!user) return;
         try {
-            const { data, error } = await supabase
-                .from('messages')
-                .select('*')
-                .or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`)
-                .order('created_at', { ascending: false })
-                .limit(100);
+            const { data, error } = await getInboxMessages();
 
             if (data) {
                 // Ensure the data matches our Message type
@@ -133,6 +129,7 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
         setMessages(prev => prev.map(m => m.id === id ? { ...m, is_read: true } : m));
         setUnreadCount(prev => Math.max(0, prev - 1));
         await supabase.from('messages').update({ is_read: true }).eq('id', id);
+        if (user) await invalidateInboxMessages([user.id]);
     };
 
     const sendMessage = async (receiverId: string, content: string, subject: string | null = null, parentId: string | null = null, broadcastId: string | null = null) => {
@@ -150,6 +147,7 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
 
         if (data) {
             setMessages(prev => [data as Message, ...prev]);
+            await invalidateInboxMessages([user.id, receiverId]);
         }
 
         return { data, error };

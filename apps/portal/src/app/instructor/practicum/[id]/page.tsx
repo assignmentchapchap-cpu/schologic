@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Database } from "@schologic/database";
 import { Card } from '@/components/ui/Card';
+import { getInstructorPracticumDetails, invalidateInstructorPracticumDetails } from '@/app/actions/instructorPracticumDetails';
 
 type PracticumData = Database['public']['Tables']['practicums']['Row'];
 type Enrollment = Database['public']['Tables']['practicum_enrollments']['Row'] & {
@@ -76,16 +77,17 @@ function PracticumDetailsContent({ id }: { id: string }) {
     };
 
     // Callback to update local state when children save
-    const handleTimelineUpdate = (newConfig: any) => {
+    const handleTimelineUpdate = async (newConfig: any) => {
         if (!practicum) return;
         setPracticum({ ...practicum, timeline: newConfig });
         setIsTimelineDirty(false);
         // We might need to keep navigation blocked if rubrics are dirty, but for timeline we are good.
         if (!isRubricDirty) allowNavigation('main-tabs');
+        await invalidateInstructorPracticumDetails(id);
     };
 
     // Callback for Rubric updates
-    const handleRubricsUpdate = (type: 'logs' | 'supervisor' | 'report', newRubric: any) => {
+    const handleRubricsUpdate = async (type: 'logs' | 'supervisor' | 'report', newRubric: any) => {
         if (!practicum) return;
         const keyMap = {
             'logs': 'logs_rubric',
@@ -94,6 +96,7 @@ function PracticumDetailsContent({ id }: { id: string }) {
         };
         setPracticum({ ...practicum, [keyMap[type]]: newRubric });
         // Dirty state is managed via onDirtyStateChange callback from manager
+        await invalidateInstructorPracticumDetails(id);
     };
 
     // Guarded Tab Switch
@@ -132,23 +135,16 @@ function PracticumDetailsContent({ id }: { id: string }) {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
 
-                // Fetch Practicum + Enrollments in parallel (single query each)
-                const [pracRes, enrollRes] = await Promise.all([
-                    supabase.from('practicums').select('*').eq('id', id).single(),
-                    supabase.from('practicum_enrollments')
-                        .select('*, profiles:student_id(*)')
-                        .eq('practicum_id', id)
-                        .neq('status', 'draft')
-                ]);
+                const { data, error: fetchErr } = await getInstructorPracticumDetails(id);
 
-                if (pracRes.error) throw pracRes.error;
-                setPracticum(pracRes.data);
+                if (fetchErr || !data) {
+                    console.error("Error fetching practicum data details", fetchErr);
+                    throw new Error("Failed to load practicum data.")
+                }
 
-                if (enrollRes.error) throw enrollRes.error;
-                setEnrollments((enrollRes.data || []) as unknown as Enrollment[]);
+                setPracticum(data.practicum as unknown as PracticumData);
+                setEnrollments((data.enrollments || []) as unknown as Enrollment[]);
 
             } catch (error: any) {
                 console.error("Error fetching practicum data details:", {

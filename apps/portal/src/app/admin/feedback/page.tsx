@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRoleLabel } from '@/lib/identity';
+import { getInboxMessages } from '@/app/actions/messaging';
 
 type Feedback = {
     id: string;
@@ -84,14 +85,12 @@ export default function AdminFeedbackPage() {
             const currentAdminId = adminId || user?.id;
 
             if (currentAdminId) {
-                // 2. Fetch unread messages for the current admin
-                const { data: unreadMessages } = await supabase
-                    .from('messages')
-                    .select('sender_id')
-                    .eq('receiver_id', currentAdminId)
-                    .eq('is_read', false);
+                // 2. Fetch unread messages for the current admin via cached server action
+                const { data: allInboxMessages } = await getInboxMessages();
 
-                if (unreadMessages) {
+                if (allInboxMessages) {
+                    const unreadMessages = allInboxMessages.filter(m => !m.is_read && m.receiver_id === currentAdminId);
+                    
                     // Map unread counts to feedback based on user_id
                     feedbackData = feedbackData.map(f => ({
                         ...f,

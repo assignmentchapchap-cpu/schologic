@@ -25,6 +25,7 @@ import {
     PRACTICUM_REPORT_SCORE_SHEET,
     generateTimeline
 } from "@schologic/practicum-core";
+import { getStudentPracticumDetails, invalidateStudentPracticumDetails } from '@/app/actions/studentPracticumDetails';
 
 type Practicum = Database['public']['Tables']['practicums']['Row'];
 type Enrollment = Database['public']['Tables']['practicum_enrollments']['Row'];
@@ -67,6 +68,7 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
                 .eq('id', editingReflectionLogId);
 
             if (error) throw error;
+            await invalidateStudentPracticumDetails(id);
             showToast("Reflection updated successfully", "success");
             setEditingReflectionLogId(null);
             fetchDashboardData();
@@ -89,46 +91,24 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
 
     const fetchDashboardData = async () => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            setLoading(true);
 
-            const { data: enrollData, error: enrollError } = await supabase
-                .from('practicum_enrollments')
-                .select('*, practicums(*)')
-                .eq('student_id', user.id)
-                .eq('practicum_id', id)
-                .single();
+            const { data, error } = await getStudentPracticumDetails(id);
 
-            if (enrollError || !enrollData) {
+            if (error || !data) {
+                console.error("Dashboard fetch error:", error);
+                throw new Error("Failed to load dashboard data");
+            }
+
+            if (!data.enrollment || data.enrollment.status !== 'approved') {
                 router.replace(`/student/practicum/${id}/setup`);
                 return;
             }
 
-            if (enrollData.status !== 'approved') {
-                router.replace(`/student/practicum/${id}/setup`);
-                return;
-            }
-
-            setEnrollment(enrollData);
-            setPracticum(enrollData.practicums as unknown as Practicum);
-
-            const { data: logData, error: logError } = await supabase
-                .from('practicum_logs')
-                .select('*')
-                .eq('practicum_id', id)
-                .eq('student_id', user.id)
-                .order('log_date', { ascending: false });
-
-            if (logError) throw logError;
-            setLogs(logData || []);
-
-            const { data: resData, error: resError } = await supabase
-                .from('practicum_resources')
-                .select('*')
-                .eq('practicum_id', id);
-
-            if (resError) throw resError;
-            setResources(resData || []);
+            setEnrollment(data.enrollment as unknown as Enrollment);
+            setPracticum(data.practicum as unknown as Practicum);
+            setLogs(data.logs as unknown as LogEntry[]);
+            setResources(data.resources as unknown as Resource[]);
 
         } catch (error: any) {
             console.error("Dashboard fetch error:", error);
@@ -180,7 +160,8 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
 
             const blob = await res.json();
 
-            // Update local state
+            // Notify cache & Update local state
+            await invalidateStudentPracticumDetails(id);
             setEnrollment(prev => prev ? ({ ...prev, student_report_url: blob.url }) : null);
             showToast("Report submitted successfully!", "success");
 
@@ -269,6 +250,7 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
 
                 if (error) throw error;
 
+                await invalidateStudentPracticumDetails(id);
                 await fetchDashboardData();
                 setTab('logs');
                 if (data) setSelectedLogId(data.id);
@@ -317,6 +299,7 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
                 showToast("Log submitted & sent for verification!", "success");
             }
 
+            await invalidateStudentPracticumDetails(id);
             fetchDashboardData();
         } catch (e: any) {
             showToast(e.message, "error");
@@ -329,6 +312,7 @@ export default function StudentPracticumDashboard({ params }: { params: Promise<
             const { error } = await supabase.from('practicum_logs').delete().eq('id', logId);
             if (error) throw error;
 
+            await invalidateStudentPracticumDetails(id);
             setSelectedLogId(null);
             fetchDashboardData();
             showToast("Log deleted", "success");

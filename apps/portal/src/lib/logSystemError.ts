@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { redis } from './redis';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +25,12 @@ export async function logSystemError(payload: SystemErrorPayload): Promise<void>
             stack_trace: payload.stackTrace ?? null,
             user_id: payload.userId ?? null,
         });
+
+        // Invalidate all admin error caches (they are paginated and searchable, so we match the pattern)
+        const keys = await redis.keys('admin:errors:*');
+        if (keys.length > 0) {
+            await redis.del(...keys);
+        }
     } catch (err) {
         console.error('[logSystemError] Failed to log error:', err);
     }

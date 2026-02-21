@@ -11,7 +11,7 @@ import {
     Calendar, AlertCircle,
 } from 'lucide-react';
 import {
-    addUser, suspendUser, reactivateUser, changeUserRole, resetUserPassword,
+    addUser, suspendUser, reactivateUser, changeUserRole, resetUserPassword, getAllUsers
 } from '@/app/actions/adminUsers';
 import { getRoleLabel } from '@/lib/identity';
 import { format } from 'date-fns';
@@ -171,17 +171,19 @@ export default function UsersPage() {
     // ── Fetch list ──────────────────────────────────────────────────────────
     const fetchUsers = useCallback(async () => {
         setLoading(true);
-        const { data } = await supabase
-            .from('profiles')
-            .select('id, full_name, email, role, is_active, is_demo, demo_converted_at, created_at, phone, country, professional_affiliation')
-            .order('created_at', { ascending: false });
-        // Cast to unknown first to bypass schema type check (created_at is new)
-        const all = (data ?? []) as unknown as UserRow[];
-        setInstructors(all.filter(u => u.role === 'instructor'));
-        setStudents(all.filter(u => u.role === 'student'));
-        setLastRefreshed(new Date());
-        setLoading(false);
-    }, []);
+        try {
+            const data = await getAllUsers();
+            // Cast to unknown first to bypass schema type check (created_at is new)
+            const all = (data ?? []) as unknown as UserRow[];
+            setInstructors(all.filter(u => u.role === 'instructor'));
+            setStudents(all.filter(u => u.role === 'student'));
+            setLastRefreshed(new Date());
+        } catch (error) {
+            console.error('Failed to fetch users:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [getAllUsers]);
 
     useEffect(() => { fetchUsers(); }, [fetchUsers]);
 

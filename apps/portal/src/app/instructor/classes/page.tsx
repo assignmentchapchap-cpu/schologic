@@ -10,6 +10,7 @@ import { isDateFuture, isDateAfter } from '@/lib/date-utils';
 import Link from 'next/link';
 import { Database } from "@schologic/database";
 import { useSearchParams } from 'next/navigation';
+import { getInstructorClasses, invalidateInstructorClasses } from '@/app/actions/instructorClasses';
 
 type ClassItem = Database['public']['Tables']['classes']['Row'] & {
     enrollments?: { count: number }[];
@@ -40,16 +41,12 @@ function ClassesContent() {
             if (!user) return;
             setUser(user);
 
-            const { data, error } = await supabase
-                .from('classes')
-                .select('*, enrollments(count)')
-                .eq('instructor_id', user.id)
-                .order('created_at', { ascending: false });
+            const { data, error } = await getInstructorClasses();
 
             if (data) setClasses(data as unknown as ClassItem[]);
             if (error) {
                 console.error("Error fetching classes:", error);
-                logClientError("Error fetching classes: " + error.message, undefined, '/instructor/classes');
+                logClientError("Error fetching classes: " + error, undefined, '/instructor/classes');
             }
             setLoading(false);
         };
@@ -139,6 +136,9 @@ function ClassesContent() {
                 .single();
 
             if (error) throw error;
+
+            // Trigger Active Cache Invalidation
+            await invalidateInstructorClasses(user.id);
 
             setClasses([data as ClassItem, ...classes]);
             setNewClassName('');

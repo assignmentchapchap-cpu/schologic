@@ -7,6 +7,7 @@ import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { Database } from "@schologic/database";
 import { useSearchParams } from 'next/navigation';
+import { getInstructorPracticums } from '@/app/actions/instructorPracticums';
 
 type PracticumItem = Database['public']['Tables']['practicums']['Row'] & {
     practicum_enrollments?: { id: string }[];
@@ -26,11 +27,7 @@ function PracticumsContent() {
             if (!user) return;
             setUser(user);
 
-            const { data, error } = await supabase
-                .from('practicums')
-                .select('*, practicum_enrollments(id)')
-                .eq('instructor_id', user.id)
-                .order('created_at', { ascending: false });
+            const { data, error } = await getInstructorPracticums();
 
             if (error) {
                 console.error("Error fetching practicums:", error);

@@ -1,12 +1,38 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { createSessionClient } from '@schologic/database';
+import { fetchWithCache, invalidateCache } from '@/lib/cache';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
 );
+
+async function ensureAuthenticated() {
+    const cookieStore = await cookies();
+    const supabaseSession = createSessionClient(cookieStore);
+    const { data: { user }, error: authError } = await supabaseSession.auth.getUser();
+    if (authError || !user) throw new Error('Unauthorized');
+    return user;
+}
+
+// ─── Get All Users ────────────────────────────────────────────────────
+export async function getAllUsers() {
+    await ensureAuthenticated();
+    
+    return fetchWithCache('admin:users', async () => {
+        const { data, error } = await supabaseAdmin
+            .from('profiles')
+            .select('id, full_name, email, role, is_active, is_demo, demo_converted_at, created_at, phone, country, professional_affiliation')
+            .order('created_at', { ascending: false });
+            
+        if (error) throw error;
+        return data;
+    }, 300); // 5 minutes TTL
+}
 
 // ─── Add User ─────────────────────────────────────────────────────────
 export async function addUser({
@@ -42,6 +68,8 @@ export async function addUser({
             is_demo: false,
         });
 
+        await invalidateCache('admin:users');
+
         return { success: true, userId: authData.user.id };
     } catch (error: any) {
         console.error('addUser error:', error);
@@ -63,6 +91,8 @@ export async function suspendUser(userId: string) {
         // Update profile
         await supabaseAdmin.from('profiles').update({ is_active: false }).eq('id', userId);
 
+        await invalidateCache('admin:users');
+
         return { success: true };
     } catch (error: any) {
         console.error('suspendUser error:', error);
@@ -82,6 +112,8 @@ export async function reactivateUser(userId: string) {
 
         await supabaseAdmin.from('profiles').update({ is_active: true }).eq('id', userId);
 
+        await invalidateCache('admin:users');
+
         return { success: true };
     } catch (error: any) {
         console.error('reactivateUser error:', error);
@@ -100,6 +132,8 @@ export async function changeUserRole(userId: string, newRole: 'instructor' | 'st
         if (authError) throw authError;
 
         await supabaseAdmin.from('profiles').update({ role: newRole }).eq('id', userId);
+
+        await invalidateCache('admin:users');
 
         return { success: true };
     } catch (error: any) {

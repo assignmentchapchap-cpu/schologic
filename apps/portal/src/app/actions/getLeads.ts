@@ -4,6 +4,7 @@ import { createSessionClient } from '@schologic/database';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { logSystemError } from '@/lib/logSystemError';
+import { fetchWithCache } from '@/lib/cache';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -39,12 +40,16 @@ export async function getPilotRequests() {
     try {
         await ensureAuthenticated();
 
-        const { data, error } = await supabaseAdmin
-            .from('pilot_requests')
-            .select('*')
-            .order('created_at', { ascending: false });
+        const data = await fetchWithCache('admin:leads:pilots', async () => {
+            const { data, error } = await supabaseAdmin
+                .from('pilot_requests')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        if (error) throw error;
+            if (error) throw error;
+            return data;
+        }, 600); // 10 minutes
+
         return { data, error: null };
     } catch (error: any) {
         console.error('Error fetching pilot requests:', error);
@@ -57,12 +62,16 @@ export async function getInstructorInvites() {
     try {
         await ensureAuthenticated();
 
-        const { data, error } = await supabaseAdmin
-            .from('instructor_invites')
-            .select('*')
-            .order('created_at', { ascending: false });
+        const data = await fetchWithCache('admin:leads:invites', async () => {
+            const { data, error } = await supabaseAdmin
+                .from('instructor_invites')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        if (error) throw error;
+            if (error) throw error;
+            return data;
+        }, 600); // 10 minutes
+
         return { data, error: null };
     } catch (error: any) {
         console.error('Error fetching instructor invites:', error);
@@ -75,12 +84,16 @@ export async function getContactSubmissions() {
     try {
         await ensureAuthenticated();
 
-        const { data, error } = await supabaseAdmin
-            .from('contact_submissions')
-            .select('*')
-            .order('created_at', { ascending: false });
+        const data = await fetchWithCache('admin:leads:contacts', async () => {
+            const { data, error } = await supabaseAdmin
+                .from('contact_submissions')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        if (error) throw error;
+            if (error) throw error;
+            return data;
+        }, 600); // 10 minutes
+
         return { data, error: null };
     } catch (error: any) {
         console.error('Error fetching contact submissions:', error);

@@ -12,6 +12,7 @@ import { Database } from "@schologic/database";
 import { useReader } from '@/context/UniversalReaderContext';
 import { Card } from '@/components/ui/Card';
 import { Asset } from '@/types/library';
+import { getStudentClassDetails } from '@/app/actions/studentClassDetails';
 
 type ClassData = Database['public']['Tables']['classes']['Row'] & {
     instructor_profile?: { full_name: string | null, title?: string | null }
@@ -60,37 +61,30 @@ function StudentClassPage({ classId }: { classId: string }) {
     const fetchClassData = async () => {
         try {
             setLoading(true);
-            const { data: { user } } = await supabase.auth.getUser();
 
-            const clsQuery = supabase.from('classes').select('*, profiles:instructor_id(full_name, title)').eq('id', classId).single();
-            const assignQuery = supabase.from('assignments').select('*').eq('class_id', classId).order('due_date', { ascending: true });
-            const resQuery = supabase.from('class_assets').select('*, assets(*)').eq('class_id', classId).order('added_at', { ascending: false });
-            const enrollQuery = supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId);
-            const subQuery = user
-                ? supabase.from('submissions').select('assignment_id, grade').eq('class_id', classId).eq('student_id', user.id)
-                : Promise.resolve({ data: [] });
+            const { data, error } = await getStudentClassDetails(classId);
 
-            const [clsRes, assignRes, resRes, enrollRes, subRes] = await Promise.all([
-                clsQuery,
-                assignQuery,
-                resQuery,
-                enrollQuery,
-                subQuery
-            ]);
-
-            if (clsRes.data) {
-                setClassData({
-                    ...clsRes.data,
-                    instructor_profile: clsRes.data.profiles as unknown as { full_name: string, title?: string }
-                });
+            if (error || !data) {
+                console.error("Error fetching class data", error);
+                throw new Error("Failed to load class data.");
             }
-            if (assignRes.data) setAssignments(assignRes.data);
-            if (resRes.data) setResources(resRes.data as unknown as Resource[]);
-            if (enrollRes.data) setEnrollments(enrollRes.data as unknown as EnrollmentProfile[]);
 
-            if (subRes.data) {
+            const {
+                classData: clsData,
+                assignments: assignData,
+                resources: resData,
+                enrollments: enrollData,
+                submissions: subData
+            } = data;
+
+            setClassData(clsData as unknown as ClassData);
+            if (assignData) setAssignments(assignData as Assignment[]);
+            if (resData) setResources(resData as unknown as Resource[]);
+            if (enrollData) setEnrollments(enrollData as unknown as EnrollmentProfile[]);
+
+            if (subData) {
                 const map: Record<string, { grade: number | null }> = {};
-                subRes.data.forEach((s) => {
+                (subData as any[]).forEach((s) => {
                     if (s.assignment_id) {
                         map[s.assignment_id] = { grade: s.grade };
                     }

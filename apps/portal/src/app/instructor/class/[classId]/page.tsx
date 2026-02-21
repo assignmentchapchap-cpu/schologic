@@ -28,6 +28,7 @@ import { useReader } from '@/context/UniversalReaderContext';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { Asset } from '@/types/library';
 import { logClientError } from '@/app/actions/logError';
+import { getInstructorClassDetails, invalidateInstructorClassDetails } from '@/app/actions/instructorClassDetails';
 
 type ClassData = Database['public']['Tables']['classes']['Row'] & { settings?: ClassSettings | null };
 type Assignment = Database['public']['Tables']['assignments']['Row'] & Partial<{ assignment_type: string | null }>;
@@ -318,6 +319,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
             if (error) throw error;
 
+            await invalidateInstructorClassDetails(classId);
             setClassData(data as unknown as ClassData);
             setShowEditClassModal(false);
             showToast("Class Details Updated!", 'success');
@@ -331,44 +333,32 @@ function ClassDetailsContent({ classId }: { classId: string }) {
     const fetchAllData = async () => {
         try {
             setLoading(true);
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            const { data, error } = await getInstructorClassDetails(classId);
 
-            // Fetch in parallel but keep them typed
-            const clsQuery = supabase.from('classes').select('*').eq('id', classId).single();
-            const assignQuery = supabase.from('assignments').select('*, short_code').eq('class_id', classId).order('due_date', { ascending: true });
-            const enrollQuery = supabase.from('enrollments').select(`id, student_id, joined_at, profiles:student_id (full_name, email, avatar_url, registration_number)`).eq('class_id', classId);
-            const resQuery = supabase.from('class_assets').select('*, assets(*)').eq('class_id', classId).order('added_at', { ascending: false });
-            const profileQuery = supabase.from('profiles').select('settings').eq('id', user.id).single();
-            const subQuery = supabase.from('submissions').select('*').eq('class_id', classId);
+            if (error || !data) {
+                console.error("Error fetching class data", error);
+                throw new Error("Failed to load class data.");
+            }
 
-            const [clsRes, assignRes, enrollRes, resRes, profileRes, subRes] = await Promise.all([
-                clsQuery,
-                assignQuery,
-                enrollQuery,
-                resQuery,
-                profileQuery,
-                subQuery
-            ]);
+            const {
+                classData: clsData,
+                assignments: assignData,
+                enrollments: enrollData,
+                resources: resData,
+                profileSettings,
+                submissions: subData
+            } = data;
 
-            if (clsRes.error) throw clsRes.error;
-            if (assignRes.error) console.error("Assignments Fetch Error:", assignRes.error);
-            if (subRes.error) console.error("Submissions Fetch Error:", subRes.error);
-
-            // Safe Casts for JSON fields or Joins
-            setClassData(clsRes.data as unknown as ClassData);
+            setClassData(clsData as unknown as ClassData);
 
             // Handle Settings
-            const global = (profileRes.data?.settings as unknown as ClassSettings) || ({} as ClassSettings);
+            const global = (profileSettings as unknown as ClassSettings) || ({} as ClassSettings);
             setGlobalSettings(global);
 
-            if (clsRes.data.settings && typeof clsRes.data.settings === 'object') {
-                const s = clsRes.data.settings as unknown as ClassSettings;
+            if (clsData?.settings && typeof clsData.settings === 'object') {
+                const s = clsData.settings as unknown as ClassSettings;
                 const hasKeys = Object.keys(s).some(k => ['model', 'late_policy', 'allowed_file_types', 'granularity', 'scoring_method'].includes(k));
 
-                // Only consider it an override if it has keys AND is different from global (optional, but safer is just checking keys)
-                // For now, strict key check. If even one key exists, it is an override.
-                // NOTE: If the user sees this ON, it means they have saved settings previously.
                 if (hasKeys) {
                     setIsOverriding(true);
                     setSettingsForm({
@@ -389,7 +379,6 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                     });
                 }
             } else {
-                // Inherit Globals (Data settings is null or not an object)
                 setIsOverriding(false);
                 setSettingsForm({
                     model: global.model || MODELS.AI_DETECTOR_PIRATE,
@@ -400,17 +389,16 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 });
             }
 
-            if (assignRes.data) setAssignments(assignRes.data);
-            if (resRes.data) setResources(resRes.data as unknown as Resource[]);
-            if (enrollRes.data) setEnrollments(enrollRes.data as unknown as EnrollmentProfile[]);
-            if (subRes.data) {
-                const submissionsWithProfiles = subRes.data.map((s) => ({ ...s, profiles: null } as SubmissionWithProfile));
+            if (assignData) setAssignments(assignData as Assignment[]);
+            if (resData) setResources(resData as unknown as Resource[]);
+            if (enrollData) setEnrollments(enrollData as unknown as EnrollmentProfile[]);
+            if (subData) {
+                const submissionsWithProfiles = subData.map((s: any) => ({ ...s, profiles: null } as SubmissionWithProfile));
                 setSubmissions(submissionsWithProfiles);
             }
 
-
         } catch (error: any) {
-            console.error("Error fetching class data", error);
+            console.error("Error setting class data", error);
             logClientError("Error fetching class data: " + (error.message || String(error)), error.stack, `/instructor/class/${classId}`);
         } finally {
             setLoading(false);
@@ -484,6 +472,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                     .single();
 
                 if (error) throw error;
+                await invalidateInstructorClassDetails(classId);
                 setAssignments(assignments.map(a => a.id === updated.id ? updated : a));
                 showToast("Assignment Updated!", 'success');
             } else {
@@ -495,6 +484,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                     .single();
 
                 if (error) throw error;
+                await invalidateInstructorClassDetails(classId);
                 setAssignments([...assignments, created]);
                 insertedId = created.id;
                 showToast("Assignment Created Successfully!", 'success');
@@ -582,6 +572,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
             if (linkError) throw linkError;
 
+            await invalidateInstructorClassDetails(classId);
+
             // Construct new resource object for local state (simulating the join)
             const newResObj: Resource = {
                 ...linkData,
@@ -617,6 +609,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
 
             if (linkError) throw linkError;
 
+            await invalidateInstructorClassDetails(classId);
+
             const newResObj: Resource = {
                 ...linkData,
                 assets: asset
@@ -639,6 +633,7 @@ function ClassDetailsContent({ classId }: { classId: string }) {
         const newVal = !classData.is_locked;
         const { error } = await supabase.from('classes').update({ is_locked: newVal }).eq('id', classId);
         if (!error) {
+            await invalidateInstructorClassDetails(classId);
             setClassData({ ...classData, is_locked: newVal });
         }
     };
@@ -654,6 +649,8 @@ function ClassDetailsContent({ classId }: { classId: string }) {
                 .eq('id', classId);
 
             if (error) throw error;
+
+            await invalidateInstructorClassDetails(classId);
 
             // CRITICAL FIX: Update local classData state so the UI (and useEffect) knows the new settings
             if (classData) {

@@ -17,6 +17,7 @@ import DashboardCalendar from './components/DashboardCalendar';
 import DashboardTodo from './components/DashboardTodo';
 import InviteColleagueModal from '@/components/InviteColleagueModal';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getInstructorDashboardData } from '@/app/actions/instructorDashboard';
 
 import { Suspense } from 'react';
 import { useToast } from '@/context/ToastContext';
@@ -183,72 +184,26 @@ function DashboardContent() {
             if (!user) return;
             setLoading(true);
 
-            // Using context user directly
+            const { data, error } = await getInstructorDashboardData();
 
-            // Fetch Profile for Name
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('first_name, last_name, full_name')
-                .eq('id', user.id)
-                .maybeSingle();
-
-            if (profile) {
-                let fName = profile.first_name;
-                if (!fName && profile.full_name) {
-                    fName = profile.full_name.split(' ')[0];
-                }
-                if (fName) setFirstName(fName);
-            } else if (user.user_metadata?.first_name) {
-                setFirstName(user.user_metadata.first_name);
-            } else if (user.user_metadata?.full_name) {
-                setFirstName(user.user_metadata.full_name.split(' ')[0]);
+            if (error || !data) {
+                console.error("Failed to load dashboard data", error);
+                setLoading(false);
+                return;
             }
 
-            // Fetch Classes
-            const { data: classesData, error: classesError } = await supabase
-                .from('classes')
-                .select('*')
-                .eq('instructor_id', user.id);
+            setFirstName(data.firstName || 'Instructor');
 
-            if (classesData && classesData.length > 0) {
-                setClasses(classesData);
-                const classIds = classesData.map((c) => c.id);
+            if (data.classes && data.classes.length > 0) {
+                setClasses(data.classes);
+                setAllSubmissions(data.allSubmissions);
+                setAllAssignments(data.allAssignments);
+                setAllEnrollments(data.allEnrollments);
+                setAllResources(data.allResources);
+                setAllEvents(data.allEvents);
 
-                // Fetch All Submissions & Assignments for these classes
-                const subQuery = supabase.from('submissions').select('*').in('class_id', classIds);
-                const assignQuery = supabase.from('assignments').select('*').in('class_id', classIds);
-                const enrollQuery = supabase.from('enrollments').select('*, profiles:student_id(*)').in('class_id', classIds);
-                const resourceQuery = supabase.from('class_assets').select('*, assets(*)').in('class_id', classIds);
-                const eventsQuery = supabase.from('instructor_events').select('*').eq('user_id', user.id);
-
-                const [submissionsRes, assignmentsRes, enrollmentsRes, resourcesRes, eventsRes] = await Promise.all([
-                    subQuery,
-                    assignQuery,
-                    enrollQuery,
-                    resourceQuery,
-                    eventsQuery
-                ]);
-
-                if (submissionsRes.data) {
-                    setAllSubmissions(submissionsRes.data);
-                    calculateStats(classesData, submissionsRes.data);
-                }
-                if (assignmentsRes.data) {
-                    setAllAssignments(assignmentsRes.data);
-                }
-                if (enrollmentsRes.data) {
-                    setAllEnrollments(enrollmentsRes.data as unknown as Enrollment[]);
-                }
-                if (resourcesRes.data) {
-                    setAllResources(resourcesRes.data as unknown as Resource[]);
-                }
-                if (eventsRes.data) {
-                    setAllEvents(eventsRes.data);
-                }
-
-                if (submissionsRes.data && classesData) {
-                    calculateAIStats(classesData, submissionsRes.data, enrollmentsRes.data || []);
-                }
+                calculateStats(data.classes, data.allSubmissions);
+                calculateAIStats(data.classes, data.allSubmissions, data.allEnrollments);
             }
             setLoading(false);
         };

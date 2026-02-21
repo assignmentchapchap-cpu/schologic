@@ -3,6 +3,7 @@
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 import { logSystemError } from '@/lib/logSystemError';
+import { invalidateCache } from '@/lib/cache';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -56,6 +57,9 @@ export async function submitPilotRequest(data: PilotRequestData) {
       console.error('DB Insert Error:', dbError);
       throw new Error('Failed to save request');
     }
+
+    // Clear the active cache for pilots
+    await invalidateCache('admin:leads:pilots');
 
     // 2. Send Admin Notification
     const { error: resendError } = await resend.emails.send({
@@ -233,6 +237,9 @@ export async function submitDemoInvite(data: ShareDemoData) {
       console.error('DB Insert Error (Instructor Invite):', dbError);
       throw new Error(`Failed to log invitation: ${dbError.message} (${dbError.code})`);
     }
+
+    // Clear the active cache for invites
+    await invalidateCache('admin:leads:invites');
 
     // 2. Send Invitation to Recipient
     const { error: inviteEmailError } = await resend.emails.send({
@@ -424,6 +431,9 @@ export async function submitContactForm(data: ContactFormData) {
       console.error('DB Insert Error (Contact Form):', dbError);
       throw new Error('Failed to log contact submission');
     }
+
+    // Clear the active cache for contacts
+    await invalidateCache('admin:leads:contacts');
 
     // 2. Send notification to admin
     const { error: adminContactError } = await resend.emails.send({
