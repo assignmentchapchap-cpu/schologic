@@ -58,7 +58,7 @@ export async function submitPilotRequest(data: PilotRequestData) {
     }
 
     // 2. Send Admin Notification
-    await resend.emails.send({
+    const { error: resendError } = await resend.emails.send({
       from: 'Schologic System <onboarding@schologic.com>',
       to: 'info@schologic.com',
       subject: `[LEAD] ${data.institution} - Pilot Request`,
@@ -190,6 +190,12 @@ export async function submitPilotRequest(data: PilotRequestData) {
       `
     });
 
+    if (resendError) {
+      console.error('Resend API Error (Pilot):', resendError);
+      await logSystemError({ path: '/actions/leads/submitPilotRequest/resend', errorMessage: resendError.message });
+      throw new Error(`Email sending failed: ${resendError.message}`);
+    }
+
     return { success: true };
 
   } catch (error: unknown) {
@@ -225,12 +231,12 @@ export async function submitDemoInvite(data: ShareDemoData) {
 
     if (dbError) {
       console.error('DB Insert Error (Instructor Invite):', dbError);
-      throw new Error('Failed to log invitation');
+      throw new Error(`Failed to log invitation: ${dbError.message} (${dbError.code})`);
     }
 
     // 2. Send Invitation to Recipient
-    await resend.emails.send({
-      from: 'Schologic Invite <onboarding@schologic.com>',
+    const { error: inviteEmailError } = await resend.emails.send({
+      from: 'Schologic Team <onboarding@schologic.com>',
       to: data.recipientEmail,
       subject: `Private Invitation: Join ${data.senderName} on Schologic`,
       html: `
@@ -243,42 +249,57 @@ export async function submitDemoInvite(data: ShareDemoData) {
   <div style="padding: 40px 30px; background: #ffffff;">
     <p style="font-size: 16px; margin-top: 0;">Hello ${data.recipientName},</p>
     
-    <p style="font-size: 15px;"><strong>${data.senderName}</strong> (<a href="mailto:${data.senderEmail}" style="color: #4f46e5; text-decoration: none;">${data.senderEmail}</a>) has invited you to explore Schologic.</p>
+    <p style="font-size: 15px;">Your colleague, <strong>${data.senderName}</strong>, has shared Schologic with you to explore for your department's grading and academic integrity needs.</p>
+
+    <div style="background: #f8fafc; border-left: 4px solid #4f46e5; padding: 15px 20px; margin: 25px 0;">
+      <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase;">Shared By</p>
+      <p style="margin: 0; font-size: 14px; color: #334155;"><strong>Name:</strong> ${data.senderName}</p>
+      <p style="margin: 0; font-size: 14px; color: #334155;"><strong>Email:</strong> <a href="mailto:${data.senderEmail}" style="color: #4f46e5; text-decoration: none;">${data.senderEmail}</a></p>
+      ${data.recipientPhone ? `<p style="margin: 0; font-size: 14px; color: #334155;"><strong>Phone:</strong> ${data.recipientPhone}</p>` : ''}
+    </div>
 
     ${data.message ? `
-    <div style="background: #f8fafc; border-left: 4px solid #4f46e5; padding: 15px 20px; margin: 25px 0; font-style: italic; color: #475569;">
+    <div style="margin: 25px 0; font-style: italic; color: #475569;">
       "${data.message}"
     </div>
     ` : ''}
-    
-    <div style="margin: 30px 0;">
-      <h3 style="color: #0f172a; font-size: 18px; margin-bottom: 10px;">Why Schologic?</h3>
-      <p style="font-size: 15px; color: #475569; margin-bottom: 20px;">
-        Schologic is the operating system for modern faculty, featuring <strong>AI-Powered Grading</strong> (80% faster), <strong>Academic Integrity Detection</strong>, and <strong>Digital Practicum Management</strong>.
-      </p>
-      <p style="font-size: 14px;">
-        <a href="https://schologic.com/use-cases/instructors" style="color: #4f46e5; font-weight: 600; text-decoration: none;">Read More about Instructor Features &rarr;</a>
-      </p>
-    </div>
 
-    <div style="text-align: center; margin: 40px 0;">
-      <a href="https://schologic.com/?mode=demo" style="background: #4f46e5; color: white; padding: 14px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">
-        Create Demo Account
-      </a>
+    <div style="margin: 30px 0;">
+      <p style="font-size: 15px; color: #475569; margin-bottom: 20px;">
+        To review the platform and access your demo account, please follow the link below:
+      </p>
+      <p style="font-size: 14px; margin-bottom: 0;">
+        <a href="https://schologic.com/?mode=demo" style="color: #4f46e5; font-weight: 600; text-decoration: underline;">Access Demo Account &rarr;</a>
+      </p>
     </div>
 
     <p style="font-size: 14px; margin-top: 30px; border-top: 1px solid #f1f5f9; padding-top: 20px;">Sincerely,<br/><span style="font-weight: bold; color: #0f172a;">The Schologic Team</span></p>
   </div>
   
-  <div style="background: #f8fafc; padding: 20px; text-align: center; font-size: 11px; color: #94a3b8;">
-     <p>You received this invitation because ${data.senderEmail} entered your email address on Schologic.</p>
+  <div style="background: #f8fafc; padding: 25px 30px; border-top: 1px solid #f1f5f9; text-align: center;">
+    <p style="font-size: 13px; color: #475569; margin-bottom: 20px;">You received this message because ${data.senderEmail} shared Schologic with you.</p>
+    <div style="color: #94a3b8; font-size: 11px;">
+      <p style="margin-bottom: 5px; font-weight: 600; font-size: 12px; color: #64748b;">Schologic LMS & Integrity Hub</p>
+      <p style="margin-bottom: 5px;">Headquarters: Mang'u Road, Nairobi, Kenya</p>
+      <p style="margin-bottom: 5px;">Support: +254 108 289 977</p>
+      <p style="margin-bottom: 15px;">Smart, Credible, and Flexible Higher Education</p>
+      <p style="margin-top: 20px; border-top: 1px dashed #cbd5e1; padding-top: 15px; font-family: monospace; color: #cbd5e1;">SEC-REF: ${Math.random().toString(36).substring(2, 8).toUpperCase()} &copy; ${new Date().getFullYear()}</p>
+    </div>
   </div>
 </div>
       `
     });
 
+    if (inviteEmailError) {
+      console.error('Resend API Error (Recipient Invite):', inviteEmailError);
+      await logSystemError({ path: '/actions/leads/submitDemoInvite/resend_recipient', errorMessage: inviteEmailError.message });
+      throw new Error(`Failed to send email to ${data.recipientEmail}: ${inviteEmailError.message}`);
+    }
+
     // 3. Send Lead Notification to Admin
-    await resend.emails.send({
+    // Delay 5 seconds to avoid Resend rate limit (2 req/sec)
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const { error: adminAuthError } = await resend.emails.send({
       from: 'Schologic System <onboarding@schologic.com>',
       to: 'info@schologic.com',
       subject: `[REFERRAL] New Lead Referred by ${data.senderName}`,
@@ -332,8 +353,14 @@ export async function submitDemoInvite(data: ShareDemoData) {
       `
     });
 
+    if (adminAuthError) {
+      console.error('Resend API Error (Admin Notification):', adminAuthError);
+    }
+
     // 4. Send Confirmation to Sender (CC)
-    await resend.emails.send({
+    // Delay 5 seconds to avoid Resend rate limit
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const { error: senderAuthError } = await resend.emails.send({
       from: 'Schologic Team <onboarding@schologic.com>',
       to: data.senderEmail,
       subject: `You invited ${data.recipientName} to Schologic`,
@@ -359,6 +386,10 @@ export async function submitDemoInvite(data: ShareDemoData) {
 </div>
       `
     });
+
+    if (senderAuthError) {
+      console.error('Resend API Error (Sender Confirmation):', senderAuthError);
+    }
 
     return { success: true };
 
@@ -395,7 +426,7 @@ export async function submitContactForm(data: ContactFormData) {
     }
 
     // 2. Send notification to admin
-    await resend.emails.send({
+    const { error: adminContactError } = await resend.emails.send({
       from: 'Schologic Contact <onboarding@schologic.com>',
       to: 'info@schologic.com',
       subject: `[CONTACT] ${data.subject}`,
@@ -432,8 +463,14 @@ export async function submitContactForm(data: ContactFormData) {
       `
     });
 
+    if (adminContactError) {
+      console.error('Resend API Error (Contact Admin):', adminContactError);
+      await logSystemError({ path: '/actions/leads/submitContactForm/resend_admin', errorMessage: adminContactError.message });
+      throw new Error(`Email sending to Admin failed: ${adminContactError.message}`);
+    }
+
     // 3. Send acknowledgement to sender
-    await resend.emails.send({
+    const { error: senderContactError } = await resend.emails.send({
       from: 'Schologic Team <onboarding@schologic.com>',
       to: data.email,
       subject: 'We received your message - Schologic',
@@ -467,6 +504,12 @@ export async function submitContactForm(data: ContactFormData) {
 </div>
       `
     });
+
+    if (senderContactError) {
+      console.error('Resend API Error (Contact Sender):', senderContactError);
+      await logSystemError({ path: '/actions/leads/submitContactForm/resend_sender', errorMessage: senderContactError.message });
+      // We won't throw here, since the admin already got it, but we log the failure.
+    }
 
     return { success: true };
 

@@ -3,7 +3,7 @@
 
 import { createClient, Database } from "@schologic/database";
 import { User } from '@supabase/supabase-js';
-import { Home, Clock, ChevronRight, X, FileText, Search, Plus, Calendar as CalendarIcon, ArrowUpRight, CheckCircle, BookOpen } from 'lucide-react';
+import { Home, Clock, ChevronRight, X, FileText, Search, Plus, Calendar as CalendarIcon, ArrowUpRight, CheckCircle, BookOpen, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -15,6 +15,7 @@ import AIStatsCard from '@/components/AIStatsCard';
 import AIInsightsModal from '@/components/AIInsightsModal';
 import DashboardCalendar from './components/DashboardCalendar';
 import DashboardTodo from './components/DashboardTodo';
+import InviteColleagueModal from '@/components/InviteColleagueModal';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Suspense } from 'react';
@@ -53,6 +54,7 @@ function DashboardContent() {
     const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
     const [showAssignmentsModal, setShowAssignmentsModal] = useState(false);
     const [showAIInsights, setShowAIInsights] = useState(false);
+    const [showInviteModal, setShowInviteModal] = useState(false);
     const [loading, setLoading] = useState(true);
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -849,6 +851,25 @@ function DashboardContent() {
                         </div>
                     )
                 }
+
+                {/* Floating Action Button for Invites */}
+                <button
+                    onClick={() => setShowInviteModal(true)}
+                    className="fixed bottom-6 right-6 z-40 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-2 group border-4 border-white dark:border-slate-900"
+                    aria-label="Invite Colleague"
+                >
+                    <UserPlus className="w-6 h-6" />
+                    <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 ease-in-out font-bold text-sm">
+                        <span className="pl-2 pr-1">Invite Colleague</span>
+                    </span>
+                </button>
+
+                <InviteColleagueModal
+                    isOpen={showInviteModal}
+                    onClose={() => setShowInviteModal(false)}
+                    senderName={firstName}
+                    senderEmail={user?.email || ''}
+                />
             </div >
         </div >
     );

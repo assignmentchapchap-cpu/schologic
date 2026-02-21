@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Users, Search, AlertTriangle, Loader2, Mail } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Users, Search, AlertTriangle, Loader2, Mail, RefreshCw } from 'lucide-react';
 import { getPilotRequests, getInstructorInvites, getContactSubmissions } from '@/app/actions/getLeads';
 
 export default function LeadsDashboard() {
@@ -11,32 +11,41 @@ export default function LeadsDashboard() {
     const [contacts, setContacts] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const loadData = useCallback(async (isManualRefresh = false) => {
+        if (isManualRefresh) {
+            setIsRefreshing(true);
+        } else {
+            setIsLoading(true);
+        }
+        setError(null);
+
+        try {
+            const [pilotsRes, invitesRes, contactsRes] = await Promise.all([
+                getPilotRequests(),
+                getInstructorInvites(),
+                getContactSubmissions()
+            ]);
+
+            if (pilotsRes.error || invitesRes.error || contactsRes.error) {
+                setError('Failed to fetch some leads data.');
+            }
+
+            setPilots(pilotsRes.data || []);
+            setInvites(invitesRes.data || []);
+            setContacts(contactsRes.data || []);
+        } catch (err) {
+            setError('An unexpected error occurred while loading.');
+        } finally {
+            setIsLoading(false);
+            setIsRefreshing(false);
+        }
+    }, []);
 
     useEffect(() => {
-        async function loadData() {
-            setIsLoading(true);
-            try {
-                const [pilotsRes, invitesRes, contactsRes] = await Promise.all([
-                    getPilotRequests(),
-                    getInstructorInvites(),
-                    getContactSubmissions()
-                ]);
-
-                if (pilotsRes.error || invitesRes.error || contactsRes.error) {
-                    setError('Failed to fetch some leads data.');
-                }
-
-                setPilots(pilotsRes.data || []);
-                setInvites(invitesRes.data || []);
-                setContacts(contactsRes.data || []);
-            } catch (err) {
-                setError('An unexpected error occurred while loading.');
-            } finally {
-                setIsLoading(false);
-            }
-        }
         loadData();
-    }, []);
+    }, [loadData]);
 
     return (
         <div className="p-6 md:p-8 space-y-6">
@@ -53,6 +62,15 @@ export default function LeadsDashboard() {
                         Centrally manage and review institutional pilot requests, peer invitations, and general contact inquiries from the web forms.
                     </p>
                 </div>
+
+                <button
+                    onClick={() => loadData(true)}
+                    disabled={isRefreshing || isLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 text-sm font-medium shadow-sm"
+                >
+                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                </button>
             </div>
 
             {error && (

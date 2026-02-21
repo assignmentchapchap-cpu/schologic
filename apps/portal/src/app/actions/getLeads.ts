@@ -1,6 +1,8 @@
 'use server';
 
+import { createSessionClient } from '@schologic/database';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 import { logSystemError } from '@/lib/logSystemError';
 
 const supabaseAdmin = createClient(
@@ -14,8 +16,29 @@ const supabaseAdmin = createClient(
     }
 );
 
+/**
+ * Ensures the API is only invoked by an authenticated user.
+ * The Admin Layout relies on client-side routing protection,
+ * but this adds a backend layer before we fetch with the Admin key.
+ */
+async function ensureAuthenticated() {
+    const cookieStore = await cookies();
+    const supabase = createSessionClient(cookieStore);
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        console.error('getLeads authentication failed:', authError?.message || 'No user session');
+        throw new Error('Unauthorized');
+    }
+
+    return user;
+}
+
 export async function getPilotRequests() {
     try {
+        await ensureAuthenticated();
+
         const { data, error } = await supabaseAdmin
             .from('pilot_requests')
             .select('*')
@@ -32,6 +55,8 @@ export async function getPilotRequests() {
 
 export async function getInstructorInvites() {
     try {
+        await ensureAuthenticated();
+
         const { data, error } = await supabaseAdmin
             .from('instructor_invites')
             .select('*')
@@ -48,6 +73,8 @@ export async function getInstructorInvites() {
 
 export async function getContactSubmissions() {
     try {
+        await ensureAuthenticated();
+
         const { data, error } = await supabaseAdmin
             .from('contact_submissions')
             .select('*')

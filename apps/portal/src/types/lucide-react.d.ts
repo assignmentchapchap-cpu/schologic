@@ -192,4 +192,6 @@ declare module 'lucide-react' {
     export const Zap: LucideIcon;
     export const ZoomIn: LucideIcon;
     export const ZoomOut: LucideIcon;
+    export const Gift: LucideIcon;
+    export const UserPlus: LucideIcon;
 }

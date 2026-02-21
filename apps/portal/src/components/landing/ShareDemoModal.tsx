@@ -94,10 +94,10 @@ export default function ShareDemoModal({ onClose }: Props) {
                                 </div>
                             )}
 
-                            <div className="space-y-4">
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Your Details (Sender)</h3>
-                                    <div className="space-y-3">
+                            <div className="space-y-3">
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Your Details (Sender)</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         <div>
                                             <div className="relative">
                                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -107,7 +107,7 @@ export default function ShareDemoModal({ onClose }: Props) {
                                                     value={senderName}
                                                     onChange={(e) => setSenderName(e.target.value)}
                                                     placeholder="Your Name"
-                                                    className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
+                                                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all shadow-sm"
                                                 />
                                             </div>
                                         </div>
@@ -120,39 +120,26 @@ export default function ShareDemoModal({ onClose }: Props) {
                                                     value={senderEmail}
                                                     onChange={(e) => setSenderEmail(e.target.value)}
                                                     placeholder="Your Email"
-                                                    className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
+                                                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all shadow-sm"
                                                 />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                                    <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3">Recipient Details</h3>
-                                    <div className="space-y-3">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div className="relative">
-                                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={recipientName}
-                                                    onChange={(e) => setRecipientName(e.target.value)}
-                                                    placeholder="Their Name"
-                                                    className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
-                                                />
-                                            </div>
-                                            <div className="relative">
-                                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                                <input
-                                                    type="tel"
-                                                    required
-                                                    value={recipientPhone}
-                                                    onChange={(e) => setRecipientPhone(e.target.value)}
-                                                    placeholder="Phone Number"
-                                                    className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
-                                                />
-                                            </div>
+                                <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+                                    <h3 className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2">Recipient Details</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="relative">
+                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                required
+                                                value={recipientName}
+                                                onChange={(e) => setRecipientName(e.target.value)}
+                                                placeholder="Their Name"
+                                                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all shadow-sm"
+                                            />
                                         </div>
                                         <div className="relative">
                                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -162,22 +149,33 @@ export default function ShareDemoModal({ onClose }: Props) {
                                                 value={recipientEmail}
                                                 onChange={(e) => setRecipientEmail(e.target.value)}
                                                 placeholder="Their Email"
-                                                className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
+                                                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all shadow-sm"
+                                            />
+                                        </div>
+                                        <div className="relative md:col-span-2">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="tel"
+                                                required
+                                                value={recipientPhone}
+                                                onChange={(e) => setRecipientPhone(e.target.value)}
+                                                placeholder="Phone Number"
+                                                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all shadow-sm"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Personal Message <span className="text-slate-300 font-normal normal-case">(Optional)</span></label>
+                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 mt-1 ml-1">Personal Message <span className="text-slate-300 font-normal normal-case">(Optional)</span></label>
                                     <div className="relative">
-                                        <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                                        <MessageSquare className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                                         <textarea
                                             value={message}
                                             onChange={(e) => setMessage(e.target.value)}
                                             rows={2}
                                             placeholder="Hey, check out this grading tool..."
-                                            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none resize-none text-sm"
+                                            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none resize-none text-sm transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
