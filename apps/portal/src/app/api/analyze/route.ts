@@ -7,6 +7,7 @@ import { logAiUsage, estimateTokens } from '@/lib/logAiUsage';
 import { logSystemError } from '@/lib/logSystemError';
 
 export async function POST(req: NextRequest) {
+    let userId: string | undefined;
     try {
         const { text, model, granularity, method, classId } = await req.json();
 
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
         const cookieStore = await cookies();
         const supabase = createSessionClient(cookieStore);
         const { data: { user } } = await supabase.auth.getUser();
+        if (user) userId = user.id;
 
         const selectedModel = model || MODELS.AI_DETECTOR_PIRATE;
 
@@ -86,10 +88,11 @@ export async function POST(req: NextRequest) {
 
     } catch (error) {
         console.error("Analyze API Error:", error);
-        logSystemError({
+        await logSystemError({
             path: '/api/analyze',
             errorMessage: error instanceof Error ? error.message : 'Unknown error',
             stackTrace: error instanceof Error ? error.stack : undefined,
+            userId
         });
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

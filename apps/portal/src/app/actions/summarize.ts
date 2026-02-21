@@ -5,6 +5,7 @@ import { summarizeText } from '@schologic/ai-bridge';
 import { cookies } from 'next/headers';
 import { createSessionClient } from '@schologic/database';
 import { logAiUsage } from '@/lib/logAiUsage';
+import { logSystemError } from '@/lib/logSystemError';
 
 
 export interface SummarizeOptions {
@@ -36,6 +37,7 @@ async function fetchTextFromUrl(url: string): Promise<string> {
 }
 
 export async function generateSummary(fileUrl: string, mimeType: string, options?: SummarizeOptions) {
+    let userId: string | undefined;
     if (!fileUrl) {
         return { error: 'No file URL provided', summary: null };
     }
@@ -127,6 +129,7 @@ export async function generateSummary(fileUrl: string, mimeType: string, options
         const cookieStore = await cookies();
         const supabase = createSessionClient(cookieStore);
         const { data: { user } } = await supabase.auth.getUser();
+        if (user) userId = user.id;
 
         const { points, usage } = await summarizeText(text, apiKey, options?.context);
 
@@ -148,6 +151,12 @@ export async function generateSummary(fileUrl: string, mimeType: string, options
 
     } catch (error: any) {
         console.error('[Summarize] Error:', error);
+        await logSystemError({
+            path: '/actions/summarize',
+            errorMessage: error.message || 'Failed to generate summary',
+            stackTrace: error.stack,
+            userId
+        });
         return { error: error.message || 'Failed to generate summary', summary: null };
     }
 }

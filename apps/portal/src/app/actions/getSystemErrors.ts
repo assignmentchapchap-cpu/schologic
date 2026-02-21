@@ -1,6 +1,7 @@
 'use server';
 
-import { createClient } from "@schologic/database";
+import { createSessionClient } from "@schologic/database";
+import { cookies } from "next/headers";
 
 export type SystemErrorLog = {
     id: string;
@@ -19,22 +20,28 @@ export async function getSystemErrors(
     limit: number = 20,
     search?: string
 ): Promise<{ data: SystemErrorLog[], total: number, error?: string }> {
-    const supabase = createClient();
-
     try {
+        const cookieStore = await cookies();
+        const supabase = createSessionClient(cookieStore);
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return { data: [], total: 0, error: "Unauthorized" };
         }
 
-        // Get user profile to check role
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
+        let userRole = user.app_metadata?.role || user.user_metadata?.role;
 
-        if (profileError || !profile?.role || !['superadmin', 'admin'].includes(profile.role as string)) {
+        if (!userRole) {
+            // Get user profile to check role fallback
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+            userRole = profile?.role;
+        }
+
+        if (!userRole || !['superadmin', 'admin'].includes(userRole as string)) {
             return { data: [], total: 0, error: "Forbidden: Insufficient permissions" };
         }
 
@@ -42,11 +49,19 @@ export async function getSystemErrors(
         const from = (page - 1) * limit;
         const to = from + limit - 1;
 
-        let query = supabase
+        // Use service role client to bypass RLS for system error logs
+        const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+        const supabaseAdmin = createAdminClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            { auth: { autoRefreshToken: false, persistSession: false } }
+        );
+
+        let query = supabaseAdmin
             .from('system_errors')
             .select(`
                 *,
-                users:user_id (email)
+                users:profiles(email)
             `, { count: 'exact' })
             .order('created_at', { ascending: false })
             .range(from, to);

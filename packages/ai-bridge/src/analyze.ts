@@ -47,8 +47,7 @@ export async function analyzeText(
 
             if (!response.ok) {
                 console.error("HF API Error:", response.status, response.statusText);
-                results.push({ text: unit, prob: 0, words, isFlagged: false, contribution: 0 });
-                continue;
+                throw new Error(`HuggingFace API Request Failed: ${response.status} ${response.statusText}`);
             }
 
             const data = await response.json();
@@ -93,7 +92,8 @@ export async function analyzeText(
 
         } catch (err) {
             console.error("Error analyzing unit:", err);
-            results.push({ text: unit, prob: 0, words, isFlagged: false, contribution: 0 });
+            // Throw the error instead of pushing a dummy score to block submissions
+            throw err;
         }
     }
 

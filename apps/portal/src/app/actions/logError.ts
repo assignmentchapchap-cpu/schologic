@@ -1,7 +1,8 @@
 'use server';
 
-import { createClient } from "@schologic/database";
+import { createSessionClient } from "@schologic/database";
 import { logSystemError } from '@/lib/logSystemError';
+import { cookies } from "next/headers";
 
 /**
  * Server action to log errors from Client Components.
@@ -11,7 +12,8 @@ export async function logClientError(message: string, stack?: string, path?: str
     let userId: string | undefined;
 
     try {
-        const supabase = createClient();
+        const cookieStore = await cookies();
+        const supabase = createSessionClient(cookieStore);
         const { data: { user } } = await supabase.auth.getUser();
         if (user) userId = user.id;
     } catch (e) {

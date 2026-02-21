@@ -6,6 +6,7 @@ import { logAiUsage } from '@/lib/logAiUsage';
 import { logSystemError } from '@/lib/logSystemError';
 
 export async function POST(req: Request) {
+    let userId: string | undefined;
     try {
         const body = await req.json();
         const {
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
         const cookieStore = await cookies();
         const supabase = createSessionClient(cookieStore);
         const { data: { user } } = await supabase.auth.getUser();
+        if (user) userId = user.id;
 
         console.log("Analyzing submission via AI Bridge for:", assignment_title);
 
@@ -61,10 +63,11 @@ export async function POST(req: Request) {
 
     } catch (error: unknown) {
         console.error("TA API Error:", error);
-        logSystemError({
+        await logSystemError({
             path: '/api/assistant',
             errorMessage: error instanceof Error ? error.message : 'TA analysis failed.',
             stackTrace: error instanceof Error ? error.stack : undefined,
+            userId
         });
         const message = error instanceof Error ? error.message : 'TA analysis failed.';
         return NextResponse.json({ error: message }, { status: 500 });

@@ -23,6 +23,7 @@ import {
     RefreshCw
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import Link from 'next/link';
 
 export default function ErrorLogTable() {
     const [logs, setLogs] = useState<SystemErrorLog[]>([]);
@@ -150,9 +151,17 @@ export default function ErrorLogTable() {
                                     <TableCell>
                                         <div className="flex items-center gap-2 text-xs text-slate-600">
                                             <User className="w-3 h-3 text-slate-400" />
-                                            <span className="truncate max-w-[120px]" title={log.users?.email || 'Anonymous'}>
-                                                {log.users?.email || 'Anonymous'}
-                                            </span>
+                                            {log.users?.email ? (
+                                                <span className="truncate max-w-[120px]" title={log.users.email}>
+                                                    {log.users.email}
+                                                </span>
+                                            ) : log.user_id ? (
+                                                <Link href={`/admin/users/${log.user_id}`} className="text-indigo-600 hover:underline truncate max-w-[120px]" title="View Profile">
+                                                    View Profile
+                                                </Link>
+                                            ) : (
+                                                <span className="text-slate-400 italic">Anonymous</span>
+                                            )}
                                         </div>
                                     </TableCell>
                                 </TableRow>
