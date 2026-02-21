@@ -130,9 +130,9 @@ export async function generateSummary(fileUrl: string, mimeType: string, options
 
         const { points, usage } = await summarizeText(text, apiKey, options?.context);
 
-        // Log AI usage with real token counts (fire-and-forget)
+        // Log AI usage with real token counts
         if (user) {
-            logAiUsage({
+            await logAiUsage({
                 instructorId: user.id,
                 endpoint: '/actions/summarize',
                 provider: 'publicai',

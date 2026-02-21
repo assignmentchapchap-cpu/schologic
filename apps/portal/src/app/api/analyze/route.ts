@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
             apiKey
         );
 
-        // Log AI usage (fire-and-forget)
+        // Log AI usage
         if (user) {
             const estimatedTokens = estimateTokens(text);
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
                 }
             }
 
-            logAiUsage({
+            await logAiUsage({
                 instructorId,
                 studentId,
                 endpoint: '/api/analyze',

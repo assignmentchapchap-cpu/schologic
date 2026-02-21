@@ -20,7 +20,7 @@ interface AiUsagePayload {
 }
 
 /**
- * Fire-and-forget: Logs AI API usage to `api_usage_logs`.
+ * Logs AI API usage to `api_usage_logs`.
  * Errors are swallowed so they never block the API response.
  */
 export async function logAiUsage(payload: AiUsagePayload): Promise<void> {
