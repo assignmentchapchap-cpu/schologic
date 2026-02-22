@@ -104,7 +104,7 @@ export default function AdminSidebar({ isCollapsed = false, onToggleCollapse }: 
                             className={cn("flex items-center gap-3 overflow-hidden hover:opacity-80 transition-opacity cursor-pointer")}
                         >
                             <div className="relative w-10 h-10 shrink-0">
-                                <Image src="/logo.png" alt="Schologic LMS" fill className="object-cover rounded-xl" />
+                                <Image src="/logo_updated.png" alt="Schologic LMS" fill className="object-contain rounded-xl" />
                             </div>
                             <div className={cn("transition-all duration-300", isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100")}>
                                 <span className="text-xl font-bold text-white whitespace-nowrap">

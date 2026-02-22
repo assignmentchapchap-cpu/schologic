@@ -51,7 +51,7 @@ export function JsonLdOrganization() {
         "@id": "https://schologic.com/#organization",
         name: "Schologic LMS",
         url: "https://schologic.com",
-        logo: "https://schologic.com/logo.png",
+        logo: "https://schologic.com/logo_updated.png",
         description:
             "Schologic is an education technology company offering Credible, Flexible, & Intelligent Learning. Our platform serves universities, colleges, and TVET institutions with AI content detection, automated grading, practicum management, and open educational resources.",
         areaServed: {

@@ -2,6 +2,7 @@
 
 import { GraduationCap, Grid, FileText, Shield, Sparkles, BookOpen, Archive, ChevronDown, School, Users, Menu, X } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 
 interface NavbarProps {
@@ -34,9 +35,15 @@ export default function Navbar({ onOpenDemo, solid }: NavbarProps) {
     return (
         <nav className="fixed top-0 left-0 w-full z-50 bg-slate-900 border-b border-slate-700 py-3 transition-colors duration-300">
             <div className="container mx-auto px-6 flex justify-between items-center">
-                <Link href="/" className="flex items-center gap-2 group">
-                    <div className="bg-indigo-600 p-2 rounded-lg group-hover:bg-indigo-500 transition-colors">
-                        <GraduationCap className="w-6 h-6 text-white" />
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="relative w-9 h-9 shrink-0">
+                        <Image
+                            src="/logo_updated.png"
+                            alt="Schologic Logo"
+                            fill
+                            priority
+                            className="object-contain"
+                        />
                     </div>
                     <span className="font-serif font-bold text-xl text-white tracking-tight">Schologic LMS</span>
                 </Link>

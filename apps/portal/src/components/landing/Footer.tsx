@@ -2,6 +2,7 @@
 
 import { Github, Twitter, Linkedin, GraduationCap, Shield, Server, Eye, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 
 function FooterColumn({ title, children }: { title: string, children: React.ReactNode }) {
@@ -71,8 +72,15 @@ export default function Footer() {
                 <div className="container mx-auto px-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
                         <div className="col-span-1 md:col-span-1">
-                            <div className="flex items-center gap-2 font-serif font-bold text-xl mb-4">
-                                <GraduationCap className="w-8 h-8 text-indigo-500" />
+                            <div className="flex items-center gap-3 font-serif font-bold text-xl mb-6">
+                                <div className="relative w-10 h-10 shrink-0">
+                                    <Image
+                                        src="/logo_updated.png"
+                                        alt="Schologic Logo"
+                                        fill
+                                        className="object-contain"
+                                    />
+                                </div>
                                 Schologic LMS
                             </div>
                             <p className="text-slate-500 text-sm leading-relaxed">
