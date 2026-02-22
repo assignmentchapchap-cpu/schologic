@@ -56,6 +56,7 @@ import { ToastProvider } from "@/context/ToastContext";
 import DemoBanner from '@/components/DemoBanner';
 import { UserProvider } from "@/context/UserContext";
 import { JsonLdOrganization } from "@/components/seo/JsonLd";
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 
 export default function RootLayout({
@@ -82,6 +83,7 @@ export default function RootLayout({
             {children}
           </UserProvider>
         </ToastProvider>
+        <GoogleAnalytics gaId="G-WLLYY0ET1Y" />
       </body >
     </html >
   );
