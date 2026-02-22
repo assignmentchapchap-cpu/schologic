@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { getUserAction } from '@/app/actions/identity';
 
 type UserContextType = {
     user: User | null;
@@ -30,17 +31,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                // Resolve role: app_metadata (secure) > user_metadata
+                // Resolve role: app_metadata (secure) > user_metadata > profile cache
                 let role = user.app_metadata?.role || user.user_metadata?.role;
+                let isActive = user.user_metadata?.is_active;
 
-                if (!role) {
-                    // Fallback to profiles table for consistency with proxy.ts
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('role')
-                        .eq('id', user.id)
-                        .single();
-                    role = profile?.role;
+                if (!role || isActive === undefined) {
+                    const profile = await getUserAction();
+                    if (profile) {
+                        role = role || profile.role;
+                        isActive = isActive !== undefined ? isActive : profile.is_active;
+                    }
                 }
 
                 (user as any).role = role || 'student';
@@ -69,11 +69,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                     let role = user.app_metadata?.role || user.user_metadata?.role;
 
                     if (!role) {
-                        const { data: profile } = await supabase
-                            .from('profiles')
-                            .select('role')
-                            .eq('id', user.id)
-                            .single();
+                        const profile = await getUserAction();
                         role = profile?.role;
                     }
 

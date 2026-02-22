@@ -238,7 +238,7 @@ export default function HomeClient() {
                         Academic Excellence?
                     </h2>
                     <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-                        Join forward-thinking institutions using the Schologic LMS to offer smart, credible, and flexible higher education.
+                        Join forward-thinking institutions using the Schologic LMS to offer credible, flexible, & intelligent learning.
                     </p>
 
                     <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center sm:justify-center sm:gap-4 w-full px-1 sm:px-0">
@@ -277,7 +277,7 @@ export default function HomeClient() {
 
             {/* Hidden Semantic Text for AI Crawlers */}
             <div className="hidden">
-                Schologic is an education technology company building the operating system for academic integrity and digital learning in Africa.
+                Schologic is an education technology company offering Credible, Flexible, & Intelligent Learning.
                 AI content detection, automated grading, practicum management, and open educational resources for universities, colleges, and TVET institutions.
                 Evidence-Based AI Detection using RoBERTa open-weights models trained on the Human ChatGPT Comparison Corpus (HC3).
                 LTI 1.3 Compliant. IMS Global Common Cartridge 1.3. CUE and CDACC aligned.

@@ -23,16 +23,16 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://schologic.com'),
-  title: "Schologic LMS - Smart, Credible, and Flexible Higher Education, with AI",
+  title: "Schologic LMS - Credible, Flexible, & Intelligent Learning.",
   description: "Cut grading time by up to 80%, eliminate textbook costs, and protect academic integrity — without switching between five different tools. Schologic LMS unifies AI grading, content detection, class management, and open educational resources into one platform designed for African universities and colleges.",
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'Schologic LMS',
-    description: 'The operating system for academic integrity and digital learning in Africa.',
+    description: 'Credible, Flexible, & Intelligent Learning.',
     url: 'https://schologic.com',
-    siteName: 'Schologic',
+    siteName: 'Schologic LMS',
     images: [
       {
         url: '/images/updated screenshots/dashboard.webp',
@@ -47,17 +47,14 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Schologic LMS',
-    description: 'The operating system for academic integrity and digital learning in Africa.',
+    description: 'Credible, Flexible, & Intelligent Learning.',
     images: ['/images/updated screenshots/dashboard.webp'],
   },
 };
 
 import { ToastProvider } from "@/context/ToastContext";
 import DemoBanner from '@/components/DemoBanner';
-import { UniversalReaderProvider } from '@/components/providers/UniversalReaderProvider';
 import { UserProvider } from "@/context/UserContext";
-import { NotificationProvider } from "@/context/NotificationContext";
-import { MessageProvider } from "@/context/MessageContext";
 import { JsonLdOrganization } from "@/components/seo/JsonLd";
 
 
@@ -68,21 +65,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://yysunbytccvkynpyxzjy.supabase.co" />
+        <link rel="dns-prefetch" href="https://yysunbytccvkynpyxzjy.supabase.co" />
+        <link rel="preconnect" href="https://fond-akita-38050.upstash.io" />
+        <link rel="dns-prefetch" href="https://fond-akita-38050.upstash.io" />
+      </head>
       <body
         className={`${inter.variable} ${merriweather.variable} ${jetbrainsMono.variable} font-sans antialiased overflow-x-hidden`}
         suppressHydrationWarning
       >
         <ToastProvider>
           <UserProvider>
-            <UniversalReaderProvider>
-              <NotificationProvider>
-                <MessageProvider>
-                  <DemoBanner />
-                  <JsonLdOrganization />
-                  {children}
-                </MessageProvider>
-              </NotificationProvider>
-            </UniversalReaderProvider>
+            <DemoBanner />
+            <JsonLdOrganization />
+            {children}
           </UserProvider>
         </ToastProvider>
       </body >

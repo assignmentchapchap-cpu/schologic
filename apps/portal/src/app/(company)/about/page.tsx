@@ -4,19 +4,17 @@ import Link from 'next/link';
 import { JsonLdWebPage } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-    title: 'About Us - Smart, Credible, and Flexible Higher Education',
-    description: 'Schologic LMS is the operating system for academic integrity and digital learning in Africa. Unifying AI grading, content detection, and OER.',
+    title: 'About Us - Credible, Flexible, & Intelligent Learning.',
+    description: 'Schologic LMS offers Credible, Flexible, & Intelligent Learning. Unifying AI detection, practicum management instructor assitants, and Open Education Resources.',
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function AboutPage() {
     return (
         <>
-            {/* JSON-LD */}
-            <JsonLdWebPage
-                name="About Us - Smart, Credible, and Flexible Higher Education"
-                description="Schologic LMS is the operating system for academic integrity and digital learning in Africa."
-            />
-
             {/* Header */}
             <section className="pt-16 pb-12 text-center">
                 <div className="container mx-auto px-6">
@@ -24,10 +22,10 @@ export default function AboutPage() {
                         <Sparkles className="w-3 h-3" /> About Us
                     </div>
                     <h1 className="text-4xl md:text-5xl font-serif font-black text-slate-900 mb-4">
-                        Smart, Credible, and Flexible Higher Education, with AI.
+                        Credible, Flexible, & Intelligent Learning.
                     </h1>
                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                        Schologic is an education technology company building the operating system for academic integrity and digital learning in Africa.
+                        Schologic is an education technology company offering Credible, Flexible, & Intelligent Learning.
                     </p>
                 </div>
             </section>

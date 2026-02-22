@@ -3,6 +3,7 @@
 import { createSessionClient } from "@schologic/database";
 import { cookies } from "next/headers";
 import { fetchWithCache } from "@/lib/cache";
+import { getUserIdentity } from "@/lib/identity-server";
 
 export type SystemErrorLog = {
     id: string;
@@ -33,12 +34,8 @@ export async function getSystemErrors(
         let userRole = user.app_metadata?.role || user.user_metadata?.role;
 
         if (!userRole) {
-            // Get user profile to check role fallback
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .single();
+            // Get user profile to check role fallback (via cache)
+            const profile = await getUserIdentity(user.id);
             userRole = profile?.role;
         }
 

@@ -30,7 +30,7 @@ export default function UseCasesOverview() {
                         How Schologic Works
                     </h1>
                     <p className="text-xl md:text-2xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
-                        Smart, credible, and flexible tools built for every stakeholder in the academic ecosystem.
+                        Credible, flexible, & intelligent learning tools built for every stakeholder in the academic ecosystem.
                     </p>
                 </GridColumn>
             </SectionGrid>

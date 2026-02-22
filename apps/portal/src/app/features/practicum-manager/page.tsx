@@ -7,25 +7,18 @@ import { PracticumManagerFAQ } from '@/components/features/practicum-manager/Pra
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Practicum & Internship Management System for TVET & Teacher Training | Schologic',
-    description: 'Digital practicum management for teaching practice and industrial attachments in Kenya. Track placements, automate evaluations, and ensure compliance.',
+    title: 'Practicum & Industrial Attachment Management | Schologic LMS',
+    description: 'Digitize logbooks and automate supervisor evaluations. Schologic LMS provides an auditable trail for teaching practice and industrial attachments.',
     keywords: [
-        'practicum management system',
-        'teaching practice Kenya',
-        'industrial attachment tracking',
-        'TVET practicum software',
-        'teacher training college',
-        'field placement management',
-        'internship tracking system',
-        'supervisor evaluation software',
-        'student logbook management',
-        'practicum compliance tools',
-        'workplace-based learning',
-        'practicum assessment rubrics'
+        'practicum management',
+        'industrial attachment',
+        'Schologic LMS',
+        'digital logbook',
+        'supervisor evaluation'
     ],
     openGraph: {
-        title: 'Practicum & Internship Management for TVET & Teacher Training Colleges',
-        description: 'Automate practicum workflows: student placements, supervisor reports, secure logbooks, and compliance tracking. Built for Kenyan TVET institutions and teacher training colleges.',
+        title: 'Practicum & Industrial Attachment Management | Schologic LMS',
+        description: 'Automate student placements, supervisor reports, and secure logbooks. Built for TVET and teacher training colleges.',
     },
     other: {
         'application/ld+json': JSON.stringify({

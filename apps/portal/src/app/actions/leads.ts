@@ -187,7 +187,7 @@ export async function submitPilotRequest(data: PilotRequestData) {
       <p style="margin-bottom: 5px;"><strong>Schologic LMS & Integrity Hub</strong></p>
       <p style="margin-bottom: 5px;">Regional HQ: Mang'u Road, Nairobi, Kenya</p>
       <p style="margin-bottom: 5px;">For Queries Contact +254 108289977</p>
-      <p>Smart, Credible, and Flexible Higher Education, with AI</p>
+      <p>Credible, Flexible, & Intelligent Learning.</p>
     </div>
   </div>
 </div>
@@ -289,7 +289,7 @@ export async function submitDemoInvite(data: ShareDemoData) {
       <p style="margin-bottom: 5px; font-weight: 600; font-size: 12px; color: #64748b;">Schologic LMS & Integrity Hub</p>
       <p style="margin-bottom: 5px;">Headquarters: Mang'u Road, Nairobi, Kenya</p>
       <p style="margin-bottom: 5px;">Support: +254 108 289 977</p>
-      <p style="margin-bottom: 15px;">Smart, Credible, and Flexible Higher Education</p>
+      <p style="margin-bottom: 15px;">Credible, Flexible, & Intelligent Learning.</p>
       <p style="margin-top: 20px; border-top: 1px dashed #cbd5e1; padding-top: 15px; font-family: monospace; color: #cbd5e1;">SEC-REF: ${Math.random().toString(36).substring(2, 8).toUpperCase()} &copy; ${new Date().getFullYear()}</p>
     </div>
   </div>
@@ -488,7 +488,7 @@ export async function submitContactForm(data: ContactFormData) {
 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; max-width: 600px; margin: 0 auto; line-height: 1.6; color: #334155;">
   <div style="background: #f8fafc; padding: 30px; text-align: center; border-bottom: 1px solid #e2e8f0;">
     <h1 style="color: #0f172a; margin: 0; font-size: 20px; font-weight: 700;">SCHOLOGIC LMS</h1>
-    <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 12px;">Smart, Credible, and Flexible Higher Education</p>
+    <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 12px;">Credible, Flexible, & Intelligent Learning.</p>
   </div>
 
   <div style="padding: 40px 30px;">
@@ -508,7 +508,7 @@ export async function submitContactForm(data: ContactFormData) {
     <div style="color: #94a3b8; font-size: 11px;">
       <p style="margin-bottom: 5px;"><strong>Schologic LMS</strong></p>
       <p style="margin-bottom: 5px;">For Queries Contact +254 108289977</p>
-      <p>Smart, Credible, and Flexible Higher Education, with AI</p>
+      <p>Credible, Flexible, & Intelligent Learning.</p>
     </div>
   </div>
 </div>

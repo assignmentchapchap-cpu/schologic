@@ -17,9 +17,9 @@ import {
 import { JsonLdFAQPage, JsonLdBreadcrumbList } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: 'University LMS Kenya | Academic Integrity & Multi-Campus Management | Schologic',
-    description: 'Eliminate campus silos, automate TVET practicum tracking, and secure academic integrity with AI detection. The unified platform for Kenya\'s leading universities with CUE compliance built-in.',
-    keywords: ['university lms kenya', 'academic integrity software', 'practicum management', 'multi-campus platform', 'student retention analytics', 'OER integration', 'TVET compliance', 'open and distance learning', 'online classes', 'virtual learning', 'CUE accreditation', 'data sovereignty'],
+    title: 'Schologic LMS for Universities | Academic Integrity & Multi-Campus Management',
+    description: 'Protect degree value with AI detection and automate multi-campus operations. Schologic LMS provides sovereign, CUE-compliant digital learning for leading African universities.',
+    keywords: ['Schologic LMS', 'university lms kenya', 'academic integrity', 'multi-campus management', 'CUE compliance', 'data sovereignty'],
 };
 
 const faqItems = [

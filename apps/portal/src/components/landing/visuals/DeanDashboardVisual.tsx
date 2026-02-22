@@ -30,11 +30,15 @@ export const DeanDashboardVisual = () => {
     const [current, setCurrent] = useState(0);
     const [isExpanded, setIsExpanded] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [isHydrated, setIsHydrated] = useState(false);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const touchStartX = useRef<number | null>(null);
 
     useEffect(() => {
         setMounted(true);
+        // Delay hydration trigger slightly to ensure first paint matches placeholder
+        const timeout = setTimeout(() => setIsHydrated(true), 100);
+        return () => clearTimeout(timeout);
     }, []);
 
     // --- Navigation (resets autoplay timer) ---
@@ -165,7 +169,7 @@ export const DeanDashboardVisual = () => {
                                             style={{
                                                 opacity: index === current ? 1 : 0,
                                                 transformOrigin: 'top left', // Anchor to top-left corner (Sidebar stays visible)
-                                                transform: index === current ? 'scale(1.3)' : 'scale(1)', // Max zoom 1.3 (130%)
+                                                transform: (index === current && isHydrated) ? 'scale(1.3)' : 'scale(1)', // Max zoom 1.3 (130%)
                                                 transition: 'opacity 1000ms ease-in-out, transform 8000ms linear', // 8s zoom per request
                                                 zIndex: index === current ? 10 : 0,
                                                 pointerEvents: 'none',

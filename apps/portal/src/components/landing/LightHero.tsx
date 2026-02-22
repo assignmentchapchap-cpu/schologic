@@ -18,12 +18,12 @@ export function LightHero() {
                     {/* LEFT REGION: Content (Span 7) */}
                     <div className="md:col-span-7 flex flex-col">
 
-                        <h1 className="text-[2.75rem] leading-[1.1] sm:text-5xl md:text-6xl font-serif font-black text-slate-900 mb-8 tracking-tight">
-                            Smart, Credible, and Flexible Learning <br /> - With AI.
+                        <h1 className="text-[2.75rem] leading-[1.2] sm:text-5xl md:text-6xl font-serif font-black text-slate-900 mb-8 tracking-tight">
+                            Credible, Flexible, & Intelligent Learning.
                         </h1>
 
                         <p className="text-lg md:text-xl text-slate-600 leading-10 md:leading-loose mb-10 font-light max-w-2xl">
-                            Save <span className="text-slate-900">up to 80% of administrative time</span> with the Schologic <strong>Learning Management System (LMS)</strong>. We unify AI Assistant tasks, digital forensics, and open educational resources into <span className="text-slate-900">one powerful platform</span>.
+                            Save <span className="text-slate-900">up to 80% of learning management time</span> with the <strong>Schologic LMS institutional portal</strong>. We unify AI content detection, digital practicum management, AI assistants and open educational resources into <span className="text-slate-900">one powerful platform</span>.
                         </p>
 
                         {/* CTAs + Assurances Wrapper (Constrained Width on Desktop) */}
@@ -34,7 +34,7 @@ export function LightHero() {
                                     href="/#request-pilot"
                                     className="flex items-center justify-center px-4 md:px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-indigo-500/30 text-sm md:text-base whitespace-nowrap md:min-w-[240px] active:scale-95"
                                 >
-                                    Request Institutional Pilot
+                                    Start Institutional Pilot
                                 </Link>
                                 <Link
                                     href="/login?view=signup"
@@ -48,11 +48,11 @@ export function LightHero() {
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-slate-500 mt-2">
                                 <div className="flex items-center gap-2">
                                     <CheckCircle className="w-5 h-5 text-emerald-600" />
-                                    <span>Instant Access</span>
+                                    <span>Free Instructor Access</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                                    <span>No Credit Card</span>
+                                    <span>Live Demo</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Clock className="w-5 h-5 text-amber-600" />

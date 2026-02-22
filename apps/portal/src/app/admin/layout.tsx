@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import AdminSidebar from '@/components/AdminSidebar';
 import { NavigationGuardProvider } from '@/context/NavigationGuardContext';
 import { FeedbackProvider } from '@/context/FeedbackContext';
+import { DashboardProviders } from '@/components/providers/DashboardProviders';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -29,19 +30,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
         <NavigationGuardProvider>
             <FeedbackProvider>
-                <div className="min-h-screen bg-slate-50">
-                    <AdminSidebar
-                        isCollapsed={isCollapsed}
-                        onToggleCollapse={toggleSidebar}
-                    />
+                <DashboardProviders>
+                    <div className="min-h-screen bg-slate-50">
+                        <AdminSidebar
+                            isCollapsed={isCollapsed}
+                            onToggleCollapse={toggleSidebar}
+                        />
 
-                    <div
-                        className={`min-h-screen transition-all duration-300 ease-in-out ${isCollapsed ? 'md:ml-20' : 'md:ml-64'
-                            }`}
-                    >
-                        {children}
+                        <div
+                            className={`min-h-screen transition-all duration-300 ease-in-out ${isCollapsed ? 'md:ml-20' : 'md:ml-64'
+                                }`}
+                        >
+                            {children}
+                        </div>
                     </div>
-                </div>
+                </DashboardProviders>
             </FeedbackProvider>
         </NavigationGuardProvider>
     );

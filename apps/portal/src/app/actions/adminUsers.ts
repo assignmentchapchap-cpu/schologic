@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createSessionClient } from '@schologic/database';
 import { fetchWithCache, invalidateCache } from '@/lib/cache';
+import { invalidateUserIdentity } from '@/lib/identity-server';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,13 +23,13 @@ async function ensureAuthenticated() {
 // ─── Get All Users ────────────────────────────────────────────────────
 export async function getAllUsers() {
     await ensureAuthenticated();
-    
+
     return fetchWithCache('admin:users', async () => {
         const { data, error } = await supabaseAdmin
             .from('profiles')
             .select('id, full_name, email, role, is_active, is_demo, demo_converted_at, created_at, phone, country, professional_affiliation')
             .order('created_at', { ascending: false });
-            
+
         if (error) throw error;
         return data;
     }, 300); // 5 minutes TTL
@@ -69,6 +70,7 @@ export async function addUser({
         });
 
         await invalidateCache('admin:users');
+        await invalidateUserIdentity(authData.user.id);
 
         return { success: true, userId: authData.user.id };
     } catch (error: any) {
@@ -92,6 +94,7 @@ export async function suspendUser(userId: string) {
         await supabaseAdmin.from('profiles').update({ is_active: false }).eq('id', userId);
 
         await invalidateCache('admin:users');
+        await invalidateUserIdentity(userId);
 
         return { success: true };
     } catch (error: any) {
@@ -113,6 +116,7 @@ export async function reactivateUser(userId: string) {
         await supabaseAdmin.from('profiles').update({ is_active: true }).eq('id', userId);
 
         await invalidateCache('admin:users');
+        await invalidateUserIdentity(userId);
 
         return { success: true };
     } catch (error: any) {
@@ -134,6 +138,7 @@ export async function changeUserRole(userId: string, newRole: 'instructor' | 'st
         await supabaseAdmin.from('profiles').update({ role: newRole }).eq('id', userId);
 
         await invalidateCache('admin:users');
+        await invalidateUserIdentity(userId);
 
         return { success: true };
     } catch (error: any) {

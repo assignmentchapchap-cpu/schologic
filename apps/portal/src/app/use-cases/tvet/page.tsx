@@ -10,19 +10,14 @@ import Image from "next/image";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "LMS for TVET Institutions in Kenya | Digital Learning Platform | Schologic",
-    description: "Schologic is the operating system for Competency-Based Education (CBET). Automate CDACC compliance, track industrial attachment, and deliver TVET theory online.",
+    title: 'Schologic LMS for TVET | CBET Assessment & CDACC Compliance',
+    description: 'The operating system for Competency-Based Education. Automate CDACC compliance and track industrial attachments with Schologic LMS.',
     keywords: [
-        "TVET LMS Kenya",
-        "CBET assessment tool",
-        "CDACC compliance software",
-        "TVET capitation reporting system",
-        "industrial attachment tracking",
-        "continuing technical education",
-        "Schologic for TVET",
-        "Zero Textbook Cost",
-        "OER TVET",
-        "TVETA accreditation"
+        'TVET LMS Kenya',
+        'CBET assessment',
+        'CDACC compliance',
+        'industrial attachment tracking',
+        'Schologic LMS TVET'
     ],
 };
 

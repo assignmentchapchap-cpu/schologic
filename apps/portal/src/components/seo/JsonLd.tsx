@@ -49,11 +49,11 @@ export function JsonLdOrganization() {
         "@context": "https://schema.org",
         "@type": "Organization",
         "@id": "https://schologic.com/#organization",
-        name: "Schologic",
+        name: "Schologic LMS",
         url: "https://schologic.com",
         logo: "https://schologic.com/logo.png",
         description:
-            "Schologic is an education technology company building the operating system for academic integrity and digital learning in Africa. Our platform serves universities, colleges, and TVET institutions with AI content detection, automated grading, practicum management, and open educational resources.",
+            "Schologic is an education technology company offering Credible, Flexible, & Intelligent Learning. Our platform serves universities, colleges, and TVET institutions with AI content detection, automated grading, practicum management, and open educational resources.",
         areaServed: {
             "@type": "Country",
             name: "Kenya",
@@ -84,7 +84,7 @@ export function JsonLdSoftwareApplication() {
         operatingSystem: "Web",
         url: "https://schologic.com",
         description:
-            "Cut grading time by 80%, eliminate textbook costs, and protect academic integrity — without switching between five different tools. Schologic LMS unifies AI grading, content detection, class management, and open educational resources into one platform designed for African universities and colleges.",
+            "Save up to 80% of learning management time with the Schologic LMS institutional portal. We unify AI content detection, digital practicum management, AI assistants and open educational resources into one powerful platform.",
         provider: {
             "@type": "Organization",
             "@id": "https://schologic.com/#organization",
@@ -122,7 +122,7 @@ export function JsonLdPricing() {
         "@context": "https://schema.org",
         "@type": "Service",
         name: "Schologic LMS",
-        description: "Comprehensive LMS for African institutions with AI grading and integrity tools.",
+        description: "Comprehensive LMS for higher learning with AI grading and integrity tools.",
         offers: [
             {
                 "@type": "Offer",
@@ -190,7 +190,7 @@ export function JsonLdWebSite() {
         "@context": "https://schema.org",
         "@type": "WebSite",
         "url": "https://schologic.com",
-        "name": "Schologic",
+        "name": "Schologic LMS",
         "potentialAction": {
             "@type": "SearchAction",
             "target": "https://schologic.com/search?q={search_term_string}",

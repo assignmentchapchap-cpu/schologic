@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
     return {
         name: 'Schologic LMS',
         short_name: 'Schologic',
-        description: 'The operating system for academic integrity and digital learning in Africa.',
+        description: 'Credible, Flexible, & Intelligent Learning.',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',

@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { logSecurityEvent } from '@/lib/logSecurityEvent'
+import { getUserIdentity } from '@/lib/identity-server'
 
 export async function proxy(request: NextRequest) {
     let response = NextResponse.next({
@@ -52,14 +53,9 @@ export async function proxy(request: NextRequest) {
     // 3. Role Fetching (Priority to secure app_metadata, fallback to user_metadata or DB)
     let userRole = user?.app_metadata?.role || user?.user_metadata?.role;
 
-    // If user is logged in but role is missing from both JWT claims, fetch from profiles table
+    // If user is logged in but role is missing from both JWT claims, fetch from profiles table (via Redis cache)
     if (user && !userRole) {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
+        const profile = await getUserIdentity(user.id);
         if (profile?.role) {
             userRole = profile.role;
         }

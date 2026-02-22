@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { cookies, headers } from 'next/headers';
 import { createSessionClient } from '@schologic/database';
+import { invalidateUserIdentity } from '@/lib/identity-server';
 
 
 // Admin client for privileged operations (wiping data, updating auth flags)
@@ -76,6 +77,8 @@ export async function upgradeDemoAccount(newEmail: string) {
       is_demo: false,
       demo_converted_at: new Date().toISOString()
     }).eq('id', userId);
+
+    await invalidateUserIdentity(userId);
 
     return { success: true };
 

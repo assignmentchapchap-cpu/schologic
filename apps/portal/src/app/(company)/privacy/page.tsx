@@ -5,15 +5,15 @@ import { Shield } from 'lucide-react';
 export const metadata: Metadata = {
     title: 'Privacy Policy - Schologic LMS',
     description: 'Privacy Policy for Schologic LMS. Learn about our commitment to Data Sovereignty, FERPA/GDPR compliance, and student data protection.',
+    robots: {
+        index: false,
+        follow: true,
+    },
 };
 
 export default function PrivacyPage() {
     return (
         <div className="container mx-auto px-6 py-16 max-w-4xl">
-            <JsonLdWebPage
-                name="Privacy Policy - Schologic LMS"
-                description="Privacy Policy for Schologic LMS. Learn about our Data Sovereignty and compliance."
-            />
             {/* Header */}
             <section className="pt-16 pb-12 text-center">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-6">
