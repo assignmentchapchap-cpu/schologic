@@ -50,6 +50,11 @@ export const metadata: Metadata = {
     description: 'Credible, Flexible, & Intelligent Learning.',
     images: ['/images/updated screenshots/dashboard.webp'],
   },
+  icons: {
+    icon: '/favicon_updated.png',
+    shortcut: '/favicon_updated.png',
+    apple: '/favicon_updated.png',
+  },
 };
 
 import { ToastProvider } from "@/context/ToastContext";
