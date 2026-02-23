@@ -2,14 +2,13 @@
 
 import { InstitutionalInquiryForm } from '@/components/leads/InstitutionalInquiryForm';
 import { BackgroundGrid } from '@/components/use-cases/BackgroundGrid';
-import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
+import PilotNavbar from '@/components/landing/PilotNavbar';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
 export default function PilotLandingPage() {
     return (
         <main className="min-h-screen bg-white selection:bg-indigo-500/30">
-            <Navbar dark />
+            <PilotNavbar />
 
             {/* HERO SECTION */}
             <section className="relative pt-24 pb-10 md:pt-32 md:pb-16 overflow-hidden bg-slate-50 border-b border-slate-200">
@@ -285,7 +284,6 @@ export default function PilotLandingPage() {
                 </div>
             </section>
 
-            <Footer />
         </main>
     );
 }
