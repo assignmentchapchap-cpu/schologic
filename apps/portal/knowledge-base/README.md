@@ -28,6 +28,7 @@ Welcome to the Schologic LMS instructor knowledge base. This documentation cover
 
 - [Calendar](./11-calendar.md) - Due dates and events
 - [Student Workflows](./12-student-workflows.md) - How students use the platform
+- [Pilot Management Portal](./15-pilot-management-portal.md) - Institutional onboarding and lifecycles
 - [Troubleshooting & FAQ](./13-troubleshooting-faq.md) - Common issues
 
 ---
@@ -50,6 +51,7 @@ Welcome to the Schologic LMS instructor knowledge base. This documentation cover
 | 12 | Student Workflows | Student perspective for instructors |
 | 13 | Troubleshooting | FAQ, common issues |
 | 14 | Practicum Management | Logbooks, reports, verification |
+| 15 | Pilot Portal | PMP lifecycle, inquiry, configuration |
 
 ---
 

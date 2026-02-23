@@ -36,8 +36,26 @@ export async function proxy(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
     const path = request.nextUrl.pathname;
+    const host = request.headers.get('host') || '';
     const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || undefined;
     const userAgent = request.headers.get('user-agent') || undefined;
+
+    // 1.5 Subdomain Routing (Next.js 16 proxy pattern)
+    // Map pilot.schologic.com (or pilot.localhost) to the /pilot internal route
+    if (host.startsWith('pilot.')) {
+        // If they are at the root or just /pilot, keep them on the landing page
+        if (path === '/' || path === '/pilot') {
+            return NextResponse.rewrite(new URL('/pilot', request.url));
+        }
+
+        // Handle KB route under the subdomain
+        if (path === '/pilot-knowledge-base') {
+            return NextResponse.rewrite(new URL('/pilot-knowledge-base', request.url));
+        }
+
+        // For now, other routes under pilot. subdomain are not supported or 
+        // will be handled by standard Next.js routing until we add more (tracking/evaluation)
+    }
 
     // 2. Global Account Status Check (Bypass for login/disabled/api)
     const isPublicPath = path.startsWith('/login') || path.startsWith('/auth') || path.startsWith('/disabled') || path.startsWith('/api') || path === '/';

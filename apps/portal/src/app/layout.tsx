@@ -54,6 +54,12 @@ export const metadata: Metadata = {
     icon: '/favicon_updated.png',
     shortcut: '/favicon_updated.png',
     apple: '/favicon_updated.png',
+    other: [
+      {
+        rel: 'icon',
+        url: '/favicon_updated.png',
+      },
+    ],
   },
 };
 
