@@ -1,13 +1,45 @@
-'use client';
-
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { PilotNavbarSimple } from '@/components/pilot/PilotNavbarSimple';
+import { JsonLdWebPage, JsonLdBreadcrumbList } from '@/components/seo/JsonLd';
+
+export const metadata: Metadata = {
+    title: 'Knowledge Base | Schologic LMS Pilot Management',
+    description: 'Master the Schologic LMS Pilot Management Portal. Detailed documentation on platform overview, application processes, team collaboration, and institutional configuration.',
+    keywords: [
+        'LMS Pilot Management',
+        'Schologic Knowledge Base',
+        'Institutional LMS Deployment',
+        'AI Grading Documentation',
+        'Academic Integrity Software Kenya',
+        'TVET Digital Transformation',
+        'OER Integration Guide',
+        'learning management kenya',
+        'free institutional pilot',
+        'custom lms'
+    ],
+    alternates: {
+        canonical: 'https://pilot.schologic.com/pilot-knowledge-base',
+    }
+};
 
 export default function PilotKnowledgeBase() {
     return (
         <div className="min-h-screen bg-white font-sans text-slate-900">
             <PilotNavbarSimple />
+
+            <JsonLdWebPage
+                name="Schologic LMS Pilot Knowledge Base"
+                description="Comprehensive documentation for the Schologic LMS Pilot Management Portal, covering deployment, configuration, and evaluation."
+                url="https://pilot.schologic.com/pilot-knowledge-base"
+            />
+            <JsonLdBreadcrumbList
+                items={[
+                    { name: 'Pilot Portal', item: 'https://pilot.schologic.com/' },
+                    { name: 'Knowledge Base', item: 'https://pilot.schologic.com/pilot-knowledge-base' }
+                ]}
+            />
 
             {/* Content Container */}
             <main className="pt-32 pb-24 max-w-4xl mx-auto px-6">
@@ -17,6 +49,31 @@ export default function PilotKnowledgeBase() {
                             Knowledge Base
                         </h1>
                         <p className="text-slate-500 font-sans font-light text-lg">Schologic LMS: Pilot Management Portal Documentation</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-3xl p-8 mb-16 border border-slate-100 animate-in fade-in slide-in-from-top-4 duration-700">
+                        <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2">
+                            <span className="w-8 h-px bg-slate-300"></span>
+                            Table of Contents
+                        </h2>
+                        <nav className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                            {[
+                                { id: 'platform-overview', title: 'Platform Overview' },
+                                { id: 'application-process', title: 'The Application Process' },
+                                { id: 'team-collaboration', title: 'Team Collaboration' },
+                                { id: 'pilot-architect', title: 'LMS Customization' },
+                                { id: 'branding-config', title: 'Branding & Setup' },
+                                { id: 'evaluation-phase', title: 'Evaluation & Transition' },
+                            ].map((item, idx) => (
+                                <Link
+                                    key={item.id}
+                                    href={`#${item.id}`}
+                                    className="group flex items-center gap-4 text-slate-600 hover:text-indigo-600 transition-all duration-300"
+                                >
+                                    <span className="text-xs font-mono font-bold text-slate-400 group-hover:text-indigo-400 transition-colors">0{idx + 1}</span>
+                                    <span className="text-sm font-medium tracking-tight">{item.title}</span>
+                                </Link>
+                            ))}
+                        </nav>
                     </div>
 
                     <div className="space-y-16 text-slate-700 leading-relaxed font-light">

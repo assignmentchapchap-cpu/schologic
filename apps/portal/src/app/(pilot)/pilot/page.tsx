@@ -1,5 +1,4 @@
-'use client'; // Unified Pilot Portal Page
-
+import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { InstitutionalInquiryForm } from '@/components/leads/InstitutionalInquiryForm';
@@ -7,15 +6,47 @@ import { BackgroundGrid } from '@/components/use-cases/BackgroundGrid';
 import { Sparkles, ArrowRight, ShieldCheck, Clock, Activity, CheckCircle2 } from 'lucide-react';
 import { PilotNavbarSimple } from '@/components/pilot/PilotNavbarSimple';
 import { KnowledgeBaseCarousel } from '@/components/pilot/KnowledgeBaseCarousel';
+import { JsonLdWebPage, JsonLdBreadcrumbList } from '@/components/seo/JsonLd';
+
+export const metadata: Metadata = {
+    title: 'Pilot Management Portal | Institutional LMS Transformation',
+    description: 'Launch your institutional LMS pilot with Schologic. Secure, AI-powered learning management tailored for universities, colleges, and TVET institutions across Africa.',
+    keywords: [
+        'Institutional LMS Pilot',
+        'Pilot Management Portal',
+        'Academic Integrity Pilot',
+        'Schologic Pilot Program',
+        'LMS Deployment Strategy',
+        'AI Grading Pilot',
+        'African Higher Education Technology',
+        'learning management kenya',
+        'free institutional pilot',
+        'custom lms'
+    ],
+    alternates: {
+        canonical: 'https://pilot.schologic.com',
+    }
+};
 
 export default function PilotLandingPage() {
     return (
         <main className="min-h-screen bg-white selection:bg-indigo-500/30">
             <PilotNavbarSimple />
 
+            <JsonLdWebPage
+                name="Schologic LMS Pilot Management Portal"
+                description="Get a custom LMS in four steps. We have simplified the ability of institutions to create a flexible LMS through the pilot management portal where stakeholders can collaborate in design, track progress, and evaluate the pilot KPIs."
+                url="https://pilot.schologic.com"
+            />
+            <JsonLdBreadcrumbList
+                items={[
+                    { name: 'Pilot Portal', item: 'https://pilot.schologic.com' }
+                ]}
+            />
+
             {/* HERO SECTION */}
             <section className="relative pt-24 pb-10 md:pt-32 md:pb-16 overflow-hidden bg-white border-b border-slate-200">
-                <BackgroundGrid />
+                <BackgroundGrid variant="amber" />
 
                 <div className="w-full pl-3 pr-4 md:pr-12 lg:pr-16 relative z-10">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 items-start">
@@ -292,9 +323,9 @@ export default function PilotLandingPage() {
                     </div>
 
                     <div className="mt-16 text-center">
-                        <p className="text-sm text-slate-600 mb-6 font-mono tracking-widest uppercase">Asynchronous Documentation</p>
-                        <a href="/pilot-knowledge-base" className="inline-flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-xl active:scale-95">
-                            Browse the 15-Chapter Knowledge Base
+                        <p className="text-sm text-slate-600 mb-6 font-mono tracking-widest uppercase">Institutional Gateway</p>
+                        <a href="https://schologic.com" className="inline-flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-xl active:scale-95">
+                            Return to Main Site
                             <ArrowRight className="w-4 h-4" />
                         </a>
                     </div>

@@ -161,12 +161,13 @@ export function JsonLdPricing() {
 /**
  * Renders WebPage schema for generic pages.
  */
-export function JsonLdWebPage({ name, description }: { name: string; description: string }) {
+export function JsonLdWebPage({ name, description, url }: { name: string; description: string; url?: string }) {
     const schema = {
         "@context": "https://schema.org",
         "@type": "WebPage",
         name: name,
         description: description,
+        url: url,
         publisher: {
             "@type": "Organization",
             "@id": "https://schologic.com/#organization",
@@ -217,7 +218,7 @@ export function JsonLdBreadcrumbList({ items }: { items: { name: string; item: s
             "@type": "ListItem",
             "position": index + 1,
             "name": item.name,
-            "item": `https://schologic.com${item.item}`
+            "item": item.item.startsWith('http') ? item.item : `https://schologic.com${item.item}`
         }))
     };
 
