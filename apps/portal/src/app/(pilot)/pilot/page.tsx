@@ -1,87 +1,105 @@
-'use client';
+'use client'; // Unified Pilot Portal Page
 
+import Link from 'next/link';
+import Image from 'next/image';
 import { InstitutionalInquiryForm } from '@/components/leads/InstitutionalInquiryForm';
 import { BackgroundGrid } from '@/components/use-cases/BackgroundGrid';
-import PilotNavbar from '@/components/landing/PilotNavbar';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, ShieldCheck, Clock, Activity, CheckCircle2 } from 'lucide-react';
+import { PilotNavbarSimple } from '@/components/pilot/PilotNavbarSimple';
+import { KnowledgeBaseCarousel } from '@/components/pilot/KnowledgeBaseCarousel';
 
 export default function PilotLandingPage() {
     return (
         <main className="min-h-screen bg-white selection:bg-indigo-500/30">
-            <PilotNavbar />
+            <PilotNavbarSimple />
 
             {/* HERO SECTION */}
-            <section className="relative pt-24 pb-10 md:pt-32 md:pb-16 overflow-hidden bg-slate-50 border-b border-slate-200">
+            <section className="relative pt-24 pb-10 md:pt-32 md:pb-16 overflow-hidden bg-white border-b border-slate-200">
                 <BackgroundGrid />
 
-                {/* Ambient Glows */}
-                <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
-
                 <div className="w-full pl-3 pr-4 md:pr-12 lg:pr-16 relative z-10">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 items-center">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 items-start">
 
                         {/* LEFT COLUMN: Narrative */}
-                        <div className="md:col-span-7 flex flex-col">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50/50 backdrop-blur-sm border border-amber-200/40 text-amber-700 text-xs font-black mb-8 font-mono tracking-widest uppercase">
-                                <Sparkles className="w-4 h-4 text-amber-500" />
-                                <span>Institutional Portal</span>
-                            </div>
+                        <div className="md:col-span-7 flex flex-col pt-0">
 
-                            <h1 className="text-[2.75rem] leading-[1.2] sm:text-5xl md:text-6xl font-serif font-black text-slate-900 mb-8 tracking-tight">
-                                Create a learning <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-indigo-900">management system</span> <br />
-                                that you need.
+                            <h1 className="text-[2.75rem] leading-[1.2] sm:text-5xl md:text-6xl font-serif font-bold text-slate-900 mb-8 tracking-tight">
+                                Create the learning <br />
+                                management system <br />
+                                you need.
                             </h1>
 
                             <p className="text-lg md:text-xl text-slate-600 leading-10 md:leading-loose mb-10 font-light max-w-2xl">
                                 Get a custom LMS in four steps. We have simplified the ability of institutions to create a flexible LMS through the pilot management portal where stakeholders can collaborate in design, track progress, and evaluate the pilot KPIs.
                             </p>
 
-                            <div className="flex flex-wrap items-center gap-8 text-sm font-bold text-slate-400 mt-auto pt-6 border-t border-slate-200/60">
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-slate-900">01. INQUIRY</span>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Step One</span>
-                                </div>
-                                <div className="w-8 h-px bg-slate-200" />
-                                <div className="flex flex-col gap-1 opacity-40">
-                                    <span className="text-slate-900">02. CONFIG</span>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Step Two</span>
-                                </div>
-                                <div className="w-8 h-px bg-slate-200" />
-                                <div className="flex flex-col gap-1 opacity-40">
-                                    <span className="text-slate-900">03. PILOT</span>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Step Three</span>
+                            <div className="mt-auto pt-8 border-t border-slate-200/60 max-w-2xl">
+                                <div className="flex flex-col gap-8">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                                            <Sparkles className="w-4 h-4 text-indigo-600" />
+                                        </div>
+                                        <span className="text-xs font-black text-slate-900 uppercase tracking-widest font-sans">Institutional Advantage</span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8">
+                                        <div className="flex items-start gap-4 group">
+                                            <div className="mt-1 w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm group-hover:border-indigo-200 group-hover:text-indigo-600 transition-all duration-300">
+                                                <ShieldCheck className="w-5 h-5" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <h3 className="text-sm font-bold text-slate-900 leading-none">Unified Governance</h3>
+                                                <p className="text-xs text-slate-500 leading-relaxed font-light">Centralize leadership, IT, and faculty in one secure portal.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-4 group">
+                                            <div className="mt-1 w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm group-hover:border-indigo-200 group-hover:text-indigo-600 transition-all duration-300">
+                                                <Clock className="w-5 h-5" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <h3 className="text-sm font-bold text-slate-900 leading-none">Asynchronous Design</h3>
+                                                <p className="text-xs text-slate-500 leading-relaxed font-light">Architect your ideal digital campus at your own institutional pace.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-4 group">
+                                            <div className="mt-1 w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm group-hover:border-indigo-200 group-hover:text-indigo-600 transition-all duration-300">
+                                                <Activity className="w-5 h-5" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <h3 className="text-sm font-bold text-slate-900 leading-none">Data-Driven Insights</h3>
+                                                <p className="text-xs text-slate-500 leading-relaxed font-light">Track module success and define KPIs with an ROI blueprint.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-4 group">
+                                            <div className="mt-1 w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm group-hover:border-indigo-200 group-hover:text-indigo-600 transition-all duration-300">
+                                                <CheckCircle2 className="w-5 h-5" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <h3 className="text-sm font-bold text-slate-900 leading-none">Evidence-Based ROI</h3>
+                                                <p className="text-xs text-slate-500 leading-relaxed font-light">Move from inquiry to proof without procurement friction.</p>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div className="pt-6 border-t border-slate-100/50 mt-4">
+                                        <div className="flex items-center gap-3 group/cta cursor-default">
+                                            <span className="text-2xl font-bold text-slate-900 leading-tight">Fill the form to begin your pilot today</span>
+                                            <ArrowRight className="w-6 h-6 text-indigo-500 animate-bounce-x" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* RIGHT COLUMN: 2-Step Form */}
-                        <div className="md:col-span-5 relative">
+                        <div className="md:col-span-5 relative md:pt-20">
                             <InstitutionalInquiryForm />
                         </div>
 
-                    </div>
-                </div>
-            </section>
-
-            {/* SECTION 1: THE INSTITUTIONAL ADVANTAGE */}
-            <section className="py-16 md:py-20 bg-white border-b border-slate-100">
-                <div className="container mx-auto px-6 max-w-4xl text-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-[0.2em] mb-8">
-                        The Advantage
-                    </div>
-
-                    <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 leading-tight mb-8">
-                        The Institutional Advantage
-                    </h2>
-
-                    <div className="text-lg md:text-xl text-slate-500 leading-relaxed font-light italic">
-                        "The Schologic Pilot Management Portal (PMP) is a dedicated gateway designed to unify the interests of academic leadership, IT administrators, and faculty within a single, secure environment. Adopting an enterprise Learning Management System often fails due to fragmented communication and opaque deployment expectations. The PMP solves this by providing a transparent, asynchronous workspace where stakeholders can architect their ideal digital campus at their own pace. By centralizing module selection, success KPI tracking, and committee collaboration, the PMP ensures that every pilot is data-driven and aligned with institutional goals. From day one, your team has a clear blueprint of the platform’s ROI, transitioning from inquiry to evidence-based evaluation without the friction of traditional software procurement, ultimately safeguarding your institution’s academic integrity and financial efficiency."
-                    </div>
-
-                    <div className="mt-12 flex justify-center">
-                        <div className="w-16 h-1 bg-gradient-to-r from-indigo-500 to-indigo-100 rounded-full" />
                     </div>
                 </div>
             </section>
@@ -91,7 +109,7 @@ export default function PilotLandingPage() {
                 <div className="container mx-auto px-6 relative z-10">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-4">The 4-Step Pilot Journey</h2>
-                        <p className="text-slate-500 font-sans font-light">From initial inquiry to evidence-based ROI evaluation.</p>
+                        <p className="text-slate-700 font-sans font-light">From initial inquiry to evidence-based ROI evaluation.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -101,8 +119,8 @@ export default function PilotLandingPage() {
                                 <span className="font-mono font-black">01</span>
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 mb-3">Institutional Inquiry</h3>
-                            <p className="text-xs text-slate-500 leading-relaxed font-light">
-                                The journey begins with a secure, verified request from your institutional champion. By providing your official university or college credentials, you initiate an automated review gate that ensures your private tenant is provisioned with maximum data sovereignty.
+                            <p className="text-sm text-slate-700 leading-relaxed font-light">
+                                Submit a secure request through your institutional lead. Provide university credentials to initiate automated provisioning, ensuring your private tenant maintains maximum data sovereignty and security.
                             </p>
                         </div>
 
@@ -112,8 +130,8 @@ export default function PilotLandingPage() {
                                 <span className="font-mono font-black">02</span>
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 mb-3">Configuration</h3>
-                            <p className="text-xs text-slate-500 leading-relaxed font-light">
-                                Invite up to five key stakeholders to join a unified workspace. Together, your team will use the 'Pilot Architect' to select modules, white-label the interface, and define success KPIs, eliminating misaligned expectations.
+                            <p className="text-sm text-slate-700 leading-relaxed font-light">
+                                Invite five stakeholders to your unified workspace. Use our 'Pilot Architect' to select modules, white-label the interface, and define success KPIs, ensuring your team remains aligned.
                             </p>
                         </div>
 
@@ -123,8 +141,8 @@ export default function PilotLandingPage() {
                                 <span className="font-mono font-black">03</span>
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 mb-3">Live Sandbox</h3>
-                            <p className="text-xs text-slate-500 leading-relaxed font-light">
-                                Schologic provision your dedicated tenant in under two weeks. This is your custom environment, pre-loaded with your branding and integrated with your OER cartridges for live testing with real data.
+                            <p className="text-sm text-slate-700 leading-relaxed font-light">
+                                Launch your dedicated tenant within two weeks. Your environment arrives pre-loaded with branding and institutional OER cartridges, enabling live testing with real-world datasets for immediate evaluation.
                             </p>
                         </div>
 
@@ -134,7 +152,7 @@ export default function PilotLandingPage() {
                                 <span className="font-mono font-black">04</span>
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 mb-3">ROI Evaluation</h3>
-                            <p className="text-xs text-slate-500 leading-relaxed font-light">
+                            <p className="text-sm text-slate-700 leading-relaxed font-light">
                                 Access a comprehensive Executive ROI Report highlighting grading hours saved, AI flags reduced, and financial savings from OER integration—definitive proof for enterprise transition.
                             </p>
                         </div>
@@ -148,9 +166,9 @@ export default function PilotLandingPage() {
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
                         <div className="max-w-2xl">
                             <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-4">Modular Architecture</h2>
-                            <p className="text-slate-500 font-sans font-light text-lg">Scale your digital campus with precision. Choose the foundations you need and the intelligent values you want.</p>
+                            <p className="text-slate-700 font-sans font-light text-lg">Scale your digital campus with precision. Choose the foundations you need and the intelligent values you want.</p>
                         </div>
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-l border-slate-200 pl-6 hidden md:block">
+                        <div className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] border-l border-slate-200 pl-6 hidden md:block">
                             Enterprise Ready <br /> Modular Framework
                         </div>
                     </div>
@@ -226,56 +244,55 @@ export default function PilotLandingPage() {
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-4">Preparation & Success</h2>
-                        <p className="text-slate-500 font-sans font-light max-w-2xl mx-auto">Browse our documentation or get quick answers to frequently asked institutional questions.</p>
+                        <p className="text-slate-700 font-sans font-light max-w-2xl mx-auto mb-8">Browse our documentation or get quick answers to frequently asked institutional questions.</p>
+                        <Link
+                            href="/pilot-knowledge-base"
+                            className="inline-flex items-center gap-2 px-8 py-3 bg-white border border-slate-200 text-slate-900 rounded-full font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95 group"
+                        >
+                            Knowledge Base
+                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-indigo-500" />
+                        </Link>
                     </div>
+                </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-20">
-                        {/* KB CARD 1 */}
-                        <a href="/pilot-knowledge-base" className="group p-8 bg-white rounded-3xl border border-slate-200 hover:border-indigo-500 transition-all hover:shadow-2xl hover:shadow-indigo-500/10">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Chapter 01</span>
-                            <h4 className="text-xl font-bold text-slate-900 mb-4">Platform Overview</h4>
-                            <p className="text-sm text-slate-500 leading-relaxed font-light group-hover:text-slate-900 transition-colors">
-                                Understand the core architecture behind Schologic's institutional portal and how we handle data sovereignty.
-                            </p>
-                        </a>
+                <KnowledgeBaseCarousel />
 
-                        {/* KB CARD 2 */}
-                        <a href="/pilot-knowledge-base" className="group p-8 bg-white rounded-3xl border border-slate-200 hover:border-indigo-500 transition-all hover:shadow-2xl hover:shadow-indigo-500/10">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Chapter 02</span>
-                            <h4 className="text-xl font-bold text-slate-900 mb-4">Getting Started</h4>
-                            <p className="text-sm text-slate-500 leading-relaxed font-light group-hover:text-slate-900 transition-colors">
-                                A step-by-step guide for Institutional Champions to verify their domain and invite their core pilot team.
-                            </p>
-                        </a>
-
-                        {/* KB CARD 3 */}
-                        <a href="/pilot-knowledge-base" className="group p-8 bg-white rounded-3xl border border-slate-200 hover:border-indigo-500 transition-all hover:shadow-2xl hover:shadow-indigo-500/10">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Chapter 03</span>
-                            <h4 className="text-xl font-bold text-slate-900 mb-4">Managing Classes</h4>
-                            <p className="text-sm text-slate-500 leading-relaxed font-light group-hover:text-slate-900 transition-colors">
-                                Learn how instructors interface with the Class Manager to automate high-volume grading and tracking.
-                            </p>
-                        </a>
-                    </div>
+                <div className="container mx-auto px-6">
 
                     {/* FAQ SNEAK PEEK */}
                     <div className="max-w-3xl mx-auto space-y-4">
                         <div className="p-6 bg-white rounded-2xl border border-slate-200">
-                            <h5 className="font-bold text-slate-900 mb-2">How long does the domain verification take?</h5>
-                            <p className="text-sm text-slate-500 leading-relaxed">Automatic verification happens within minutes of submitting your institutional email. Manual overrides take up to 24 hours.</p>
+                            <h5 className="font-bold text-slate-900 mb-2">Is the Schologic Pilot completely free?</h5>
+                            <p className="text-sm text-slate-700 leading-relaxed">The standard 2-4 week pilot requires a nominal setup investment based on the size of the institution and the specific modules requested (e.g., custom domain provisioning, dedicated cloud infrastructure). However, this is a zero-risk investment: if your institution converts to a full enterprise contract after the pilot, 100% of the pilot setup costs are credited back to your account.</p>
                         </div>
                         <div className="p-6 bg-white rounded-2xl border border-slate-200">
-                            <h5 className="font-bold text-slate-900 mb-2">Can we use our own branding?</h5>
-                            <p className="text-sm text-slate-500 leading-relaxed">Yes. In the configuration phase, you can upload logos and set primary colors for a fully white-labeled experience.</p>
+                            <h5 className="font-bold text-slate-900 mb-2">How long does it take to start the pilot?</h5>
+                            <p className="text-sm text-slate-700 leading-relaxed">Once the Institutional Champion formally submits the customized Pilot Blueprint, our engineering team requires 1 to 2 weeks to provision your servers, apply your white-label branding, and configure your specific academic modules. You can track this progress live in the Pilot Management Portal.</p>
                         </div>
                         <div className="p-6 bg-white rounded-2xl border border-slate-200">
-                            <h5 className="font-bold text-slate-900 mb-2">Is the pilot data kept secure?</h5>
-                            <p className="text-sm text-slate-500 leading-relaxed">Absolutely. Every pilot is provisioned on a dedicated secure tenant with full encryption at rest and in transit.</p>
+                            <h5 className="font-bold text-slate-900 mb-2">How many students and instructors can participate?</h5>
+                            <p className="text-sm text-slate-700 leading-relaxed">To ensure a focused and highly measurable trial, we strongly recommend capping the pilot at a maximum of 200 students (or 10% of your student body, whichever is lower) and between 2 to 5 Lead Instructors/HODs. This ensures manageable data collection and focused support.</p>
+                        </div>
+                        <div className="p-6 bg-white rounded-2xl border border-slate-200">
+                            <h5 className="font-bold text-slate-900 mb-2">Is our student data safe during the pilot?</h5>
+                            <p className="text-sm text-slate-700 leading-relaxed">Absolutely. Schologic operates under strict Data Sovereignty principles and complies fully with the Kenya Data Protection Act (KDPA). All data is hosted securely, and Schologic retains zero rights to your institution's intellectual property or student records. Your pilot tenant is entirely isolated from other institutions.</p>
+                        </div>
+                        <div className="p-6 bg-white rounded-2xl border border-slate-200">
+                            <h5 className="font-bold text-slate-900 mb-2">What happens to our data if we do not proceed after the pilot?</h5>
+                            <p className="text-sm text-slate-700 leading-relaxed">If your institution chooses not to upgrade to an enterprise license after the trial period, your committee will be given a 14-day window to export all grades, reports, and administrative data. After this window, the pilot tenant and all associated data are permanently and securely deleted from our servers.</p>
+                        </div>
+                        <div className="p-6 bg-white rounded-2xl border border-slate-200">
+                            <h5 className="font-bold text-slate-900 mb-2">Can we invite more than 5 members to the Pilot Committee?</h5>
+                            <p className="text-sm text-slate-700 leading-relaxed">The Pilot Management Portal is optimized for a core decision-making committee of up to 5 members (e.g., Champion, HODs, Lead Instructors, IT Admin). If you require a larger governance board to review the configurations, please mention this in the discussion board, and our team can adjust your portal limits.</p>
+                        </div>
+                        <div className="p-6 bg-white rounded-2xl border border-slate-200">
+                            <h5 className="font-bold text-slate-900 mb-2">Do we need a dedicated IT team to run the Schologic Pilot?</h5>
+                            <p className="text-sm text-slate-700 leading-relaxed">No. Because Schologic is a fully managed, cloud-native SaaS platform, our team handles all server provisioning, security patching, and uptime monitoring. Your IT department only needs to be involved for initial governance approval and reviewing data sovereignty documentation.</p>
                         </div>
                     </div>
 
                     <div className="mt-16 text-center">
-                        <p className="text-sm text-slate-400 mb-6 font-mono tracking-widest uppercase">Asynchronous Documentation</p>
+                        <p className="text-sm text-slate-600 mb-6 font-mono tracking-widest uppercase">Asynchronous Documentation</p>
                         <a href="/pilot-knowledge-base" className="inline-flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-xl active:scale-95">
                             Browse the 15-Chapter Knowledge Base
                             <ArrowRight className="w-4 h-4" />
@@ -283,7 +300,6 @@ export default function PilotLandingPage() {
                     </div>
                 </div>
             </section>
-
-        </main>
+        </main >
     );
 }

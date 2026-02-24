@@ -119,20 +119,17 @@ export function InstitutionalInquiryForm() {
 
     if (state === 'success') {
         return (
-            <div className="p-8 text-center animate-in fade-in zoom-in duration-500 bg-white rounded-3xl border border-slate-200 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-3 opacity-10">
-                    <GraduationCap className="w-20 h-20 text-indigo-600" />
-                </div>
-                <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6 relative z-10">
+            <div className="p-8 text-center animate-in fade-in zoom-in duration-500 bg-white rounded-3xl border border-slate-200 shadow-xl relative overflow-hidden">
+                <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-6 relative z-10">
                     <CheckCircle className="w-10 h-10 text-emerald-600" />
                 </div>
-                <h3 className="text-2xl font-serif font-black text-slate-900 mb-2">Inquiry Received</h3>
-                <p className="text-slate-600 mb-8 max-w-xs mx-auto text-sm leading-relaxed">
+                <h3 className="text-2xl font-serif font-bold text-slate-900 mb-2">Inquiry Received</h3>
+                <p className="text-slate-600 mb-8 max-w-xs mx-auto text-sm leading-relaxed font-light">
                     Thank you, {firstName}. Your institutional credentials have been verified. Our strategists will reach out to schedule your pilot kickoff.
                 </p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-xl active:scale-95"
+                    className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
                 >
                     Done
                 </button>
@@ -141,20 +138,17 @@ export function InstitutionalInquiryForm() {
     }
 
     return (
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] overflow-hidden animate-fade-in relative group transition-all duration-500 hover:shadow-[0_48px_96px_-24px_rgba(79,70,229,0.15)]">
-            {/* Glossy Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/20 pointer-events-none" />
-
-            <div className="bg-slate-900 px-8 py-5 flex items-center justify-between relative z-10">
+        <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-2xl overflow-hidden animate-fade-in relative group transition-all duration-500">
+            <div className="bg-white px-8 py-5 flex items-center justify-between relative z-10 border-b border-slate-100">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                        <GraduationCap className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center">
+                        <GraduationCap className="w-4 h-4 text-slate-900" />
                     </div>
-                    <span className="text-sm font-bold text-white tracking-tight uppercase">Pilot Inquiry</span>
+                    <span className="text-sm font-bold text-slate-900 tracking-tight uppercase">Pilot Inquiry</span>
                 </div>
                 <div className="flex gap-1.5">
-                    <div className={`h-1.5 w-6 rounded-full transition-all duration-500 ${step === 1 ? 'bg-indigo-400' : 'bg-slate-700'}`} />
-                    <div className={`h-1.5 w-6 rounded-full transition-all duration-500 ${step === 2 ? 'bg-indigo-400' : 'bg-slate-700'}`} />
+                    <div className={`h-1.5 w-6 rounded-full transition-all duration-500 ${step === 1 ? 'bg-indigo-500' : 'bg-slate-200'}`} />
+                    <div className={`h-1.5 w-6 rounded-full transition-all duration-500 ${step === 2 ? 'bg-indigo-500' : 'bg-slate-200'}`} />
                 </div>
             </div>
 
@@ -169,68 +163,68 @@ export function InstitutionalInquiryForm() {
                     <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">First Name</label>
+                                <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">First Name</label>
                                 <input
                                     type="text"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
                                     placeholder="Jane"
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Last Name</label>
+                                <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Last Name</label>
                                 <input
                                     type="text"
                                     value={lastName}
                                     onChange={(e) => setLastName(e.target.value)}
                                     placeholder="Doe"
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Institutional Email</label>
+                            <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Institutional Email</label>
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 onBlur={() => setEmailTouched(true)}
                                 placeholder="dean@university.ac.ke"
-                                className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium ${emailError ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}
+                                className={`w-full px-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium ${emailError ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Institution Name</label>
+                            <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Institution Name</label>
                             <input
                                 type="text"
                                 value={institution}
                                 onChange={(e) => setInstitution(e.target.value)}
                                 placeholder="University of Nairobi"
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Institution Size</label>
+                                <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Institution Size</label>
                                 <select
                                     value={institutionSize}
                                     onChange={(e) => setInstitutionSize(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none cursor-pointer text-sm font-medium"
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none cursor-pointer text-sm font-medium"
                                 >
                                     <option value="">Select size...</option>
                                     {INSTITUTION_SIZES.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Current LMS</label>
+                                <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Current LMS</label>
                                 <select
                                     value={currentLms}
                                     onChange={(e) => setCurrentLms(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none cursor-pointer text-sm font-medium"
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none cursor-pointer text-sm font-medium"
                                 >
                                     <option value="">Select LMS...</option>
                                     {LMS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
@@ -239,12 +233,12 @@ export function InstitutionalInquiryForm() {
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Phone Number</label>
+                            <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Phone Number</label>
                             <div className="flex gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                                    className="px-3 border border-slate-200 rounded-xl bg-slate-50 text-xs font-mono font-bold flex items-center gap-1 min-w-[80px]"
+                                    className="px-3 border border-slate-200 rounded-xl bg-white text-xs font-mono font-bold flex items-center gap-1 min-w-[80px]"
                                 >
                                     {countryCode} <ChevronDown className="w-3 h-3 text-slate-400" />
                                 </button>
@@ -254,7 +248,7 @@ export function InstitutionalInquiryForm() {
                                     onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                                     onBlur={() => setPhoneTouched(true)}
                                     placeholder="712345678"
-                                    className={`flex-1 px-4 py-3 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium ${phoneError ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}
+                                    className={`flex-1 px-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium ${phoneError ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}
                                 />
                             </div>
                         </div>
@@ -262,12 +256,12 @@ export function InstitutionalInquiryForm() {
                 ) : (
                     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5">Pilot Goals (Select all that apply)</label>
+                            <label className="block text-xs font-bold text-slate-900 mb-2.5 ml-1">Pilot Goals (Select all that apply)</label>
                             <div className="grid grid-cols-1 gap-2">
                                 {INTEREST_OPTIONS.map(opt => (
                                     <label
                                         key={opt.value}
-                                        className={`group flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${primaryInterest.includes(opt.value) ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
+                                        className={`group flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${primaryInterest.includes(opt.value) ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-white'}`}
                                     >
                                         <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${primaryInterest.includes(opt.value) ? 'bg-indigo-500 border-indigo-500' : 'bg-white border-slate-300'}`}>
                                             {primaryInterest.includes(opt.value) && <CheckCircle className="w-3.5 h-3.5 text-white" />}
@@ -279,7 +273,7 @@ export function InstitutionalInquiryForm() {
                             </div>
                         </div>
 
-                        <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer group">
+                        <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white/50 cursor-pointer group">
                             <input type="checkbox" checked={virtualLearning} onChange={(e) => setVirtualLearning(e.target.checked)} className="w-5 h-5 rounded border-slate-300 text-indigo-600" />
                             <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Active Distance Learning Program</span>
                         </label>
@@ -308,7 +302,7 @@ export function InstitutionalInquiryForm() {
                             <button
                                 type="submit"
                                 disabled={state === 'submitting'}
-                                className="flex-1 py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 disabled:opacity-50 active:scale-95 flex items-center justify-center"
+                                className="flex-1 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-lg shadow-slate-900/10 disabled:opacity-50 active:scale-95 flex items-center justify-center"
                             >
                                 {state === 'submitting' ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Request Institutional Pilot'}
                             </button>
@@ -317,15 +311,15 @@ export function InstitutionalInquiryForm() {
                 </div>
             </form>
 
-            <div className="bg-slate-50/80 backdrop-blur-sm px-8 py-4 border-t border-slate-100 flex items-center justify-center gap-2 relative z-10">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Verified Secure Data Portal</span>
+            <div className="bg-white px-8 py-4 border-t border-slate-100 flex items-center justify-center gap-2 relative z-10">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Verified Secure Data Portal</span>
             </div>
 
             {showCountryDropdown && (
                 <div className="absolute top-0 left-0 w-full h-full bg-white/95 backdrop-blur-sm z-50 p-6 animate-in fade-in slide-in-from-bottom-5 duration-300 overflow-y-auto">
                     <div className="flex items-center justify-between mb-6">
-                        <h4 className="font-serif font-black text-slate-900 text-lg">Select Country</h4>
+                        <h4 className="font-serif font-bold text-slate-900 text-lg">Select Country</h4>
                         <button onClick={() => setShowCountryDropdown(false)} className="text-slate-400 hover:text-slate-900 transition-colors px-2 py-1 font-bold">Close</button>
                     </div>
                     <div className="relative mb-4">
@@ -343,7 +337,7 @@ export function InstitutionalInquiryForm() {
                             <button
                                 key={c.code}
                                 onClick={() => { setCountryCode(c.code); setShowCountryDropdown(false); }}
-                                className="flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 transition-all text-left"
+                                className="flex items-center justify-between p-4 rounded-xl hover:bg-white transition-all text-left"
                             >
                                 <span className="text-sm font-bold text-slate-700">{c.country}</span>
                                 <span className="font-mono text-xs text-slate-400">{c.code}</span>
