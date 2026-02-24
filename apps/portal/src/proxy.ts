@@ -44,9 +44,20 @@ export async function proxy(request: NextRequest) {
     // Map pilot.schologic.com (or pilot.localhost) to the /pilot internal route
     if (host.startsWith('pilot.')) {
         // Public routes on the pilot subdomain
-        if (path === '/' || path === '/pilot' || path === '/setup' || path.startsWith('/login') || path.startsWith('/auth')) {
+        const isPilotPublicPath = path === '/' || path === '/pilot' || path.startsWith('/setup') || path.startsWith('/login') || path.startsWith('/auth') || path.startsWith('/pilot/setup') || path.startsWith('/pilot/login');
+
+        if (isPilotPublicPath) {
             // Let Next.js handle these (perhaps rewritten, but we won't block them)
-            if (path === '/' || path === '/pilot') return NextResponse.rewrite(new URL('/pilot', request.url));
+            if (path === '/' || path === '/pilot') {
+                const rewriteUrl = new URL('/pilot', request.url);
+                rewriteUrl.search = request.nextUrl.search;
+                return NextResponse.rewrite(rewriteUrl);
+            }
+            if (path.startsWith('/login') || path.startsWith('/setup')) {
+                const rewriteUrl = new URL(`/pilot${path}`, request.url);
+                rewriteUrl.search = request.nextUrl.search;
+                return NextResponse.rewrite(rewriteUrl);
+            }
             return response;
         }
 
@@ -64,7 +75,7 @@ export async function proxy(request: NextRequest) {
 
         const profile = await getUserIdentity(user.id);
         if (!profile?.pilot_permissions) {
-            logSecurityEvent({ eventType: 'role_mismatch', path, userId: user.id, userRole: profile?.role, targetRole: 'pilot_member', ipAddress, userAgent });
+            logSecurityEvent({ eventType: 'role_mismatch', path, userId: user.id, userRole: profile?.role || undefined, targetRole: 'pilot_member', ipAddress, userAgent });
             // Redirect them to a "Not Authorized" or standard login if they don't belong to this pilot
             return NextResponse.redirect(new URL('/login?error=unauthorized_pilot', request.url));
         }
