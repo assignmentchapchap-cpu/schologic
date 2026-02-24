@@ -43,9 +43,11 @@ export async function proxy(request: NextRequest) {
     // 1.5 Subdomain Routing (Next.js 16 proxy pattern)
     // Map pilot.schologic.com (or pilot.localhost) to the /pilot internal route
     if (host.startsWith('pilot.')) {
-        // If they are at the root or just /pilot, keep them on the landing page
-        if (path === '/' || path === '/pilot') {
-            return NextResponse.rewrite(new URL('/pilot', request.url));
+        // Public routes on the pilot subdomain
+        if (path === '/' || path === '/pilot' || path === '/setup' || path.startsWith('/login') || path.startsWith('/auth')) {
+            // Let Next.js handle these (perhaps rewritten, but we won't block them)
+            if (path === '/' || path === '/pilot') return NextResponse.rewrite(new URL('/pilot', request.url));
+            return response;
         }
 
         // Handle KB route under the subdomain
@@ -53,8 +55,22 @@ export async function proxy(request: NextRequest) {
             return NextResponse.rewrite(new URL('/pilot-knowledge-base', request.url));
         }
 
-        // For now, other routes under pilot. subdomain are not supported or 
-        // will be handled by standard Next.js routing until we add more (tracking/evaluation)
+        // Protected PMP Configuration Routes (Tabs 1-7 usually live under /dashboard or specific paths)
+        // If they are on the pilot subdomain but NOT on a public path, they MUST be authenticated AND have a pilot role
+        if (!user) {
+            logSecurityEvent({ eventType: 'unauthorized_access', path, targetRole: 'pilot_member', ipAddress, userAgent });
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+
+        const profile = await getUserIdentity(user.id);
+        if (!profile?.pilot_permissions) {
+            logSecurityEvent({ eventType: 'role_mismatch', path, userId: user.id, userRole: profile?.role, targetRole: 'pilot_member', ipAddress, userAgent });
+            // Redirect them to a "Not Authorized" or standard login if they don't belong to this pilot
+            return NextResponse.redirect(new URL('/login?error=unauthorized_pilot', request.url));
+        }
+
+        // They are authorized for the pilot subdomain, let them through to the PMP React application
+        return response;
     }
 
     // 2. Global Account Status Check (Bypass for login/disabled/api)

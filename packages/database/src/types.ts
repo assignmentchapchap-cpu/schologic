@@ -577,6 +577,9 @@ export type Database = {
       }
       pilot_requests: {
         Row: {
+          branding_jsonb: Json | null
+          champion_id: string | null
+          completed_tabs_jsonb: Json | null
           created_at: string | null
           current_lms: string
           email: string
@@ -585,15 +588,22 @@ export type Database = {
           institution: string
           institution_size: string
           job_title: string
+          kpis_jsonb: Json | null
           last_name: string
+          modules_jsonb: Json | null
           note: string | null
           other_info: string | null
+          permissions_jsonb: Json | null
           phone: string
           primary_interest: string[]
+          scope_jsonb: Json | null
           status: string | null
           virtual_learning: boolean
         }
         Insert: {
+          branding_jsonb?: Json | null
+          champion_id?: string | null
+          completed_tabs_jsonb?: Json | null
           created_at?: string | null
           current_lms: string
           email: string
@@ -602,15 +612,22 @@ export type Database = {
           institution: string
           institution_size: string
           job_title: string
+          kpis_jsonb?: Json | null
           last_name: string
+          modules_jsonb?: Json | null
           note?: string | null
           other_info?: string | null
+          permissions_jsonb?: Json | null
           phone: string
           primary_interest: string[]
+          scope_jsonb?: Json | null
           status?: string | null
           virtual_learning?: boolean
         }
         Update: {
+          branding_jsonb?: Json | null
+          champion_id?: string | null
+          completed_tabs_jsonb?: Json | null
           created_at?: string | null
           current_lms?: string
           email?: string
@@ -619,15 +636,72 @@ export type Database = {
           institution?: string
           institution_size?: string
           job_title?: string
+          kpis_jsonb?: Json | null
           last_name?: string
+          modules_jsonb?: Json | null
           note?: string | null
           other_info?: string | null
+          permissions_jsonb?: Json | null
           phone?: string
           primary_interest?: string[]
+          scope_jsonb?: Json | null
           status?: string | null
           virtual_learning?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pilot_requests_champion_id_fkey"
+            columns: ["champion_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pilot_team_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_champion: boolean
+          pilot_request_id: string
+          tab_permissions_jsonb: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_champion?: boolean
+          pilot_request_id: string
+          tab_permissions_jsonb?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_champion?: boolean
+          pilot_request_id?: string
+          tab_permissions_jsonb?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_team_members_pilot_request_id_fkey"
+            columns: ["pilot_request_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       practicum_enrollments: {
         Row: {
