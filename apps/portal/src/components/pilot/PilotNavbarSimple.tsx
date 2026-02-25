@@ -30,12 +30,12 @@ export function PilotNavbarSimple() {
                         Knowledge Base
                     </Link>
 
-                    <button
-                        className="px-5 py-2 bg-slate-900 text-white rounded-full text-sm font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-sm"
-                        onClick={() => { }}
+                    <Link
+                        href="/login"
+                        className="px-5 py-2 inline-block bg-slate-900 text-white rounded-full text-sm font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-sm"
                     >
                         Login
-                    </button>
+                    </Link>
                 </div>
             </div>
         </nav>

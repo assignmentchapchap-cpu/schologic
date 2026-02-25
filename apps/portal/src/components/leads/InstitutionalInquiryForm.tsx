@@ -196,15 +196,27 @@ export function InstitutionalInquiryForm() {
                             />
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Institution Name</label>
-                            <input
-                                type="text"
-                                value={institution}
-                                onChange={(e) => setInstitution(e.target.value)}
-                                placeholder="University of Nairobi"
-                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Institution Name</label>
+                                <input
+                                    type="text"
+                                    value={institution}
+                                    onChange={(e) => setInstitution(e.target.value)}
+                                    placeholder="University of Nairobi"
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Job Title</label>
+                                <input
+                                    type="text"
+                                    value={jobTitle}
+                                    onChange={(e) => setJobTitle(e.target.value)}
+                                    placeholder="Dean / Provost / IT Admin"
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                                />
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

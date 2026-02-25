@@ -29,11 +29,12 @@ export default function PilotAuthForm({ type }: { type: 'login' | 'setup' }) {
     const isReset = searchParams.get('view') === 'reset';
     const isVerifyReset = searchParams.get('view') === 'verify_reset';
 
-    // Logic: If 'setup', we enforce setting a new password via the recovery flow
-    // Setup links from Resend will include an OTP hash in the fragment, handled natively by Supabase JS.
-    // However, if they just land on /setup, we can ask for email to send a magic link/OTP.
+    // Logic: If 'setup', we enforce an email verification step first.
+    // Setup links from Resend direct users to /setup. They enter their email, 
+    // receive a 6-digit OTP, and then set their permanent password.
+    // We treat 'setup' exactly like a 'reset' flow behind the scenes.
     const [authStage, setAuthStage] = useState<AuthStage>(
-        type === 'setup' ? 'new_password' : (isVerifyReset ? 'otp_reset' : 'credentials')
+        isVerifyReset ? 'otp_reset' : 'credentials'
     );
 
     // Form Fields
@@ -97,8 +98,8 @@ export default function PilotAuthForm({ type }: { type: 'login' | 'setup' }) {
         setSuccessMsg(null);
 
         try {
-            if (isReset) {
-                // Password Reset -> Send OTP
+            if (isReset || type === 'setup') {
+                // Setup and Reset both start by sending an OTP to verify identity
                 const { error } = await supabase.auth.resetPasswordForEmail(email);
                 if (error) throw error;
                 setAuthStage('otp_reset');
@@ -203,7 +204,7 @@ export default function PilotAuthForm({ type }: { type: 'login' | 'setup' }) {
                 disabled={loading || isVerifyReset}
             />
 
-            {!isReset && !isVerifyReset && (
+            {(!isReset && !isVerifyReset && type !== 'setup') && (
                 <PasswordInput
                     placeholder="Password"
                     value={password}
@@ -219,7 +220,7 @@ export default function PilotAuthForm({ type }: { type: 'login' | 'setup' }) {
                 size="lg"
                 className="bg-slate-900 text-white hover:bg-black rounded-xl font-bold shadow-sm transition-all active:scale-[0.98]"
             >
-                {isReset ? 'Send Reset Code' : 'Sign In'}
+                {isReset ? 'Send Reset Code' : (type === 'setup' ? 'Send Setup Code' : 'Sign In')}
             </Button>
         </form>
     );
@@ -318,7 +319,7 @@ export default function PilotAuthForm({ type }: { type: 'login' | 'setup' }) {
 
             {authStage === 'credentials' && (
                 <div className="flex flex-col gap-3 text-center text-sm text-slate-600 border-t border-slate-100 pt-6 mt-6">
-                    {!isReset ? (
+                    {(!isReset && type !== 'setup') ? (
                         <button
                             onClick={() => {
                                 const params = new URLSearchParams(searchParams.toString());

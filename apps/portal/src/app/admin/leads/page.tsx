@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Users, Search, AlertTriangle, Loader2, Mail, RefreshCw } from 'lucide-react';
+import { Users, Search, AlertTriangle, Loader2, Mail, RefreshCw, CheckCircle, Check } from 'lucide-react';
 import { getPilotRequests, getInstructorInvites, getContactSubmissions } from '@/app/actions/getLeads';
+import { approvePilotRequest } from '@/app/actions/approvePilotRequest';
 
 export default function LeadsDashboard() {
     const [activeTab, setActiveTab] = useState<'pilots' | 'invites' | 'contacts'>('pilots');
@@ -12,6 +13,26 @@ export default function LeadsDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isApproving, setIsApproving] = useState<string | null>(null);
+
+    const handleApprove = async (id: string, e: React.MouseEvent) => {
+        // Prevent row click if there was one
+        e.stopPropagation();
+        setIsApproving(id);
+        setError(null);
+        try {
+            const res = await approvePilotRequest(id);
+            if (res.error) {
+                setError(res.error);
+            } else {
+                await loadData(true);
+            }
+        } catch (err: any) {
+            setError(err.message || 'Failed to approve pilot');
+        } finally {
+            setIsApproving(null);
+        }
+    };
 
     const loadData = useCallback(async (isManualRefresh = false) => {
         if (isManualRefresh) {
@@ -166,7 +187,27 @@ export default function LeadsDashboard() {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-right whitespace-nowrap text-sm text-slate-500">
-                                                    {new Date(p.created_at).toLocaleDateString()}
+                                                    <div className="flex flex-col items-end gap-2">
+                                                        <span>{new Date(p.created_at).toLocaleDateString()}</span>
+                                                        {p.champion_id ? (
+                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                <CheckCircle className="w-3.5 h-3.5 mr-1" /> Approved
+                                                            </span>
+                                                        ) : (
+                                                            <button
+                                                                onClick={(e) => handleApprove(p.id, e)}
+                                                                disabled={isApproving === p.id}
+                                                                className="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm active:scale-95 disabled:opacity-50"
+                                                            >
+                                                                {isApproving === p.id ? (
+                                                                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                                                ) : (
+                                                                    <Check className="w-3.5 h-3.5 mr-1.5" />
+                                                                )}
+                                                                {isApproving === p.id ? 'Approving...' : 'Approve Pilot'}
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
