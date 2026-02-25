@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 import PilotAuthForm from '@/components/auth/PilotAuthForm';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
-    title: 'Pilot Setup | Schologic',
+    title: 'Pilot Setup | Schologic LMS',
     description: 'Set up your Schologic Pilot Management Portal account',
 };
 
@@ -23,7 +24,9 @@ export default function PilotSetupPage() {
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="bg-white py-10 px-6 sm:rounded-2xl sm:px-12 border border-slate-200 shadow-sm">
-                    <PilotAuthForm type="setup" />
+                    <Suspense fallback={<div className="text-center text-sm text-slate-500 py-4">Loading secure portal...</div>}>
+                        <PilotAuthForm type="setup" />
+                    </Suspense>
                 </div>
             </div>
         </div>

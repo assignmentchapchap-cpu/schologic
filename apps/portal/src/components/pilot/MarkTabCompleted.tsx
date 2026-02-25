@@ -1,9 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, CircleDashed } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
+
+export const CustomCircleIcon = ({ className }: { className?: string }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+    >
+        <circle cx="12" cy="12" r="10" />
+    </svg>
+);
 
 interface MarkTabCompletedProps {
     tabId: string;
@@ -49,7 +66,7 @@ export function MarkTabCompleted({ tabId, hasWritePermission = true }: MarkTabCo
                     </>
                 ) : (
                     <>
-                        <CircleDashed className="mr-2 h-5 w-5 opacity-50" />
+                        <CustomCircleIcon className="mr-2 h-5 w-5 opacity-50" />
                         Mark as Completed
                     </>
                 )}

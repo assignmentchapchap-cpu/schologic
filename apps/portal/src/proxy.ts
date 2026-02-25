@@ -41,47 +41,49 @@ export async function proxy(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || undefined;
 
     // 1.5 Subdomain Routing (Next.js 16 proxy pattern)
-    // Map pilot.schologic.com (or pilot.localhost) to the /pilot internal route
+    // Map pilot.schologic.com (or pilot.localhost) to the /pilot internal route workspace seamlessly
     if (host.startsWith('pilot.')) {
-        // Public routes on the pilot subdomain
-        const isPilotPublicPath = path === '/' || path === '/pilot' || path.startsWith('/setup') || path.startsWith('/login') || path.startsWith('/auth') || path.startsWith('/pilot/setup') || path.startsWith('/pilot/login');
+        // 1. Normalize the path by removing explicit /pilot prefixes if the user incorrectly typed it
+        let normalizedPath = path;
+        if (path.startsWith('/pilot/')) {
+            normalizedPath = path.replace('/pilot', '');
+        } else if (path === '/pilot') {
+            normalizedPath = '/';
+        }
+
+        // --- 2. Public Exceptions on Pilot Subdomain ---
+        const isPilotPublicPath = normalizedPath === '/' || normalizedPath === '/pilot-knowledge-base' || normalizedPath === '/setup' || normalizedPath === '/login' || normalizedPath.startsWith('/auth');
 
         if (isPilotPublicPath) {
-            // Let Next.js handle these (perhaps rewritten, but we won't block them)
-            if (path === '/' || path === '/pilot') {
-                const rewriteUrl = new URL('/pilot', request.url);
-                rewriteUrl.search = request.nextUrl.search;
-                return NextResponse.rewrite(rewriteUrl);
-            }
-            if (path.startsWith('/login') || path.startsWith('/setup')) {
-                const rewriteUrl = new URL(`/pilot${path}`, request.url);
-                rewriteUrl.search = request.nextUrl.search;
-                return NextResponse.rewrite(rewriteUrl);
-            }
-            return response;
+            // Rewrite implicitly to the internal /pilot React App space without changing the browser URL string
+            const rewriteUrl = new URL(`/pilot${normalizedPath === '/' ? '' : normalizedPath}`, request.url);
+            rewriteUrl.search = request.nextUrl.search;
+            return NextResponse.rewrite(rewriteUrl);
         }
 
-        // Handle KB route under the subdomain
-        if (path === '/pilot-knowledge-base') {
-            return NextResponse.rewrite(new URL('/pilot-knowledge-base', request.url));
-        }
-
-        // Protected PMP Configuration Routes (Tabs 1-7 usually live under /dashboard or specific paths)
-        // If they are on the pilot subdomain but NOT on a public path, they MUST be authenticated AND have a pilot role
+        // --- 4. Protected Auth Checks ---
+        // If not logged in at all, redirect to the bare `/` (landing page) on this subdomain
+        // The browser will hit pilot.schologic.com/ -> which gets caught by the Public Exceptions above
         if (!user) {
-            logSecurityEvent({ eventType: 'unauthorized_access', path, targetRole: 'pilot_member', ipAddress, userAgent });
-            return NextResponse.redirect(new URL('/login', request.url));
+            logSecurityEvent({ eventType: 'unauthorized_access', path: normalizedPath, targetRole: 'pilot_member', ipAddress, userAgent });
+            return NextResponse.redirect(new URL('/', request.url));
         }
 
         const profile = await getUserIdentity(user.id);
-        if (!profile?.pilot_permissions) {
-            logSecurityEvent({ eventType: 'role_mismatch', path, userId: user.id, userRole: profile?.role || undefined, targetRole: 'pilot_member', ipAddress, userAgent });
-            // Redirect them to a "Not Authorized" or standard login if they don't belong to this pilot
-            return NextResponse.redirect(new URL('/login?error=unauthorized_pilot', request.url));
+
+        // --- 5. No Pilot Application Assigned ---
+        // If they are on a deep nested path without valid pilot permissions, force them to the root landing page `/`.
+        if (!profile?.pilot_permissions && normalizedPath !== '/setup') {
+            logSecurityEvent({ eventType: 'role_mismatch', path: normalizedPath, userId: user.id, userRole: profile?.role || undefined, targetRole: 'pilot_member', ipAddress, userAgent });
+            return NextResponse.redirect(new URL('/', request.url));
         }
 
-        // They are authorized for the pilot subdomain, let them through to the PMP React application
-        return response;
+        // --- 6. All clear. Stealth Rewrite! ---
+        // They are authorized for the pilot subdomain. We silently serve the internal app/pilot/* files.
+        // E.g. pilot.schologic.com/team -> rewrites to serves app/pilot/team/page.tsx seamlessly under the hood.
+        const rewriteUrl = new URL(`/pilot${normalizedPath === '/' ? '' : normalizedPath}`, request.url);
+        rewriteUrl.search = request.nextUrl.search;
+        return NextResponse.rewrite(rewriteUrl);
     }
 
     // 2. Global Account Status Check (Bypass for login/disabled/api)

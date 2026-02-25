@@ -4,13 +4,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TABS = [
-    { value: "team", label: "01. Team & Tasks", href: "/pilot/team" },
-    { value: "scope", label: "02. Scope", href: "/pilot/scope" },
-    { value: "kpis", label: "03. KPIs", href: "/pilot/kpis" },
-    { value: "branding", label: "04. Branding", href: "/pilot/branding" },
-    { value: "settings", label: "05. Settings", href: "/pilot/settings" },
-    { value: "dashboard", label: "06. Dashboard", href: "/pilot/dashboard" },
-    { value: "preview", label: "07. Submit", href: "/pilot/preview" },
+    { value: "team", label: "01. Team & Tasks", href: "/team" },
+    { value: "scope", label: "02. Scope", href: "/scope" },
+    { value: "kpis", label: "03. KPIs", href: "/kpis" },
+    { value: "branding", label: "04. Branding", href: "/branding" },
+    { value: "settings", label: "05. Settings", href: "/settings" },
+    { value: "dashboard", label: "06. Dashboard", href: "/dashboard" },
+    { value: "preview", label: "07. Submit", href: "/preview" },
 ];
 
 export function PilotTabsNav() {

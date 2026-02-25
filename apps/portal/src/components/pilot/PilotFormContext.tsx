@@ -80,7 +80,7 @@ export function PilotFormProvider({
     defaultValues?: Partial<PilotBlueprint>;
 }) {
     const formMethods = useForm<PilotBlueprint>({
-        resolver: zodResolver(pilotBlueprintSchema),
+        resolver: zodResolver(pilotBlueprintSchema) as any,
         defaultValues: defaultValues || {
             scope_jsonb: {
                 core_modules: [], add_ons: [], target_departments: [],
