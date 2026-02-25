@@ -51,43 +51,37 @@ export async function proxy(request: NextRequest) {
             normalizedPath = '/';
         }
 
-        // --- 2. Public Exceptions on Pilot Subdomain ---
-        const isPilotPublicPath = normalizedPath === '/' || normalizedPath === '/pilot-knowledge-base' || normalizedPath === '/setup' || normalizedPath === '/login' || normalizedPath.startsWith('/auth');
+        // --- 2. Protected Portal Auth Checks ---
+        // If they are trying to access the internal authenticated application, strictly verify them.
+        if (normalizedPath.startsWith('/portal')) {
+            if (!user) {
+                logSecurityEvent({ eventType: 'unauthorized_access', path: normalizedPath, targetRole: 'pilot_member', ipAddress, userAgent });
+                return NextResponse.redirect(new URL('/login?error=unauthorized_pilot', request.url));
+            }
 
-        if (isPilotPublicPath) {
-            // Rewrite implicitly to the internal /pilot React App space without changing the browser URL string
-            const rewriteUrl = new URL(`/pilot${normalizedPath === '/' ? '' : normalizedPath}`, request.url);
-            rewriteUrl.search = request.nextUrl.search;
-            return NextResponse.rewrite(rewriteUrl);
+            const profile = await getUserIdentity(user.id);
+
+            // If they are on a protected portal path without valid pilot permissions
+            if (!profile?.pilot_permissions) {
+                logSecurityEvent({ eventType: 'role_mismatch', path: normalizedPath, userId: user.id, userRole: profile?.role || undefined, targetRole: 'pilot_member', ipAddress, userAgent });
+                return NextResponse.redirect(new URL('/login?error=unauthorized_pilot', request.url));
+            }
         }
 
-        // --- 4. Protected Auth Checks ---
-        // If not logged in at all, redirect to the bare `/` (landing page) on this subdomain
-        // The browser will hit pilot.schologic.com/ -> which gets caught by the Public Exceptions above
-        if (!user) {
-            logSecurityEvent({ eventType: 'unauthorized_access', path: normalizedPath, targetRole: 'pilot_member', ipAddress, userAgent });
-            return NextResponse.redirect(new URL('/', request.url));
+        // --- 3. All clear. Stealth Rewrite! ---
+        // We silently serve the internal app/pilot/* files.
+        // E.g. pilot.schologic.com/portal/team -> rewrites to serves app/pilot/portal/team/page.tsx seamlessly under the hood.
+        if (path.startsWith('/pilot/')) {
+            return NextResponse.next();
         }
 
-        const profile = await getUserIdentity(user.id);
-
-        // --- 5. No Pilot Application Assigned ---
-        // If they are on a deep nested path without valid pilot permissions, force them to the root landing page `/`.
-        if (!profile?.pilot_permissions && normalizedPath !== '/setup') {
-            logSecurityEvent({ eventType: 'role_mismatch', path: normalizedPath, userId: user.id, userRole: profile?.role || undefined, targetRole: 'pilot_member', ipAddress, userAgent });
-            return NextResponse.redirect(new URL('/', request.url));
-        }
-
-        // --- 6. All clear. Stealth Rewrite! ---
-        // They are authorized for the pilot subdomain. We silently serve the internal app/pilot/* files.
-        // E.g. pilot.schologic.com/team -> rewrites to serves app/pilot/team/page.tsx seamlessly under the hood.
         const rewriteUrl = new URL(`/pilot${normalizedPath === '/' ? '' : normalizedPath}`, request.url);
         rewriteUrl.search = request.nextUrl.search;
         return NextResponse.rewrite(rewriteUrl);
     }
 
     // 2. Global Account Status Check (Bypass for login/disabled/api)
-    const isPublicPath = path.startsWith('/login') || path.startsWith('/auth') || path.startsWith('/disabled') || path.startsWith('/api') || path === '/';
+    const isPublicPath = path.startsWith('/login') || path.startsWith('/setup') || path.startsWith('/pilot-knowledge-base') || path.startsWith('/auth') || path.startsWith('/disabled') || path.startsWith('/api') || path === '/';
 
     if (user && !isPublicPath) {
         // If account is marked as inactive in metadata, redirect to disabled

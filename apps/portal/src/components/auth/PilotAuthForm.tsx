@@ -108,7 +108,7 @@ export default function PilotAuthForm({ type }: { type: 'login' | 'setup' }) {
                 const { data, error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
                 // Redirect on success
-                window.location.href = '/team';
+                window.location.href = '/portal/team';
             }
         } catch (err: unknown) {
             console.error('Pilot Auth error:', err);
@@ -180,7 +180,7 @@ export default function PilotAuthForm({ type }: { type: 'login' | 'setup' }) {
             if (error) throw error;
 
             // Successfully set password, redirect to portal
-            window.location.href = '/team';
+            window.location.href = '/portal/team';
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to update password.');
         } finally {
