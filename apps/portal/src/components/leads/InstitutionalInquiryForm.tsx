@@ -11,6 +11,13 @@ const INSTITUTION_SIZES = [
     { value: '10000+', label: '10,000+ students' },
 ];
 
+const INSTITUTION_TYPES = [
+    { value: 'University', label: 'University' },
+    { value: 'College', label: 'College' },
+    { value: 'TVET', label: 'TVET' },
+    { value: 'Other', label: 'Other/Specialized' },
+];
+
 const LMS_OPTIONS = [
     { value: 'Canvas', label: 'Canvas' },
     { value: 'Blackboard', label: 'Blackboard' },
@@ -20,11 +27,15 @@ const LMS_OPTIONS = [
     { value: 'None', label: 'No LMS' },
 ];
 
-const INTEREST_OPTIONS = [
-    { value: 'AI Grading', label: 'AI-Powered Grading' },
-    { value: 'Integrity Detection', label: 'Academic Integrity Detection' },
-    { value: 'OER/ZTC', label: 'OER / Zero-Textbook-Cost' },
-    { value: 'All', label: 'Full Platform' },
+const CORE_MODULES = [
+    { value: 'Class Manager', label: 'Class Manager' },
+    { value: 'Practicum Manager', label: 'Practicum Manager' },
+];
+
+const VALUE_ACCELERATORS = [
+    { value: 'AI Forensics', label: 'AI Detection & Forensics' },
+    { value: 'AI Assistant', label: 'AI Teaching Assistant' },
+    { value: 'OER Library', label: 'OER & Universal Reader' },
 ];
 
 const COUNTRY_CODES = [
@@ -57,13 +68,15 @@ export function InstitutionalInquiryForm() {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [institution, setInstitution] = useState('');
+    const [institutionType, setInstitutionType] = useState('');
     const [jobTitle, setJobTitle] = useState('');
     const [email, setEmail] = useState('');
     const [countryCode, setCountryCode] = useState('+254');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [institutionSize, setInstitutionSize] = useState('');
     const [currentLms, setCurrentLms] = useState('');
-    const [primaryInterest, setPrimaryInterest] = useState<string[]>([]);
+    const [coreModules, setCoreModules] = useState<string[]>(CORE_MODULES.map(m => m.value));
+    const [valueModules, setValueModules] = useState<string[]>(VALUE_ACCELERATORS.map(m => m.value));
     const [virtualLearning, setVirtualLearning] = useState(false);
     const [otherInfo, setOtherInfo] = useState('');
 
@@ -85,14 +98,18 @@ export function InstitutionalInquiryForm() {
     const isValidPhone = (phoneValue: string) => phoneValue.length === expectedDigits;
     const phoneError = phoneTouched && phoneNumber.length > 0 && !isValidPhone(phoneNumber) ? `Need ${expectedDigits} digits` : null;
 
-    const toggleInterest = (value: string) => {
-        setPrimaryInterest(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
+    const toggleCore = (value: string) => {
+        setCoreModules(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
+    };
+
+    const toggleValue = (value: string) => {
+        setValueModules(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
     };
 
     const nextStep = () => {
         setError(null);
         if (step === 1) {
-            if (!firstName.trim() || !lastName.trim() || !jobTitle.trim() || !email.trim() || !institution.trim() || !institutionSize || !currentLms || !phoneNumber.trim()) {
+            if (!firstName.trim() || !lastName.trim() || !jobTitle.trim() || !email.trim() || !institution.trim() || !institutionType || !institutionSize || !currentLms || !phoneNumber.trim()) {
                 setError('Fill in all fields.');
                 return;
             }
@@ -105,13 +122,14 @@ export function InstitutionalInquiryForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        if (primaryInterest.length === 0) { setError('Select at least one goal.'); return; }
+        if (coreModules.length === 0) { setError('Select at least one Core Foundation.'); return; }
+        if (valueModules.length === 0) { setError('Select at least one Value Accelerator.'); return; }
         setState('submitting');
         const data: PilotRequestData = {
             firstName: capitalizeName(firstName),
             lastName: capitalizeName(lastName),
-            institution, jobTitle, email, phone: `${countryCode} ${phoneNumber}`,
-            institutionSize, currentLms, primaryInterest, virtualLearning, otherInfo: otherInfo || undefined
+            institution, institutionType, jobTitle, email, phone: `${countryCode} ${phoneNumber}`,
+            institutionSize, currentLms, coreModules, valueModules, virtualLearning, otherInfo: otherInfo || undefined
         };
         const result = await submitPilotRequest(data);
         if (result.error) { setError(result.error); setState('filling'); } else { setState('success'); }
@@ -184,16 +202,29 @@ export function InstitutionalInquiryForm() {
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Institutional Email</label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                onBlur={() => setEmailTouched(true)}
-                                placeholder="dean@university.ac.ke"
-                                className={`w-full px-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium ${emailError ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}
-                            />
+                        <div className="grid grid-cols-[2fr_1fr] gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Institutional Email</label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    onBlur={() => setEmailTouched(true)}
+                                    placeholder="dean@university.ac.ke"
+                                    className={`w-full px-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium ${emailError ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-900 mb-1.5 ml-1">Inst. Type</label>
+                                <select
+                                    value={institutionType}
+                                    onChange={(e) => setInstitutionType(e.target.value)}
+                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none cursor-pointer text-sm font-medium"
+                                >
+                                    <option value="">Select...</option>
+                                    {INSTITUTION_TYPES.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                </select>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -266,28 +297,65 @@ export function InstitutionalInquiryForm() {
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-900 mb-2.5 ml-1">Pilot Goals (Select all that apply)</label>
-                            <div className="grid grid-cols-1 gap-2">
-                                {INTEREST_OPTIONS.map(opt => (
-                                    <label
-                                        key={opt.value}
-                                        className={`group flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${primaryInterest.includes(opt.value) ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-white'}`}
-                                    >
-                                        <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${primaryInterest.includes(opt.value) ? 'bg-indigo-500 border-indigo-500' : 'bg-white border-slate-300'}`}>
-                                            {primaryInterest.includes(opt.value) && <CheckCircle className="w-3.5 h-3.5 text-white" />}
-                                        </div>
-                                        <input type="checkbox" hidden checked={primaryInterest.includes(opt.value)} onChange={() => toggleInterest(opt.value)} />
-                                        <span className={`text-sm font-bold ${primaryInterest.includes(opt.value) ? 'text-indigo-900' : 'text-slate-600'}`}>{opt.label}</span>
-                                    </label>
-                                ))}
+                    <div className="space-y-5 animate-in slide-in-from-right-4 duration-300">
+                        <label className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${coreModules.length === CORE_MODULES.length && valueModules.length === VALUE_ACCELERATORS.length
+                            ? 'bg-indigo-50 border-indigo-200'
+                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                            }`}>
+                            <span className={`text-sm font-bold ${coreModules.length === CORE_MODULES.length && valueModules.length === VALUE_ACCELERATORS.length
+                                ? 'text-indigo-900' : 'text-slate-700'
+                                }`}>Full Platform (All Modules)</span>
+                            <input
+                                type="checkbox"
+                                checked={coreModules.length === CORE_MODULES.length && valueModules.length === VALUE_ACCELERATORS.length}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        setCoreModules(CORE_MODULES.map(m => m.value));
+                                        setValueModules(VALUE_ACCELERATORS.map(m => m.value));
+                                    } else {
+                                        setCoreModules([]);
+                                        setValueModules([]);
+                                    }
+                                }}
+                                className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                        </label>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2.5 ml-1">Core Foundations</label>
+                                <div className="space-y-2">
+                                    {CORE_MODULES.map(opt => (
+                                        <label
+                                            key={opt.value}
+                                            className={`group flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${coreModules.includes(opt.value) ? 'bg-white border-indigo-500 shadow-sm' : 'bg-slate-50 border-transparent hover:border-slate-200'}`}
+                                        >
+                                            <input type="checkbox" checked={coreModules.includes(opt.value)} onChange={() => toggleCore(opt.value)} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                                            <span className={`text-sm font-medium ${coreModules.includes(opt.value) ? 'text-slate-900' : 'text-slate-600'}`}>{opt.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2.5 ml-1">Value Accelerators</label>
+                                <div className="space-y-2.5">
+                                    {VALUE_ACCELERATORS.map(opt => (
+                                        <label
+                                            key={opt.value}
+                                            className={`group flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${valueModules.includes(opt.value) ? 'bg-white border-amber-500 shadow-sm' : 'bg-slate-50 border-transparent hover:border-slate-200'}`}
+                                        >
+                                            <input type="checkbox" checked={valueModules.includes(opt.value)} onChange={() => toggleValue(opt.value)} className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500" />
+                                            <span className={`text-sm font-medium ${valueModules.includes(opt.value) ? 'text-slate-900' : 'text-slate-600'}`}>{opt.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
-                        <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white/50 cursor-pointer group">
-                            <input type="checkbox" checked={virtualLearning} onChange={(e) => setVirtualLearning(e.target.checked)} className="w-5 h-5 rounded border-slate-300 text-indigo-600" />
-                            <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Active Distance Learning Program</span>
+                        <label className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer group">
+                            <input type="checkbox" checked={virtualLearning} onChange={(e) => setVirtualLearning(e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                            <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">We have an Active Open Learning Program</span>
                         </label>
                     </div>
                 )}

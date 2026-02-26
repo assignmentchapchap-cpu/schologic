@@ -4,8 +4,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TABS = [
-    { value: "team", label: "01. Team & Tasks", href: "/portal/team" },
-    { value: "scope", label: "02. Scope", href: "/portal/scope" },
+    { value: "scope", label: "01. Scope", href: "/portal/scope" },
+    { value: "team", label: "02. Team & Tasks", href: "/portal/team" },
     { value: "kpis", label: "03. KPIs", href: "/portal/kpis" },
     { value: "branding", label: "04. Branding", href: "/portal/branding" },
     { value: "settings", label: "05. Settings", href: "/portal/settings" },
@@ -17,8 +17,8 @@ export function PilotTabsNav() {
     const pathname = usePathname();
     const router = useRouter();
 
-    // Determine active tab from pathname, default to team
-    const activeTab = TABS.find((tab) => pathname.startsWith(tab.href))?.value || "team";
+    // Determine active tab from pathname, default to scope
+    const activeTab = TABS.find((tab) => pathname.startsWith(tab.href))?.value || "scope";
 
     const handleTabChange = (value: string) => {
         const tab = TABS.find((t) => t.value === value);

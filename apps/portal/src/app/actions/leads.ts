@@ -22,12 +22,14 @@ export interface PilotRequestData {
   firstName: string;
   lastName: string;
   institution: string;
+  institutionType: string;
   jobTitle: string;
   email: string;
   phone: string;
   institutionSize: string;
   currentLms: string;
-  primaryInterest: string[];
+  coreModules: string[];
+  valueModules: string[];
   virtualLearning: boolean;
   otherInfo?: string;
   note?: string;
@@ -35,19 +37,30 @@ export interface PilotRequestData {
 
 export async function submitPilotRequest(data: PilotRequestData) {
   try {
-    // 1. Insert into database
+    // 1. Dual-Write Strategy for Database Insert
+    // Combine for legacy Admin Leads dashboard compatibility
+    const combinedInterests = [...data.coreModules, ...data.valueModules];
+
+    // Structure for modern Pilot Portal (Tab 1) pre-population
+    const modulesJsonb = {
+      core: data.coreModules,
+      add_ons: data.valueModules
+    };
+
     const { error: dbError } = await supabaseAdmin
       .from('pilot_requests')
       .insert({
         first_name: data.firstName,
         last_name: data.lastName,
         institution: data.institution,
+        institution_type: data.institutionType,
         job_title: data.jobTitle,
         email: data.email,
         phone: data.phone,
         institution_size: data.institutionSize,
         current_lms: data.currentLms,
-        primary_interest: data.primaryInterest,
+        primary_interest: combinedInterests,
+        modules_jsonb: modulesJsonb,
         virtual_learning: data.virtualLearning,
         other_info: data.otherInfo || null,
         note: data.note || null,
@@ -107,8 +120,9 @@ export async function submitPilotRequest(data: PilotRequestData) {
     </div>
 
     <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-      <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold; color: #475569;">PRIMARY INTERESTS</p>
-      <p style="margin: 0; font-size: 14px; color: #1e293b;">${data.primaryInterest.join(', ')}</p>
+      <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold; color: #475569;">PILOT SCOPE</p>
+      <p style="margin: 0 0 5px 0; font-size: 14px; color: #1e293b;"><strong>Core Foundations:</strong> ${data.coreModules.join(', ')}</p>
+      <p style="margin: 0; font-size: 14px; color: #1e293b;"><strong>Value Accelerators:</strong> ${data.valueModules.join(', ')}</p>
       
       ${data.virtualLearning ? '<p style="margin: 10px 0 0 0; font-size: 12px; color: #4f46e5; font-weight: 600;">✓ HAS VIRTUAL LEARNING PROGRAM</p>' : ''}
     </div>
@@ -175,7 +189,8 @@ export async function submitPilotRequest(data: PilotRequestData) {
     <div style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 25px; margin-top: 30px;">
       <p style="margin: 0 0 15px 0; font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Engagement Summary</p>
       <p style="margin: 5px 0; font-size: 13px;"><strong>Lead Stakeholder:</strong> ${data.firstName} ${data.lastName}</p>
-      <p style="margin: 5px 0; font-size: 13px;"><strong>Institutional Focus:</strong> ${data.primaryInterest.join(', ')}</p>
+      <p style="margin: 5px 0; font-size: 13px;"><strong>Core Foundations:</strong> ${data.coreModules.join(', ')}</p>
+      <p style="margin: 5px 0; font-size: 13px;"><strong>Value Accelerators:</strong> ${data.valueModules.join(', ')}</p>
     </div>
 
     <p style="font-size: 14px; margin-top: 30px;">Sincerely,<br/><span style="font-weight: bold; color: #0f172a;">Schologic Partnership Team</span></p>
