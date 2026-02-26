@@ -1,4 +1,5 @@
 
+import { getPilotUrl } from '@/lib/urls';
 import { FeatureHero } from '@/components/features/FeatureHero';
 import { FeatureGrid, FeatureCard } from '@/components/features/FeatureGrid';
 import { FEATURE_LINKS } from '@/components/features/StickySubNav';
@@ -124,7 +125,6 @@ export default function FeaturesPage() {
                         </div>
                         <div className="bg-slate-900/50 rounded-2xl p-6 border border-slate-800">
                             <h3 className="text-lg font-bold text-white mb-2">Can I import my existing courses?</h3>
-import { getPilotUrl } from '@/lib/urls';
                             <p className="text-slate-400">Yes. We support Common Cartridge (IMSCC) imports from Canvas, Blackboard, and Moodle, preserving your structure and content.</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-2xl p-6 border border-slate-800">
