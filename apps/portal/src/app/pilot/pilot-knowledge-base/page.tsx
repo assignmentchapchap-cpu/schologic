@@ -394,6 +394,7 @@ export default function PilotKnowledgeBase() {
                                     <li><strong>Timeline:</strong> The standard development, customization, and cloud provisioning process takes between 1 to 2 weeks.</li>
                                     <li><strong>Tracking Progress:</strong> You do not need to wait in the dark. Your committee can log into the Pilot Management Portal at any time to view a live progress tracker.</li>
                                     <li><strong>Feedback Loop:</strong> As our engineers configure your specific grading rubrics or import your OER IMSCC cartridges, they will push updates to the portal. Your team can review these configurations and provide immediate feedback directly through the PMP interface, ensuring the final environment perfectly matches your academic requirements.</li>
+import { getPilotUrl } from '@/lib/urls';
                                 </ul>
 
                                 <h3 className="text-xl font-bold text-slate-900 mt-8">Go-Live: The Admin Dashboard & Evaluation Module</h3>
@@ -430,7 +431,7 @@ export default function PilotKnowledgeBase() {
                     {/* Final CTA Footer */}
                     <div className="mt-32 pt-16 border-t border-slate-100 text-center">
                         <Link
-                            href="/pilot"
+                            href={getPilotUrl()}
                             className="inline-flex items-center gap-2 px-10 py-5 bg-indigo-600 text-white rounded-full font-bold text-lg hover:bg-indigo-700 transition-all shadow-xl active:scale-95 group"
                         >
                             Complete Pilot Scoping

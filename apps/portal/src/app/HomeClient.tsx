@@ -25,21 +25,17 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/landing/Footer';
 import DemoSignupModal from '@/components/auth/DemoSignupModal';
-import InstitutionalPilotModal from '@/components/leads/InstitutionalPilotModal';
 import ShareDemoModal from '@/components/landing/ShareDemoModal';
 import { JsonLdWebSite } from "@/components/seo/JsonLd";
+import Link from 'next/link';
+import { getPilotUrl } from '@/lib/urls';
 
 export default function HomeClient() {
     const [showDemoModal, setShowDemoModal] = useState(false);
-    const [showPilotModal, setShowPilotModal] = useState(false);
     const [showInviteModal, setShowInviteModal] = useState(false);
     const searchParams = useSearchParams();
 
     useEffect(() => {
-        if (typeof window !== 'undefined' && window.location.hash === '#request-pilot') {
-            setShowPilotModal(true);
-        }
-
         const mode = searchParams.get('mode');
         if (mode === 'demo') {
             setShowDemoModal(true);
@@ -242,12 +238,12 @@ export default function HomeClient() {
                     </p>
 
                     <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center sm:justify-center sm:gap-4 w-full px-1 sm:px-0">
-                        <button
-                            onClick={() => setShowPilotModal(true)}
-                            className="px-2 py-3 sm:px-8 sm:py-4 bg-indigo-600 text-white rounded-lg font-bold text-base sm:text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 font-sans w-full sm:w-auto sm:min-w-[280px] whitespace-nowrap"
+                        <Link
+                            href={getPilotUrl()}
+                            className="px-2 py-3 sm:px-8 sm:py-4 bg-indigo-600 text-white rounded-lg font-bold text-base sm:text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 font-sans flex items-center justify-center w-full sm:w-auto sm:min-w-[280px] whitespace-nowrap"
                         >
-                            Start <span className="hidden sm:inline">Your Institutional</span> Pilot
-                        </button>
+                            Start <span className="hidden sm:inline">&nbsp;Your Institutional</span>&nbsp;Pilot
+                        </Link>
 
                         <button
                             onClick={() => setShowInviteModal(true)}
@@ -267,9 +263,6 @@ export default function HomeClient() {
                 <DemoSignupModal onClose={() => setShowDemoModal(false)} />
             )}
 
-            {showPilotModal && (
-                <InstitutionalPilotModal onClose={() => setShowPilotModal(false)} />
-            )}
 
             {showInviteModal && (
                 <ShareDemoModal onClose={() => setShowInviteModal(false)} />

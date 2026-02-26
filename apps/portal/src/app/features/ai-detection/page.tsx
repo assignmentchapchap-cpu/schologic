@@ -5,6 +5,7 @@ import { AIDetectionFAQ } from '@/components/features/ai-detection/AIDetectionFA
 import { RelatedFeatures } from '@/components/features/RelatedFeatures';
 import { Shield, Eye, Lock, Scale, CheckCircle, AlertTriangle, Github, Server, Cpu, ExternalLink } from 'lucide-react';
 import type { Metadata } from 'next';
+import { getPilotUrl } from '@/lib/urls';
 
 export const metadata: Metadata = {
     title: 'AI Content Detection & Academic Integrity | Schologic LMS',
@@ -47,7 +48,7 @@ export default function AIDetectionPage() {
                 align="center"
                 visual={<IntegrityHub />}
                 ctaText="Start Your Pilot"
-                ctaHref="/#request-pilot"
+                ctaHref={getPilotUrl()}
             />
 
             <div className="container mx-auto px-6">

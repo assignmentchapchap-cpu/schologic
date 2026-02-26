@@ -5,6 +5,7 @@ import { GradingDeepDive } from '@/components/features/class-manager/GradingDeep
 import { EcosystemLinks } from '@/components/features/class-manager/EcosystemLinks';
 import { ClassManagerFAQ } from '@/components/features/class-manager/ClassManagerFAQ';
 import type { Metadata } from 'next';
+import { getPilotUrl } from '@/lib/urls';
 
 export const metadata: Metadata = {
     title: 'Class Management & Unified Gradebook | Schologic LMS',
@@ -42,7 +43,7 @@ export default function ClassManagerPage() {
                 align="center"
                 // Placeholder for actual dashboard visual - using a code block style div for now
                 ctaText="Start Your Pilot"
-                ctaHref="/#request-pilot"
+                ctaHref={getPilotUrl()}
             />
 
             {/* Intro Stat */}

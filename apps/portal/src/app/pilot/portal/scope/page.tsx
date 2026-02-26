@@ -15,15 +15,11 @@ export default async function PilotScopePage() {
         redirect('/login');
     }
 
-    const { pilot } = res.data;
+    const { pilot, profile } = res.data;
 
     return (
         <div>
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Pilot Blueprint Scope</h1>
-                <p className="text-slate-500 text-sm">Define what modules will be tested and constraints on the deployment.</p>
-            </div>
-            <ScopeClient pilot={pilot} />
+            <ScopeClient pilot={pilot} profile={profile} />
         </div>
     );
 }

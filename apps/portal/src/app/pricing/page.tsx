@@ -5,6 +5,7 @@ import { CheckCircle, ArrowRight, GraduationCap, School, Heart, Sparkles, Chevro
 import Link from 'next/link';
 import DemoSignupModal from '@/components/auth/DemoSignupModal';
 import { JsonLdFAQPage, JsonLdPricing } from '@/components/seo/JsonLd';
+import { getPilotUrl } from '@/lib/urls';
 
 const faqItems = [
     {
@@ -130,8 +131,8 @@ export default function PricingPage() {
                             </ul>
                             <div className="space-y-2">
                                 <Link
-                                    href="/#request-pilot"
-                                    className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-sm text-center block"
+                                    href={getPilotUrl()}
+                                    className="inline-flex w-full items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-md active:scale-[0.98]"
                                 >
                                     Request a Pilot
                                 </Link>
@@ -245,7 +246,7 @@ export default function PricingPage() {
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link
-                            href="/#request-pilot"
+                            href={getPilotUrl()}
                             className="inline-flex items-center gap-2 px-8 py-3.5 bg-indigo-600 text-white rounded-full font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
                         >
                             Request Institutional Pilot

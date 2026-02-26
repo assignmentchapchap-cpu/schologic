@@ -35,7 +35,7 @@ export default function FeaturesPage() {
                 label="Platform Features"
                 align="center"
                 ctaText="Start Your Pilot"
-                ctaHref="/#request-pilot"
+                ctaHref={getPilotUrl()}
             />
 
             <div className="container mx-auto px-6 pb-24">
@@ -124,6 +124,7 @@ export default function FeaturesPage() {
                         </div>
                         <div className="bg-slate-900/50 rounded-2xl p-6 border border-slate-800">
                             <h3 className="text-lg font-bold text-white mb-2">Can I import my existing courses?</h3>
+import { getPilotUrl } from '@/lib/urls';
                             <p className="text-slate-400">Yes. We support Common Cartridge (IMSCC) imports from Canvas, Blackboard, and Moodle, preserving your structure and content.</p>
                         </div>
                         <div className="bg-slate-900/50 rounded-2xl p-6 border border-slate-800">

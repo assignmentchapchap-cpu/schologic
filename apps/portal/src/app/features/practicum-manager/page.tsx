@@ -5,6 +5,7 @@ import { AssessmentFramework } from '@/components/features/practicum-manager/Ass
 import { ComplianceTools } from '@/components/features/practicum-manager/ComplianceTools';
 import { PracticumManagerFAQ } from '@/components/features/practicum-manager/PracticumManagerFAQ';
 import type { Metadata } from 'next';
+import { getPilotUrl } from '@/lib/urls';
 
 export const metadata: Metadata = {
     title: 'Practicum & Industrial Attachment Management | Schologic LMS',
@@ -52,7 +53,7 @@ export default function PracticumManagerPage() {
                 label="Practicum Management"
                 align="center"
                 ctaText="Request a Demo"
-                ctaHref="/#request-pilot"
+                ctaHref={getPilotUrl()}
             />
 
             {/* Intro Section */}

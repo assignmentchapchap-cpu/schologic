@@ -8,6 +8,7 @@ import Link from "next/link";
 import { JsonLdFAQPage } from "@/components/seo/JsonLd";
 import Image from "next/image";
 import { Metadata } from "next";
+import { getPilotUrl } from '@/lib/urls';
 
 export const metadata: Metadata = {
     title: 'Schologic LMS for TVET | CBET Assessment & CDACC Compliance',
@@ -38,8 +39,8 @@ export default function TvetPage() {
                 subtitle="Manage the complexity of CBET with one platform. Sync theory, track industrial attachment, and simplify CDACC compliance without adding administrative weight."
                 label="For TVET Institutions"
                 accentColor="emerald"
-                ctaText="Request a Pilot"
-                ctaHref="/#request-pilot"
+                ctaText="Request Priority Access"
+                ctaHref={getPilotUrl()}
                 secondaryCtaText="View Live Demo"
                 secondaryCtaHref="/demo"
                 visualPosition="left"
@@ -288,8 +289,8 @@ export default function TvetPage() {
                 heading="The Future of TVET is Digital."
                 subtitle="Join forward-thinking institutions building capacity, relief, and reputation. Schologic integrates secure assessment tools, AI content detection, and digital proctoring into every course."
                 primaryCta={{
-                    text: "Request a Pilot",
-                    href: "/#request-pilot",
+                    href: getPilotUrl(),
+                    text: "Assess Full Capabilities"
                 }}
                 secondaryCta={{
                     text: "Explore All Features",

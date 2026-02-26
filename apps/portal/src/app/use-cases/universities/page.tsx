@@ -15,6 +15,7 @@ import {
     SystemEcosystemVisual
 } from "@/components/landing/visuals/LazyVisuals";
 import { JsonLdFAQPage, JsonLdBreadcrumbList } from "@/components/seo/JsonLd";
+import { getPilotUrl } from '@/lib/urls';
 
 export const metadata: Metadata = {
     title: 'Schologic LMS for Universities | Academic Integrity & Multi-Campus Management',
@@ -45,8 +46,8 @@ export default function UniversitiesPage() {
                 subtitle="Unify campuses. Automate practicums. Secure degrees. One sovereign platform for leading institutions in Kenya and beyond."
                 label="For Universities"
                 accentColor="indigo"
-                ctaText="Request a Pilot"
-                ctaHref="/#request-pilot"
+                ctaText="Request Priority Access"
+                ctaHref={getPilotUrl()}
                 secondaryCtaText="View Live Demo"
                 secondaryCtaHref="/demo"
                 visualPosition="right"
@@ -119,8 +120,8 @@ export default function UniversitiesPage() {
                                 </p>
                             </div>
                             <div className="mt-8">
-                                <Link href="/#request-pilot" className="text-emerald-600 font-bold hover:text-emerald-700 inline-flex items-center gap-2 px-6 py-3 bg-emerald-50 rounded-full hover:bg-emerald-100 transition-colors">
-                                    Begin your institutional pilot <ArrowRight className="w-4 h-4" />
+                                <Link href={getPilotUrl()} className="text-emerald-600 font-bold hover:text-emerald-700 inline-flex items-center gap-2 px-6 py-3 bg-emerald-50 rounded-full hover:bg-emerald-100 transition-colors">
+                                    Start a pilot <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </Link>
                             </div>
                         </div>
@@ -273,8 +274,8 @@ export default function UniversitiesPage() {
                 heading="Transform Your Institution."
                 subtitle="Unify campuses, automate assessment, and ensure regulatory compliance with one sovereign platform. Whether you manage one campus or ten, Schologic provides the infrastructure for quality and student success."
                 primaryCta={{
-                    text: "Request a Pilot",
-                    href: "/#request-pilot",
+                    href: getPilotUrl(),
+                    text: "Assess Full Capabilities"
                 }}
                 secondaryCta={{
                     text: "View Live Demo",

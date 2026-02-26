@@ -21,16 +21,17 @@ export default async function PilotPortalLayout({
     const p = pilot as any;
 
     // Map database columns to the PilotBlueprint schema
+    const rawScope = p.scope_jsonb || {};
     const defaultValues: Partial<PilotBlueprint> = {
         id: p.id as string,
         champion_id: (p.champion_id as string) || undefined,
-        scope_jsonb: p.scope_jsonb || {
-            core_modules: p.modules_jsonb?.core || [],
-            add_ons: p.modules_jsonb?.add_ons || [],
-            target_departments: [],
-            pilot_period_weeks: 4,
-            max_students: 200,
-            max_instructors: 5
+        scope_jsonb: {
+            core_modules: rawScope.core_modules || p.modules_jsonb?.core || [],
+            add_ons: rawScope.add_ons || p.modules_jsonb?.add_ons || [],
+            target_departments: rawScope.target_departments || [],
+            pilot_period_weeks: rawScope.pilot_period_weeks || 4,
+            max_students: rawScope.max_students || 200,
+            max_instructors: rawScope.max_instructors || 5
         },
         kpis_jsonb: p.kpis_jsonb || undefined,
         branding_jsonb: p.branding_jsonb || undefined,

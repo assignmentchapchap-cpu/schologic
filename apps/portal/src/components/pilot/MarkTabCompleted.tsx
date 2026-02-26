@@ -30,7 +30,20 @@ interface MarkTabCompletedProps {
 
 export function MarkTabCompleted({ tabId, hasWritePermission = true }: MarkTabCompletedProps) {
     const { watch, setValue } = usePilotForm();
-    const completedTabs = watch("completed_tabs_jsonb") || [];
+    const rawCompletedTabs = watch("completed_tabs_jsonb");
+
+    // Ensure completedTabs is always a valid array
+    let completedTabs: string[] = [];
+    if (Array.isArray(rawCompletedTabs)) {
+        completedTabs = rawCompletedTabs;
+    } else if (typeof rawCompletedTabs === 'string') {
+        try {
+            const parsed = JSON.parse(rawCompletedTabs);
+            if (Array.isArray(parsed)) completedTabs = parsed;
+        } catch {
+            completedTabs = [];
+        }
+    }
 
     // Check if current tab is in the completed array
     const isCompleted = completedTabs.includes(tabId);

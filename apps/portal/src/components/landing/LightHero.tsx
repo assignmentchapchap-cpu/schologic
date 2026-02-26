@@ -6,6 +6,7 @@ import { BackgroundGrid } from "@/components/use-cases/BackgroundGrid";
 import dynamic from 'next/dynamic';
 
 import { DeanDashboardVisual } from "@/components/landing/visuals/LazyVisuals";
+import { getPilotUrl } from '@/lib/urls';
 
 export function LightHero() {
     return (
@@ -31,8 +32,8 @@ export function LightHero() {
                             {/* Dual CTAs */}
                             <div className="grid grid-cols-2 sm:flex sm:flex-row gap-4 w-full mb-6">
                                 <Link
-                                    href="/#request-pilot"
-                                    className="flex items-center justify-center px-4 md:px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-indigo-500/30 text-sm md:text-base whitespace-nowrap md:min-w-[240px] active:scale-95"
+                                    href={getPilotUrl()}
+                                    className="px-8 py-4 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 flex items-center justify-center gap-2"
                                 >
                                     Start Institutional Pilot
                                 </Link>

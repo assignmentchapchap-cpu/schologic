@@ -5,6 +5,7 @@ import { RelatedFeatures } from '@/components/features/RelatedFeatures';
 import { FileText, BookOpen, Download, Zap, Archive, Sparkles, Monitor, Layers, Search, CheckCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getPilotUrl } from '@/lib/urls';
 
 export const metadata: Metadata = {
     title: 'Universal Document Reader for LMS | PDF, DOCX & IMSCC | Schologic',
@@ -50,7 +51,7 @@ export default function UniversalReaderPage() {
                 align="center"
                 visual={<ReaderInterfaceMock />}
                 ctaText="Start Your Pilot"
-                ctaHref="/#request-pilot"
+                ctaHref={getPilotUrl()}
             />
 
             <div className="container mx-auto px-6">

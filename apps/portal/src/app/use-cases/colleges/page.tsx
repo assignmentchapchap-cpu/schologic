@@ -7,6 +7,7 @@ import Link from "next/link";
 import { JsonLdFAQPage } from "@/components/seo/JsonLd";
 import Image from "next/image";
 import { Metadata } from "next";
+import { getPilotUrl } from '@/lib/urls';
 
 export const metadata: Metadata = {
     title: "LMS for Colleges in Kenya | Hybrid Learning Platform | Schologic",
@@ -43,8 +44,8 @@ export default function CollegesPage() {
                 subtitle="Deliver full-time, evening, and distance programs through one unified platform. Maximize capacity, empower instructors, and protect credentials."
                 label="For Colleges"
                 accentColor="amber"
-                ctaText="Request a Pilot"
-                ctaHref="/#request-pilot"
+                ctaText="Request Priority Access"
+                ctaHref={getPilotUrl()}
                 secondaryCtaText="View Live Demo"
                 secondaryCtaHref="/demo"
                 visualPosition="left"
@@ -336,8 +337,8 @@ export default function CollegesPage() {
                 heading="One Standard. Verified Achievement."
                 subtitle="Combat the perception that evening or online programs are less rigorous. Schologic integrates secure assessment tools, AI content detection, and digital proctoring into every course."
                 primaryCta={{
-                    text: "Request a Pilot",
-                    href: "/#request-pilot",
+                    href: getPilotUrl(),
+                    text: "Assess Full Capabilities"
                 }}
                 secondaryCta={{
                     text: "Explore Features",
