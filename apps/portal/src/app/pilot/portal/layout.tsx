@@ -33,7 +33,15 @@ export default async function PilotPortalLayout({
             max_students: rawScope.max_students || 200,
             max_instructors: rawScope.max_instructors || 5
         },
-        kpis_jsonb: p.kpis_jsonb || undefined,
+        kpis_jsonb: (p.kpis_jsonb && typeof p.kpis_jsonb === 'object' && !Array.isArray(p.kpis_jsonb))
+            ? {
+                kpis: Array.isArray(p.kpis_jsonb.kpis) ? p.kpis_jsonb.kpis : [],
+                questions: (p.kpis_jsonb.questions && typeof p.kpis_jsonb.questions === 'object') ? p.kpis_jsonb.questions : {},
+                delivery: (p.kpis_jsonb.delivery && typeof p.kpis_jsonb.delivery === 'object')
+                    ? p.kpis_jsonb.delivery
+                    : { method: "dashboard", frequency: "weekly" },
+            }
+            : undefined,
         branding_jsonb: p.branding_jsonb || undefined,
         permissions_jsonb: p.permissions_jsonb || undefined,
         dashboard_layout_jsonb: p.dashboard_layout_jsonb || undefined,

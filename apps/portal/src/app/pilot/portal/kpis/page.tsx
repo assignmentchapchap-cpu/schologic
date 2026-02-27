@@ -1,16 +1,25 @@
 import { Metadata } from 'next';
+import { getCurrentPilotRequest } from '@/app/actions/pilotPortal';
+import { KPIsClient } from './KPIsClient';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
     title: 'KPIs | Pilot Management Portal',
     description: 'Define key performance indicators for your pilot.',
 };
 
-export default function PilotKPIsPage() {
+export default async function PilotKPIsPage() {
+    const res = await getCurrentPilotRequest();
+
+    if (res.error || !res.data) {
+        redirect('/login');
+    }
+
+    const { pilot, profile } = res.data;
+
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">Pilot KPIs</h1>
-            <p className="text-slate-600">Select and define measurement criteria for success.</p>
-            {/* Phase 4 UI goes here */}
+        <div>
+            <KPIsClient pilot={pilot} profile={profile} />
         </div>
     );
 }

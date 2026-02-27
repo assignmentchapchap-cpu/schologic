@@ -25,10 +25,27 @@ export const pilotBlueprintSchema = z.object({
 
     // Tab 3: KPIs
     kpis_jsonb: z.object({
-        selected_kpis: z.array(z.string()).default([]),
-        measurement_criteria: z.record(z.string(), z.string()).default({}),
+        kpis: z.array(z.object({
+            id: z.string(),
+            module: z.string(),        // Source module ID or "generic"
+            title: z.string(),
+            type: z.enum(["automated", "self_assessment"]),
+            enabled: z.boolean().default(true),
+            is_auto: z.boolean().default(true),
+            frequency: z.enum(["daily", "weekly", "biweekly", "end_of_pilot"]).default("weekly"),
+        })).default([]),
+        questions: z.record(z.string(), z.array(z.object({
+            id: z.string(),
+            text: z.string(),
+            is_auto: z.boolean().default(true),
+        }))).default({}),
+        delivery: z.object({
+            method: z.enum(["dashboard", "manual"]).default("dashboard"),
+            frequency: z.enum(["weekly", "biweekly", "end_of_pilot"]).default("weekly"),
+        }).default({ method: "dashboard", frequency: "weekly" }),
     }).default({
-        selected_kpis: [], measurement_criteria: {}
+        kpis: [], questions: {},
+        delivery: { method: "dashboard", frequency: "weekly" }
     }),
 
     // Tab 4: Branding
@@ -106,7 +123,7 @@ export function PilotFormProvider({
                 core_modules: [], add_ons: [], target_departments: [],
                 pilot_period_weeks: 4, max_students: 200, max_instructors: 5
             },
-            kpis_jsonb: { selected_kpis: [], measurement_criteria: {} },
+            kpis_jsonb: { kpis: [], questions: {}, delivery: { method: "dashboard", frequency: "weekly" } },
             branding_jsonb: { primary_color: "#4f46e5", secondary_color: "#0f172a" },
             permissions_jsonb: {
                 independent_class_management: false, allow_content_upload: true,
