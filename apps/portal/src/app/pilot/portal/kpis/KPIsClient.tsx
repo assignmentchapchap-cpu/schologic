@@ -12,6 +12,7 @@ interface KPI {
     id: string;
     module: string;
     title: string;
+    description: string;
     type: "automated" | "self_assessment";
     enabled: boolean;
     is_auto: boolean;
@@ -34,47 +35,92 @@ interface DeliverySettings {
 interface KPITemplate {
     module: string;
     title: string;
+    description: string;
     type: "automated" | "self_assessment";
     questions?: string[];
 }
 
 const KPI_TEMPLATES: KPITemplate[] = [
     {
-        module: "generic", title: "Admin Hours Saved", type: "self_assessment", questions: [
+        module: "generic",
+        title: "Admin Hours Saved",
+        description: "Measures reduction in manual administrative overhead.",
+        type: "self_assessment",
+        questions: [
             "How many hours per week do you estimate you spent on LMS admin tasks before Schologic?",
             "How many hours per week do you now spend on LMS admin tasks with Schologic?",
         ]
     },
-    { module: "Class Manager", title: "Student Participation Rate", type: "automated" },
     {
-        module: "Practicum Manager", title: "Assessor Hours Saved", type: "self_assessment", questions: [
+        module: "Class Manager",
+        title: "Student Participation Rate",
+        description: "Automated tracking of student engagement in active classes.",
+        type: "automated"
+    },
+    {
+        module: "Practicum Manager",
+        title: "Assessor Hours Saved",
+        description: "Tracking efficiency in logbook reviews and supervisor feedback.",
+        type: "self_assessment",
+        questions: [
             "How many hours per week did you spend reviewing practicum logbooks before Schologic?",
             "How many hours per week do you now spend?",
         ]
     },
     {
-        module: "Practicum Manager", title: "Confidence in Digital Logs", type: "self_assessment", questions: [
+        module: "Practicum Manager",
+        title: "Confidence in Digital Logs",
+        description: "Assessing the accuracy and reliability of digital performance logs.",
+        type: "self_assessment",
+        questions: [
             "On a scale of 1-5, how confident are you that digital logs accurately capture student performance?",
             "What is the biggest challenge you face with digital logs?",
         ]
     },
-    { module: "Practicum Manager", title: "Supervisor Turnaround Time", type: "automated" },
-    { module: "AI Forensics", title: "AI-Generated Submissions Detected", type: "automated" },
     {
-        module: "AI Assistant", title: "Grading Hours Saved", type: "self_assessment", questions: [
+        module: "Practicum Manager",
+        title: "Supervisor Turnaround Time",
+        description: "Measures speed of logbook verification and signing process.",
+        type: "automated"
+    },
+    {
+        module: "AI Forensics",
+        title: "AI-Generated Submissions Detected",
+        description: "Detection rates of potential non-original academic work.",
+        type: "automated"
+    },
+    {
+        module: "AI Assistant",
+        title: "Grading Hours Saved",
+        description: "Efficiency gains from AI-assisted feedback and grading.",
+        type: "self_assessment",
+        questions: [
             "How many hours per week did grading take before Schologic?",
             "How many hours per week does grading take now?",
         ]
     },
     {
-        module: "OER Library", title: "Textbook Cost Savings", type: "self_assessment", questions: [
+        module: "OER Library",
+        title: "Textbook Cost Savings",
+        description: "Estimated financial impact of adopting open educational resources.",
+        type: "self_assessment",
+        questions: [
             "What was the average textbook cost per student before Schologic?",
             "What is the estimated per-student cost now?",
         ]
     },
-    { module: "OER Library", title: "Resource Read Rate", type: "automated" },
     {
-        module: "OER Library", title: "Ease of Resource Access", type: "self_assessment", questions: [
+        module: "OER Library",
+        title: "Resource Read Rate",
+        description: "Tracking student interaction with OER materials.",
+        type: "automated"
+    },
+    {
+        module: "OER Library",
+        title: "Ease of Resource Access",
+        description: "User accessibility rating for digital library resources.",
+        type: "self_assessment",
+        questions: [
             "On a scale of 1-5, how easy is it to find and access course materials?",
         ]
     },
@@ -117,7 +163,7 @@ function generateDefaultKPIs(coreModules: string[], addOns: string[]): { kpis: K
         if (!enabledModules.has(tpl.module)) return;
         const id = crypto.randomUUID();
         kpis.push({
-            id, module: tpl.module, title: tpl.title, type: tpl.type,
+            id, module: tpl.module, title: tpl.title, description: tpl.description, type: tpl.type,
             enabled: true, is_auto: true, frequency: "weekly",
         });
         if (tpl.questions && tpl.questions.length > 0) {
@@ -150,7 +196,17 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
     // All KPI data lives in local state. Form context is only read on init
     // and written on save. This avoids react-hook-form watch/setValue lag.
     const initData = getValues("kpis_jsonb");
-    const [kpis, setKpis] = useState<KPI[]>(() => initData?.kpis || []);
+    const [kpis, setKpis] = useState<KPI[]>(() => {
+        const rawKpis = initData?.kpis || [];
+        return rawKpis.map((k: any) => {
+            let description = k.description || "";
+            if (!description) {
+                const tpl = KPI_TEMPLATES.find(t => t.title === k.title);
+                if (tpl) description = tpl.description;
+            }
+            return { ...k, description };
+        });
+    });
     const [questions, setQuestions] = useState<Record<string, Question[]>>(() => initData?.questions || {});
     const [delivery, setDelivery] = useState<DeliverySettings>(() => ({
         method: initData?.delivery?.method || "dashboard",
@@ -205,7 +261,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                 templates.forEach(tpl => {
                     const id = crypto.randomUUID();
                     newKpis.push({
-                        id, module: tpl.module, title: tpl.title, type: tpl.type,
+                        id, module: tpl.module, title: tpl.title, description: tpl.description, type: tpl.type,
                         enabled: true, is_auto: true, frequency: "weekly",
                     });
                     if (tpl.questions) {
@@ -229,7 +285,15 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
 
     const buildChangeDescriptions = useCallback((): string[] => {
         const saved = getValues("kpis_jsonb");
-        const oldKpis: KPI[] = saved?.kpis || [];
+        const rawOldKpis = saved?.kpis || [];
+        const oldKpis: KPI[] = rawOldKpis.map((k: any) => {
+            let description = k.description || "";
+            if (!description) {
+                const tpl = KPI_TEMPLATES.find(t => t.title === k.title);
+                if (tpl) description = tpl.description;
+            }
+            return { ...k, description };
+        });
         const oldQuestions = saved?.questions || {};
         const oldDelivery = saved?.delivery || {};
         const changes: string[] = [];
@@ -298,7 +362,15 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
     const handleCancel = () => {
         // Revert local state to form context values
         const saved = getValues("kpis_jsonb");
-        setKpis(saved?.kpis || []);
+        const rawSavedKpis = saved?.kpis || [];
+        setKpis(rawSavedKpis.map((k: any) => {
+            let description = k.description || "";
+            if (!description) {
+                const tpl = KPI_TEMPLATES.find(t => t.title === k.title);
+                if (tpl) description = tpl.description;
+            }
+            return { ...k, description };
+        }));
         setQuestions(saved?.questions || {});
         setDelivery({
             method: saved?.delivery?.method || "dashboard",
@@ -318,6 +390,10 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
         setKpis(prev => prev.map(k => k.id === kpiId ? { ...k, title } : k));
     };
 
+    const updateKpiDescription = (kpiId: string, description: string) => {
+        setKpis(prev => prev.map(k => k.id === kpiId ? { ...k, description } : k));
+    };
+
     const updateKpiFrequency = (kpiId: string, frequency: KPI['frequency']) => {
         setKpis(prev => prev.map(k => k.id === kpiId ? { ...k, frequency } : k));
     };
@@ -330,7 +406,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
     const addCustomKpi = (type: "automated" | "self_assessment") => {
         const id = crypto.randomUUID();
         const newKpi: KPI = {
-            id, module: "generic", title: "New KPI",
+            id, module: "generic", title: "New KPI", description: "",
             type, enabled: true, is_auto: false, frequency: "weekly",
         };
         setKpis(prev => [...prev, newKpi]);
@@ -407,52 +483,92 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
 
     return (
         <div className="animate-in slide-in-from-bottom-4 duration-500 pb-20">
-            {/* Page Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 relative z-50">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Key Performance Indicators</h1>
+            {/* Top Page Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4 relative z-50">
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Key Performance Indicators</h1>
+
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowChangelog(!showChangelog)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold transition-colors rounded-lg ${showChangelog ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'}`}
+                    >
+                        <History className="w-4 h-4" /> History
+                    </button>
+                    {isEditing ? (
+                        <>
+                            <button
+                                onClick={handleCancel}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-lg transition-colors"
+                            >
+                                <X className="w-4 h-4" /> Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+                            >
+                                {isSaving ? (
+                                    <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</>
+                                ) : (
+                                    <><Save className="w-4 h-4" /> Save KPIs</>
+                                )}
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => !isCompleted && setIsEditing(true)}
+                            disabled={isCompleted}
+                            title={isCompleted ? "Unmark as completed to edit" : ""}
+                            className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold shadow-sm rounded-lg transition-colors ${isCompleted ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                }`}
+                        >
+                            <Pencil className="w-4 h-4" /> Edit KPIs
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Subtitle & Expand Row mapped to grid */}
+            <div className="flex flex-col lg:flex-row gap-8 mb-6 relative z-50">
+                <div className="lg:w-1/3">
                     <p className="text-slate-500 text-sm">Define how success will be measured during the pilot.</p>
                 </div>
-
-                <div className="flex flex-col items-end gap-3 relative z-50">
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setShowChangelog(!showChangelog)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold transition-colors rounded-lg ${showChangelog ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'}`}
-                        >
-                            <History className="w-4 h-4" /> History
-                        </button>
-                        {isEditing ? (
-                            <>
-                                <button
-                                    onClick={handleCancel}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-lg transition-colors"
-                                >
-                                    <X className="w-4 h-4" /> Cancel
-                                </button>
-                                <button
-                                    onClick={handleSave}
-                                    disabled={isSaving}
-                                    className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors disabled:opacity-50"
-                                >
-                                    {isSaving ? (
-                                        <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</>
-                                    ) : (
-                                        <><Save className="w-4 h-4" /> Save KPIs</>
-                                    )}
-                                </button>
-                            </>
-                        ) : (
+                <div className="lg:w-2/3 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        {/* Expand/Collapse All */}
+                        {selfAssessmentKpis.length > 0 ? (
                             <button
-                                onClick={() => !isCompleted && setIsEditing(true)}
-                                disabled={isCompleted}
-                                title={isCompleted ? "Unmark as completed to edit" : ""}
-                                className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold shadow-sm rounded-lg transition-colors ${isCompleted ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                                    }`}
+                                onClick={allExpanded ? collapseAll : expandAll}
+                                className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:border-slate-300 rounded-lg transition-colors shadow-sm"
                             >
-                                <Pencil className="w-4 h-4" /> Edit KPIs
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${allExpanded ? 'rotate-180' : ''}`} />
+                                {allExpanded ? 'Collapse All' : 'Expand All'}
                             </button>
-                        )}
+                        ) : <div />}
+
+                        {/* Modules Filter - Relocated */}
+                        <div className="flex items-center gap-2 border-l border-slate-200 pl-4 h-6">
+                            <Filter className="w-3.5 h-3.5 text-slate-400" />
+                            <select
+                                value={filterModule}
+                                onChange={e => setFilterModule(e.target.value)}
+                                className="text-[11px] font-bold text-slate-600 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-indigo-300 bg-white shadow-sm max-w-[130px] truncate"
+                            >
+                                <option value="all">All Modules</option>
+                                {uniqueModules.map(m => (
+                                    <option key={m} value={m}>{MODULE_LABELS[m] || m}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={filterType}
+                                onChange={e => setFilterType(e.target.value)}
+                                className="text-[11px] font-bold text-slate-600 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-indigo-300 bg-white shadow-sm max-w-[130px] truncate"
+                            >
+                                <option value="all">All Types</option>
+                                <option value="automated">⚡ Automated</option>
+                                <option value="self_assessment">📋 Self-Assessment</option>
+                            </select>
+                        </div>
                     </div>
 
                     {/* Status Text */}
@@ -483,45 +599,45 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                             })()}
                         </div>
                     )}
-
-                    {error && <span className="text-xs font-bold text-red-500">{error}</span>}
-
-                    {/* Changelog Dropdown — filtered to kpis, with tab badge */}
-                    {!isEditing && showChangelog && (() => {
-                        const allLog = watch("changelog_jsonb") || {};
-                        const kpiEntries = (allLog['kpis'] || [])
-                            .map((e: any) => ({ ...e, tab: 'kpis' }))
-                            .sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime())
-                            .slice(0, 30);
-
-                        if (kpiEntries.length === 0) return (
-                            <div className="absolute top-full mt-2 right-0 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-4 z-50 animate-in fade-in slide-in-from-top-2">
-                                <p className="text-xs text-slate-400 text-center">No edit history yet.</p>
-                            </div>
-                        );
-
-                        return (
-                            <div className="absolute top-full mt-2 right-0 w-80 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                                <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Edit History</h4>
-                                <div className="max-h-64 overflow-y-auto">
-                                    {kpiEntries.map((log: any, idx: number) => (
-                                        <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className="text-slate-700 text-xs font-medium truncate">{log.user}</span>
-                                                <div className="flex items-center gap-1.5 shrink-0">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">KPIs</span>
-                                                    <span className="text-slate-400 text-[10px]">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                </div>
-                                            </div>
-                                            <p className="text-[11px] text-slate-500 mt-0.5 truncate">{log.action}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })()}
                 </div>
             </div>
+
+            {error && <span className="text-xs font-bold text-red-500 block mb-2">{error}</span>}
+
+            {/* Changelog Dropdown — filtered to kpis, with tab badge */}
+            {!isEditing && showChangelog && (() => {
+                const allLog = watch("changelog_jsonb") || {};
+                const kpiEntries = (allLog['kpis'] || [])
+                    .map((e: any) => ({ ...e, tab: 'kpis' }))
+                    .sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime())
+                    .slice(0, 30);
+
+                if (kpiEntries.length === 0) return (
+                    <div className="absolute top-full mt-2 right-0 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-4 z-50 animate-in fade-in slide-in-from-top-2">
+                        <p className="text-xs text-slate-400 text-center">No edit history yet.</p>
+                    </div>
+                );
+
+                return (
+                    <div className="absolute top-full mt-2 right-0 w-80 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
+                        <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Edit History</h4>
+                        <div className="max-h-64 overflow-y-auto">
+                            {kpiEntries.map((log: any, idx: number) => (
+                                <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-slate-700 text-xs font-medium truncate">{log.user}</span>
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">KPIs</span>
+                                            <span className="text-slate-400 text-[10px]">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 mt-0.5 truncate">{log.action}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Main content: two-column layout */}
             <div className="flex flex-col lg:flex-row gap-8">
@@ -612,43 +728,6 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
 
                 {/* Right Column: KPI Cards */}
                 <div className="lg:w-2/3 space-y-4">
-                    {/* Filter Bar + Expand/Collapse */}
-                    {kpis.length > 0 && (
-                        <div className="flex items-center justify-between gap-3 flex-wrap">
-                            <div className="flex items-center gap-2">
-                                <Filter className="w-4 h-4 text-slate-400" />
-                                <select
-                                    value={filterModule}
-                                    onChange={e => setFilterModule(e.target.value)}
-                                    className="text-xs font-bold text-slate-600 border border-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-indigo-300 bg-white"
-                                >
-                                    <option value="all">All Modules</option>
-                                    {uniqueModules.map(m => (
-                                        <option key={m} value={m}>{MODULE_LABELS[m] || m}</option>
-                                    ))}
-                                </select>
-                                <select
-                                    value={filterType}
-                                    onChange={e => setFilterType(e.target.value)}
-                                    className="text-xs font-bold text-slate-600 border border-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-indigo-300 bg-white"
-                                >
-                                    <option value="all">All Types</option>
-                                    <option value="automated">⚡ Automated</option>
-                                    <option value="self_assessment">📋 Self-Assessment</option>
-                                </select>
-                            </div>
-                            {selfAssessmentKpis.length > 0 && (
-                                <button
-                                    onClick={allExpanded ? collapseAll : expandAll}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:border-slate-300 rounded-lg transition-colors"
-                                >
-                                    <ChevronDown className={`w-3 h-3 transition-transform ${allExpanded ? 'rotate-180' : ''}`} />
-                                    {allExpanded ? 'Collapse All' : 'Expand All'}
-                                </button>
-                            )}
-                        </div>
-                    )}
-
                     {kpis.length === 0 && (
                         <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-12 text-center">
                             <CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -665,7 +744,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
 
                         return (
                             <div key={kpi.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                                <div className="flex items-center px-5 py-3.5 gap-4 transition-colors">
+                                <div className="flex items-center px-5 py-4 gap-4 transition-colors">
                                     {isEditing && (
                                         <button
                                             onClick={() => toggleKpi(kpi.id)}
@@ -676,14 +755,26 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                                     )}
                                     <div className="flex-1 min-w-0">
                                         {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={kpi.title}
-                                                onChange={e => updateKpiTitle(kpi.id, e.target.value)}
-                                                className="text-sm font-bold text-slate-900 px-2 py-1 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none w-full"
-                                            />
+                                            <div className="space-y-1">
+                                                <input
+                                                    type="text"
+                                                    value={kpi.title}
+                                                    onChange={e => updateKpiTitle(kpi.id, e.target.value)}
+                                                    className="text-base font-bold text-slate-900 px-2 py-1 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none w-full leading-snug"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={kpi.description}
+                                                    placeholder="Description"
+                                                    onChange={e => updateKpiDescription(kpi.id, e.target.value)}
+                                                    className="text-[11px] text-slate-500 px-2 py-0.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/10 outline-none w-full"
+                                                />
+                                            </div>
                                         ) : (
-                                            <span className="text-sm font-bold text-slate-900">{kpi.title}</span>
+                                            <>
+                                                <span className="text-base font-bold text-slate-900 block leading-snug">{kpi.title}</span>
+                                                <p className="text-xs text-slate-500 mt-0.5 truncate">{kpi.description}</p>
+                                            </>
                                         )}
                                     </div>
                                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shrink-0 ${kpi.type === 'automated' ? 'text-indigo-600 bg-indigo-50' : 'text-amber-600 bg-amber-50'}`}>
