@@ -37,6 +37,8 @@ export default async function PilotPortalLayout({
         branding_jsonb: p.branding_jsonb || undefined,
         permissions_jsonb: p.permissions_jsonb || undefined,
         dashboard_layout_jsonb: p.dashboard_layout_jsonb || undefined,
+        tasks_jsonb: Array.isArray(p.tasks_jsonb) ? p.tasks_jsonb : [],
+        changelog_jsonb: (p.changelog_jsonb && typeof p.changelog_jsonb === 'object' && !Array.isArray(p.changelog_jsonb)) ? p.changelog_jsonb : {},
         completed_tabs_jsonb: p.completed_tabs_jsonb || [],
     };
 

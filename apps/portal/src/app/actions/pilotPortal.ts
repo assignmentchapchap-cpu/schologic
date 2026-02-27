@@ -14,7 +14,7 @@ export async function getCurrentPilotRequest() {
         // First find their pilot team membership to get the pilot_request_id
         const { data: membership, error: membershipError } = await supabase
             .from('pilot_team_members')
-            .select('pilot_request_id, is_champion, tab_permissions_jsonb')
+            .select('pilot_request_id, user_id, is_champion, tab_permissions_jsonb')
             .eq('user_id', user.id)
             .limit(1)
             .single();

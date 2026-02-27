@@ -13,7 +13,6 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [changelog, setChangelog] = useState<{ time: Date, editorName: string }[]>([]);
     const [deptText, setDeptText] = useState(() => (getValues("scope_jsonb.target_departments") || []).join(", "));
 
     // Watch current form state for modules and constraints
@@ -67,16 +66,18 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                 throw new Error("Max Students must be between 20 and 200.");
             }
 
-            const res = await updatePilotData({ scope_jsonb: scope });
+            // Append to persistent changelog
+            const currentLog = getValues("changelog_jsonb") || {};
+            const entry = { time: new Date().toISOString(), user: EditorName, action: 'Saved scope changes' };
+            const scopeEntries = currentLog['scope'] || [];
+            const updatedLog = { ...currentLog, scope: [entry, ...scopeEntries].slice(0, 20) };
+            setValue("changelog_jsonb", updatedLog);
+
+            const res = await updatePilotData({ scope_jsonb: scope, changelog_jsonb: updatedLog });
             if (res?.error) throw new Error(res.error);
 
-            const now = new Date();
-            setLastSaved(now);
-
-            // Log exactly who saved and when
-            setChangelog(prev => [{ time: now, editorName: EditorName }, ...prev].slice(0, 5));
-
-            setIsEditing(false); // Drop out of edit mode on success
+            setLastSaved(new Date());
+            setIsEditing(false);
         } catch (err: any) {
             console.error("Save error:", err);
             setError(err.message || "Failed to save.");
@@ -140,8 +141,7 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                             <>
                                 <button
                                     onClick={() => setShowChangelog(!showChangelog)}
-                                    disabled={changelog.length === 0 && !lastSaved}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold transition-colors rounded-lg ${showChangelog ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'} ${(changelog.length === 0 && !lastSaved) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold transition-colors rounded-lg ${showChangelog ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'}`}
                                 >
                                     <History className="w-4 h-4" /> History
                                 </button>
@@ -163,30 +163,67 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                                     Last edited by {EditorName} at {lastSaved.toLocaleTimeString()}
                                 </span>
-                            ) : (
-                                <span className="flex items-center gap-1.5">
-                                    <CheckCircle2 className="w-3.5 h-3.5" /> No unsaved changes
-                                </span>
-                            )}
+                            ) : (() => {
+                                // Show most recent entry from persistent changelog
+                                const allLog = watch("changelog_jsonb") || {};
+                                const allEntries = Object.values(allLog).flat().sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime());
+                                const latest = allEntries[0] as any;
+                                if (latest) {
+                                    return (
+                                        <span className="flex items-center gap-1.5">
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                            Last edited by {latest.user} at {new Date(latest.time).toLocaleTimeString()}
+                                        </span>
+                                    );
+                                }
+                                return (
+                                    <span className="flex items-center gap-1.5">
+                                        <CheckCircle2 className="w-3.5 h-3.5" /> No changes recorded
+                                    </span>
+                                );
+                            })()}
                         </div>
                     )}
 
                     {error && <span className="text-xs font-bold text-red-500">{error}</span>}
 
                     {/* Changelog Dropdown */}
-                    {!isEditing && showChangelog && (changelog.length > 0) && (
-                        <div className="absolute top-full mt-2 right-0 w-64 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                            <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Recent Edits (Session)</h4>
-                            <div className="max-h-48 overflow-y-auto">
-                                {changelog.map((log, idx) => (
-                                    <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg flex justify-between items-center transition-colors">
-                                        <span className="text-slate-600 text-xs font-medium truncate mr-2" title={log.editorName}>{log.editorName}</span>
-                                        <span className="text-slate-400 text-xs shrink-0">{log.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
-                                ))}
+                    {!isEditing && showChangelog && (() => {
+                        const TAB_LABELS: Record<string, string> = {
+                            scope: 'Scope', team: 'Team', kpis: 'KPIs', branding: 'Branding',
+                            settings: 'Settings', dashboard: 'Dashboard', preview: 'Preview',
+                        };
+                        const allLog = watch("changelog_jsonb") || {};
+                        const allEntries = Object.entries(allLog).flatMap(([tab, entries]: [string, any[]]) =>
+                            (entries || []).map((e: any) => ({ ...e, tab }))
+                        ).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 30);
+
+                        if (allEntries.length === 0) return (
+                            <div className="absolute top-full mt-2 right-0 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-4 z-50 animate-in fade-in slide-in-from-top-2">
+                                <p className="text-xs text-slate-400 text-center">No edit history yet.</p>
                             </div>
-                        </div>
-                    )}
+                        );
+
+                        return (
+                            <div className="absolute top-full mt-2 right-0 w-80 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
+                                <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Edit History</h4>
+                                <div className="max-h-64 overflow-y-auto">
+                                    {allEntries.map((log: any, idx: number) => (
+                                        <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="text-slate-700 text-xs font-medium truncate">{log.user}</span>
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">{TAB_LABELS[log.tab] || log.tab}</span>
+                                                    <span className="text-slate-400 text-[10px]">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                            </div>
+                                            <p className="text-[11px] text-slate-500 mt-0.5 truncate">{log.action}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
             </div>
 

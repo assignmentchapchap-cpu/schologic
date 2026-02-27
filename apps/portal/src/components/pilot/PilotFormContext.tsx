@@ -63,6 +63,26 @@ export const pilotBlueprintSchema = z.object({
         view_type: "academic", selected_widgets: []
     }),
 
+    // Cross-Tab Activity Tracker
+    tasks_jsonb: z.array(z.object({
+        id: z.string(),
+        tab: z.string(),
+        title: z.string(),
+        status: z.enum(['pending', 'in_progress', 'completed']).default('pending'),
+        assigned_to: z.string().optional(),
+        start_date: z.string().optional(),
+        due_date: z.string().optional(),
+        is_auto: z.boolean().default(true),
+        sort_order: z.number().default(0),
+    })).default([]),
+
+    // Per-tab Edit History
+    changelog_jsonb: z.record(z.string(), z.array(z.object({
+        time: z.string(),
+        user: z.string(),
+        action: z.string(),
+    }))).default({}),
+
     // Progress Tracking
     completed_tabs_jsonb: z.array(z.string()).default([]),
 });
@@ -94,6 +114,8 @@ export function PilotFormProvider({
                 communication_rules: "standard"
             },
             dashboard_layout_jsonb: { view_type: "academic", selected_widgets: [] },
+            tasks_jsonb: [],
+            changelog_jsonb: {},
             completed_tabs_jsonb: []
         },
         mode: "onChange"
