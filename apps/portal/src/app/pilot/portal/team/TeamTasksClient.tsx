@@ -417,8 +417,8 @@ export function TeamTasksClient({
                             </span>
                         ) : (() => {
                             const allLog = watch("changelog_jsonb") || {};
-                            const allEntries = Object.values(allLog).flat().sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime());
-                            const latest = allEntries[0] as any;
+                            const teamEntries = (allLog['team'] || []).sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime());
+                            const latest = teamEntries[0] as any;
                             if (latest) {
                                 return (
                                     <span className="flex items-center gap-1.5">
@@ -440,12 +440,13 @@ export function TeamTasksClient({
                     {/* Changelog dropdown */}
                     {showChangelog && (() => {
                         const allLog: Record<string, ChangelogEntry[]> = watch("changelog_jsonb") || {};
-                        // Flatten all entries across tabs with tab label
-                        const allEntries = Object.entries(allLog).flatMap(([tab, entries]) =>
-                            (entries || []).map(e => ({ ...e, tab }))
-                        ).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 30);
+                        // Show only entries for the active Team tab
+                        const teamEntries = (allLog['team'] || [])
+                            .map(e => ({ ...e, tab: 'team' }))
+                            .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+                            .slice(0, 30);
 
-                        if (allEntries.length === 0) return (
+                        if (teamEntries.length === 0) return (
                             <div className="absolute top-full mt-2 right-0 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-4 z-50 animate-in fade-in slide-in-from-top-2">
                                 <p className="text-xs text-slate-400 text-center">No edit history yet.</p>
                             </div>
@@ -455,7 +456,7 @@ export function TeamTasksClient({
                             <div className="absolute top-full mt-2 right-0 w-80 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
                                 <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Edit History</h4>
                                 <div className="max-h-64 overflow-y-auto">
-                                    {allEntries.map((log, idx) => (
+                                    {teamEntries.map((log, idx) => (
                                         <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
                                             <div className="flex items-center justify-between gap-2">
                                                 <span className="text-slate-700 text-xs font-medium truncate">{log.user}</span>

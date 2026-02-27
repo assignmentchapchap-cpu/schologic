@@ -164,10 +164,10 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                                     Last edited by {EditorName} at {lastSaved.toLocaleTimeString()}
                                 </span>
                             ) : (() => {
-                                // Show most recent entry from persistent changelog
+                                // Show most recent entry from persistent changelog for this tab
                                 const allLog = watch("changelog_jsonb") || {};
-                                const allEntries = Object.values(allLog).flat().sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime());
-                                const latest = allEntries[0] as any;
+                                const scopeEntries = (allLog['scope'] || []).sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime());
+                                const latest = scopeEntries[0] as any;
                                 if (latest) {
                                     return (
                                         <span className="flex items-center gap-1.5">
@@ -194,11 +194,12 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                             settings: 'Settings', dashboard: 'Dashboard', preview: 'Preview',
                         };
                         const allLog = watch("changelog_jsonb") || {};
-                        const allEntries = Object.entries(allLog).flatMap(([tab, entries]: [string, any[]]) =>
-                            (entries || []).map((e: any) => ({ ...e, tab }))
-                        ).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 30);
+                        const scopeEntries = (allLog['scope'] || [])
+                            .map((e: any) => ({ ...e, tab: 'scope' }))
+                            .sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime())
+                            .slice(0, 30);
 
-                        if (allEntries.length === 0) return (
+                        if (scopeEntries.length === 0) return (
                             <div className="absolute top-full mt-2 right-0 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-4 z-50 animate-in fade-in slide-in-from-top-2">
                                 <p className="text-xs text-slate-400 text-center">No edit history yet.</p>
                             </div>
@@ -208,7 +209,7 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                             <div className="absolute top-full mt-2 right-0 w-80 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
                                 <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Edit History</h4>
                                 <div className="max-h-64 overflow-y-auto">
-                                    {allEntries.map((log: any, idx: number) => (
+                                    {scopeEntries.map((log: any, idx: number) => (
                                         <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
                                             <div className="flex items-center justify-between gap-2">
                                                 <span className="text-slate-700 text-xs font-medium truncate">{log.user}</span>
