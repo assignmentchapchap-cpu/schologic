@@ -89,15 +89,47 @@ export const pilotBlueprintSchema = z.object({
 
     // Tab 5: Settings / Permissions
     permissions_jsonb: z.object({
-        independent_class_management: z.boolean().default(false),
-        allow_content_upload: z.boolean().default(true),
-        ai_assessment_override: z.boolean().default(false),
-        allow_student_roster_management: z.boolean().default(false),
-        communication_rules: z.string().default("standard"),
+        // ── Classes ──────────────────────────────────────────
+        manage_classes: z.boolean().default(true),     // master
+        class_create: z.boolean().default(true),
+        class_edit: z.boolean().default(true),
+        class_delete: z.boolean().default(false),      // destructive: off by default
+        manage_assignments: z.boolean().default(true),
+        manage_resources: z.boolean().default(true),
+
+        // ── Practicums ────────────────────────────────────────
+        manage_practicums: z.boolean().default(true),  // master
+        practicum_create: z.boolean().default(true),
+        practicum_edit: z.boolean().default(true),
+        manage_logs: z.boolean().default(true),
+        manage_supervisors: z.boolean().default(true),
+
+        // ── Library ───────────────────────────────────────────
+        allow_content_upload: z.boolean().default(true), // master
+        library_upload: z.boolean().default(true),
+        create_manual_assets: z.boolean().default(true),
+        library_edit: z.boolean().default(true),
+        library_delete: z.boolean().default(false),   // destructive: off by default
+        distribute_content: z.boolean().default(true),
+
+        // ── Students ──────────────────────────────────────────
+        manage_students: z.boolean().default(true),   // master
+        view_roster: z.boolean().default(true),
+        remove_students: z.boolean().default(false),  // destructive: off by default
+        message_students: z.boolean().default(true),
+
+        // ── Advanced ──────────────────────────────────────────
+        ai_assessment_override: z.boolean().default(true),
+        communication_rules: z.enum(["standard", "moderated", "none"]).default("standard"),
     }).default({
-        independent_class_management: false, allow_content_upload: true,
-        ai_assessment_override: false, allow_student_roster_management: false,
-        communication_rules: "standard"
+        manage_classes: true, class_create: true, class_edit: true, class_delete: false,
+        manage_assignments: true, manage_resources: true,
+        manage_practicums: true, practicum_create: true, practicum_edit: true,
+        manage_logs: true, manage_supervisors: true,
+        allow_content_upload: true, library_upload: true, create_manual_assets: true,
+        library_edit: true, library_delete: false, distribute_content: true,
+        manage_students: true, view_roster: true, remove_students: false, message_students: true,
+        ai_assessment_override: false, communication_rules: "standard"
     }),
 
     // Tab 6: Admin Dashboard layout setup
@@ -163,10 +195,16 @@ export function PilotFormProvider({
                 },
             },
             permissions_jsonb: {
-                independent_class_management: false, allow_content_upload: true,
-                ai_assessment_override: false, allow_student_roster_management: false,
-                communication_rules: "standard"
+                manage_classes: true, class_create: true, class_edit: true, class_delete: false,
+                manage_assignments: true, manage_resources: true,
+                manage_practicums: true, practicum_create: true, practicum_edit: true,
+                manage_logs: true, manage_supervisors: true,
+                allow_content_upload: true, library_upload: true, create_manual_assets: true,
+                library_edit: true, library_delete: false, distribute_content: true,
+                manage_students: true, view_roster: true, remove_students: false, message_students: true,
+                ai_assessment_override: true, communication_rules: "standard"
             },
+
             dashboard_layout_jsonb: { view_type: "academic", selected_widgets: [] },
             tasks_jsonb: [],
             changelog_jsonb: {},
