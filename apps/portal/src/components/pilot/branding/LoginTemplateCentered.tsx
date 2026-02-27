@@ -42,8 +42,10 @@ export function LoginTemplateCentered({ config }: { config: BrandingConfig }) {
                         {text_overrides.button_text}
                     </button>
                 </div>
-                <p className="text-center text-xs mt-5" style={{ color: '#94a3b8' }}>
-                    Powered by <span className="font-semibold" style={{ color: primary_color }}>{config.institution_name || 'Schologic'}</span>
+                <p className="text-center mt-5 text-sm">
+                    <a href="#" className="font-semibold hover:underline transition-opacity" style={{ color: primary_color }}>
+                        Forgot Password?
+                    </a>
                 </p>
             </div>
         </div>

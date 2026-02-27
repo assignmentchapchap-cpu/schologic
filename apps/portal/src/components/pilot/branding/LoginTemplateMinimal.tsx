@@ -34,8 +34,10 @@ export function LoginTemplateMinimal({ config }: { config: BrandingConfig }) {
                     {text_overrides.button_text}
                 </button>
             </div>
-            <p className="text-center text-xs mt-8" style={{ color: '#cbd5e1' }}>
-                Powered by <span className="font-semibold" style={{ color: primary_color }}>{config.institution_name || 'Schologic'}</span>
+            <p className="text-center mt-6 text-sm">
+                <a href="#" className="font-semibold hover:underline transition-opacity" style={{ color: primary_color }}>
+                    Forgot Password?
+                </a>
             </p>
         </div>
     );

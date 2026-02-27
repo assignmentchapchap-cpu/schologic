@@ -141,6 +141,8 @@ export function TeamTasksClient({
     const scopeModules = watch("scope_jsonb.core_modules") || [];
     const scopeAddOns = watch("scope_jsonb.add_ons") || [];
     const pilotWeeks = watch("scope_jsonb.pilot_period_weeks") || 4;
+    const completedTabs: string[] = watch("completed_tabs_jsonb") || [];
+    const isTabCompleted = useCallback((tab: string) => completedTabs.includes(tab), [completedTabs]);
 
     // Editor name
     let editorName = 'Unknown Member';
@@ -235,6 +237,8 @@ export function TeamTasksClient({
 
     // Status cycle — Grid/Gantt (no auto-save, requires manual Save)
     const updateTaskStatus = (taskId: string) => {
+        const task = tasks.find(t => t.id === taskId);
+        if (task && isTabCompleted(task.tab)) return;
         const statusCycle: Record<string, 'pending' | 'in_progress' | 'completed'> = {
             pending: 'in_progress',
             in_progress: 'completed',
@@ -248,12 +252,13 @@ export function TeamTasksClient({
 
     // Status cycle — My Tasks (auto-saves immediately)
     const updateTaskStatusAndSave = (taskId: string) => {
+        const task = tasks.find(t => t.id === taskId);
+        if (task && isTabCompleted(task.tab)) return;
         const statusCycle: Record<string, 'pending' | 'in_progress' | 'completed'> = {
             pending: 'in_progress',
             in_progress: 'completed',
             completed: 'pending',
         };
-        const task = tasks.find(t => t.id === taskId);
         const updated = tasks.map(t =>
             t.id === taskId ? { ...t, status: statusCycle[t.status] } : t
         );
@@ -263,7 +268,7 @@ export function TeamTasksClient({
 
     const startWorking = () => {
         const updated = tasks.map(t =>
-            t.assigned_to === currentUserId && t.status === 'pending'
+            t.assigned_to === currentUserId && t.status === 'pending' && !isTabCompleted(t.tab)
                 ? { ...t, status: 'in_progress' as const }
                 : t
         );
@@ -272,16 +277,18 @@ export function TeamTasksClient({
     };
 
     const updateTaskAssignee = (taskId: string, userId: string) => {
+        const task = tasks.find(t => t.id === taskId);
+        if (task && isTabCompleted(task.tab)) return;
         const updated = tasks.map(t =>
             t.id === taskId ? { ...t, assigned_to: userId || undefined } : t
         );
-        const task = tasks.find(t => t.id === taskId);
         const assigneeName = members.find(m => m.user_id === userId);
         setValue("tasks_jsonb", updated, { shouldDirty: true });
         autoSaveTasks(updated, `Assigned: ${task?.title || 'task'} → ${assigneeName ? getMemberName(assigneeName) : 'Unassigned'}`, task?.tab || 'team');
     };
 
     const assignTabBulk = (tab: string, userId: string) => {
+        if (isTabCompleted(tab)) return;
         const updated = tasks.map(t =>
             t.tab === tab ? { ...t, assigned_to: userId || undefined } : t
         );
@@ -548,8 +555,10 @@ export function TeamTasksClient({
                         {isChampion && members.length < 5 && (
                             <div className="p-4 border-t border-slate-100">
                                 <button
-                                    onClick={() => setShowInviteModal(true)}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors"
+                                    onClick={() => !isTabCompleted('team') && setShowInviteModal(true)}
+                                    disabled={isTabCompleted('team')}
+                                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-colors ${isTabCompleted('team') ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
+                                        }`}
                                 >
                                     <UserPlus className="w-4 h-4" /> Invite Member
                                 </button>
@@ -655,7 +664,9 @@ export function TeamTasksClient({
                                                     <select
                                                         value={tabAssignee}
                                                         onChange={e => assignTabBulk(tab, e.target.value)}
-                                                        className="text-xs font-medium text-slate-600 bg-transparent border border-transparent hover:border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-indigo-300 transition-colors cursor-pointer w-28 truncate"
+                                                        disabled={isTabCompleted(tab)}
+                                                        className={`text-xs font-medium bg-transparent border border-transparent rounded-lg px-2 py-1 outline-none w-28 truncate ${isTabCompleted(tab) ? 'text-slate-400 cursor-not-allowed' : 'text-slate-600 hover:border-slate-200 focus:border-indigo-300 cursor-pointer'
+                                                            }`}
                                                     >
                                                         <option value="">Unassigned</option>
                                                         {members.map(m => (
@@ -684,8 +695,10 @@ export function TeamTasksClient({
                                                             {/* Status toggle */}
                                                             <button
                                                                 onClick={() => updateTaskStatus(task.id)}
-                                                                className={`w-5 h-5 flex items-center justify-center rounded-full ring-1 transition-all ${statusCfg.bg} ${statusCfg.ring} hover:scale-110 shrink-0`}
-                                                                title={`${statusCfg.label} — click to cycle`}
+                                                                disabled={isTabCompleted(tab)}
+                                                                className={`w-5 h-5 flex items-center justify-center rounded-full ring-1 transition-all ${statusCfg.bg} ${statusCfg.ring} shrink-0 ${isTabCompleted(tab) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'
+                                                                    }`}
+                                                                title={isTabCompleted(tab) ? 'Tab completed' : `${statusCfg.label} — click to cycle`}
                                                             >
                                                                 <StatusIcon className={`w-3 h-3 ${statusCfg.color}`} />
                                                             </button>
@@ -734,7 +747,9 @@ export function TeamTasksClient({
                                                                     <select
                                                                         value={task.assigned_to || ''}
                                                                         onChange={e => updateTaskAssignee(task.id, e.target.value)}
-                                                                        className="text-[11px] font-medium text-slate-600 bg-transparent border border-transparent hover:border-slate-200 rounded-lg px-1 py-0.5 outline-none focus:border-indigo-300 transition-colors cursor-pointer w-full truncate"
+                                                                        disabled={isTabCompleted(tab)}
+                                                                        className={`text-[11px] font-medium bg-transparent border border-transparent rounded-lg px-1 py-0.5 outline-none w-full truncate ${isTabCompleted(tab) ? 'text-slate-400 cursor-not-allowed' : 'text-slate-600 hover:border-slate-200 focus:border-indigo-300 cursor-pointer transition-colors'
+                                                                            }`}
                                                                     >
                                                                         <option value="">Unassigned</option>
                                                                         {members.map(m => (

@@ -81,6 +81,14 @@ async function optimizeImage(file: File, maxWidth = 512): Promise<File> {
     });
 }
 
+// ─── Constants ───────────────────────────────────────────────
+
+const PREDEFINED_COLORS = [
+    '#4f46e5', '#3b82f6', '#0ea5e9', '#10b981', '#22c55e',
+    '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#64748b',
+    '#334155', '#0f172a'
+];
+
 // ─── Component ───────────────────────────────────────────────
 
 export function BrandingClient({ pilot, profile }: { pilot: any; profile: any }) {
@@ -88,12 +96,17 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
 
     // ─── UI State ───────────────────────────────────────────
     const [showChangelog, setShowChangelog] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    const [showGallery, setShowGallery] = useState(true);
+
+    // Flow state: 'gallery', 'editor', or 'preview'
+    const [step, setStep] = useState<'gallery' | 'editor' | 'preview'>(() => {
+        const history = getValues("changelog_jsonb")?.branding || [];
+        return history.length > 0 ? 'preview' : 'gallery';
+    });
+    const isCompleted = (watch("completed_tabs_jsonb") || []).includes("branding");
 
     const logoInputRef = useRef<HTMLInputElement>(null);
     const heroInputRef = useRef<HTMLInputElement>(null);
@@ -101,10 +114,19 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
     // ─── LOCAL STATE (instant reactivity — same as KPIs fix) ─
     const [branding, setBranding] = useState<BrandingConfig>(() => {
         const saved = getValues("branding_jsonb");
+        let safeHeading = saved?.text_overrides?.heading;
+        if (!safeHeading || safeHeading === "Welcome to Schologic LMS" || safeHeading === "Welcome to Schologic") {
+            safeHeading = `Welcome to ${pilot.institution}`;
+        }
+
         return {
             ...DEFAULT_BRANDING,
             ...saved,
-            text_overrides: { ...DEFAULT_BRANDING.text_overrides, ...(saved?.text_overrides || {}) },
+            text_overrides: {
+                ...DEFAULT_BRANDING.text_overrides,
+                ...(saved?.text_overrides || {}),
+                heading: safeHeading
+            },
             institution_name: pilot.institution
         };
     });
@@ -123,6 +145,13 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
     } else if (profile?.email) {
         editorName = profile.email.split('@')[0];
     }
+
+    // ─── Access Control ─────────────────────────────────────
+
+    const isChampion = profile?.id === pilot?.champion_uid;
+    const userTasks = watch("tasks_jsonb") || [];
+    const isAssigned = userTasks.some((t: any) => t.tab === 'branding' && t.assigned_to === profile?.id);
+    const hasWriteAccess = isChampion || isAssigned;
 
     // ─── Update helpers ─────────────────────────────────────
 
@@ -213,7 +242,7 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
         try {
             const changes = buildChangeDescriptions(currentBranding);
             if (changes.length === 0) {
-                if (!silent) setIsEditing(false);
+                if (!silent) setStep('gallery');
                 return;
             }
 
@@ -225,7 +254,6 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
 
             setLastSaved(new Date());
             lastSavedData.current = JSON.stringify(currentBranding);
-            if (!silent) setIsEditing(false);
         } catch (err: any) {
             if (!silent) setError(err.message || 'Failed to save.');
         } finally {
@@ -252,10 +280,10 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
     // ─── Display URL ────────────────────────────────────────
 
     const displayUrl = branding.use_custom_domain && branding.custom_domain
-        ? `https://${branding.custom_domain}`
+        ? branding.custom_domain
         : branding.subdomain
-            ? `https://${branding.subdomain}.schologic.com`
-            : 'https://your-institution.schologic.com';
+            ? `${branding.subdomain}.schologic.com`
+            : 'your-institution.schologic.com';
 
     // ─── Currently selected template ────────────────────────
 
@@ -278,7 +306,7 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
                 </div>
             </div>
             {/* Content */}
-            <div className={small ? "aspect-[16/10] relative overflow-hidden" : "flex-1 relative"} style={small ? {} : { height: 'calc(100% - 36px)' }}>
+            <div className={small ? "aspect-[16/10] relative overflow-hidden bg-white" : "aspect-[16/10] relative overflow-hidden bg-white"}>
                 {children}
             </div>
         </div>
@@ -297,35 +325,26 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
                     <p className="text-slate-500 text-sm">Customize how your institution's login page looks and feels.</p>
                 </div>
 
-                <div className="flex flex-col items-end gap-3 relative z-50">
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setShowChangelog(!showChangelog)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold transition-colors rounded-lg ${showChangelog ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'}`}
-                        >
-                            <History className="w-4 h-4" /> History
-                        </button>
-                        {isEditing ? (
-                            <>
-                                <button onClick={() => { setIsEditing(false); setShowGallery(true); }} className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm rounded-lg transition-colors">
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Done Editing
-                                </button>
-                                {isSaving && (
-                                    <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-400 bg-slate-50 rounded-lg">
-                                        <span className="w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" /> Saving...
-                                    </span>
-                                )}
-                            </>
-                        ) : (
-                            <button onClick={() => { setIsEditing(true); setShowGallery(false); }}
-                                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm rounded-lg transition-colors">
-                                <Pencil className="w-4 h-4" /> Edit Branding
+                {step === 'editor' && (
+                    <div className="flex flex-col items-end gap-3 relative z-50">
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setShowChangelog(!showChangelog)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold transition-colors rounded-lg ${showChangelog ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'}`}
+                            >
+                                <History className="w-4 h-4" /> History
                             </button>
-                        )}
-                    </div>
+                            <button onClick={() => setStep('preview')} className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm rounded-lg transition-colors">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Done Editing
+                            </button>
+                            {isSaving && (
+                                <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-400 bg-slate-50 rounded-lg">
+                                    <span className="w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" /> Saving...
+                                </span>
+                            )}
+                        </div>
 
-                    {/* Status Text */}
-                    {!isEditing && (
+                        {/* Status Text */}
                         <div className="text-xs font-medium text-slate-400">
                             {lastSaved ? (
                                 <span className="flex items-center gap-1.5">
@@ -346,84 +365,139 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
                                 );
                             })()}
                         </div>
-                    )}
 
-                    {error && <span className="text-xs font-bold text-red-500">{error}</span>}
+                        {error && <span className="text-xs font-bold text-red-500">{error}</span>}
 
-                    {/* Changelog Dropdown */}
-                    {!isEditing && showChangelog && (() => {
-                        const allLog = watch("changelog_jsonb") || {};
-                        const entries = (allLog['branding'] || []).sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 30);
+                        {/* Changelog Dropdown */}
+                        {showChangelog && (() => {
+                            const allLog = watch("changelog_jsonb") || {};
+                            const entries = (allLog['branding'] || []).sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 30);
 
-                        return (
-                            <div className="absolute top-full mt-2 right-0 w-80 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                                <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Edit History</h4>
-                                <div className="max-h-64 overflow-y-auto">
-                                    {entries.length === 0 ? (
-                                        <p className="text-xs text-slate-400 text-center py-4">No edit history yet.</p>
-                                    ) : entries.map((log: any, idx: number) => (
-                                        <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className="text-slate-700 text-xs font-medium truncate">{log.user}</span>
-                                                <div className="flex items-center gap-1.5 shrink-0">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-violet-500 bg-violet-50 px-1.5 py-0.5 rounded">Branding</span>
-                                                    <span className="text-slate-400 text-[10px]">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            return (
+                                <div className="absolute top-full mt-2 right-0 w-80 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
+                                    <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Edit History</h4>
+                                    <div className="max-h-64 overflow-y-auto">
+                                        {entries.length === 0 ? (
+                                            <p className="text-xs text-slate-400 text-center py-4">No edit history yet.</p>
+                                        ) : entries.map((log: any, idx: number) => (
+                                            <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-slate-700 text-xs font-medium truncate">{log.user}</span>
+                                                    <div className="flex items-center gap-1.5 shrink-0">
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-violet-500 bg-violet-50 px-1.5 py-0.5 rounded">Branding</span>
+                                                        <span className="text-slate-400 text-[10px]">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                    </div>
                                                 </div>
+                                                <p className="text-[11px] text-slate-500 mt-0.5 truncate">{log.action}</p>
                                             </div>
-                                            <p className="text-[11px] text-slate-500 mt-0.5 truncate">{log.action}</p>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })()}
-                </div>
+                            );
+                        })()}
+                    </div>
+                )}
             </div>
 
             {/* ═══════════════════════════════════════════════════
                 TEMPLATE GALLERY (shown in view mode or when choosing)
             ═══════════════════════════════════════════════════ */}
-            {(!isEditing || showGallery) && (
+            {step === 'gallery' && (
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-lg font-bold text-slate-900">Choose a Template</h2>
-                            <p className="text-sm text-slate-500">Preview all layouts with your current branding, then select one to customize.</p>
-                        </div>
-                        <MarkTabCompleted tabId="branding" />
+                    <div className="text-center mb-8">
+                        <h2 className="text-xl font-bold text-slate-800">Choose a Template</h2>
+                        <p className="text-sm text-slate-500 mt-1">Preview all layouts with your current branding, then select one to customize.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {TEMPLATES.map(tpl => {
                             const isSelected = branding.template === tpl.id;
                             return (
-                                <div key={tpl.id} className={`group rounded-xl border-2 transition-all overflow-hidden ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg' : 'border-slate-200 hover:border-slate-300 shadow-sm'}`}>
+                                <div
+                                    key={tpl.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => !isCompleted && updateField('template', tpl.id)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            if (!isCompleted) updateField('template', tpl.id);
+                                        }
+                                    }}
+                                    className={`group rounded-xl border-2 transition-all overflow-hidden text-left focus:outline-none ${isCompleted ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'} ${isSelected ? 'border-indigo-500 ring-4 ring-indigo-500/20 shadow-lg' : 'border-slate-200 hover:border-slate-300 shadow-sm'}`}
+                                >
                                     {/* Preview (scaled) */}
-                                    <MockBrowser small>
-                                        <div className="w-[200%] h-[200%] origin-top-left" style={{ transform: 'scale(0.5)' }}>
-                                            <tpl.Component config={branding} />
-                                        </div>
-                                    </MockBrowser>
+                                    <div className="pointer-events-none border-b border-slate-100">
+                                        <MockBrowser small>
+                                            <div className="w-[400%] h-[400%] origin-top-left" style={{ transform: 'scale(0.25)' }}>
+                                                <tpl.Component config={branding} />
+                                            </div>
+                                        </MockBrowser>
+                                    </div>
 
                                     {/* Info + Select */}
                                     <div className="p-4 bg-white border-t border-slate-100">
                                         <div className="flex items-center justify-between mb-1">
                                             <h3 className="text-sm font-bold text-slate-900">{tpl.name}</h3>
-                                            {isSelected && <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Active</span>}
+                                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}`}>
+                                                {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                                            </div>
                                         </div>
                                         <p className="text-xs text-slate-500 mb-3">{tpl.desc}</p>
-                                        {isEditing && (
-                                            <button
-                                                onClick={() => { updateField('template', tpl.id); setShowGallery(false); }}
-                                                className={`w-full py-1.5 text-xs font-bold rounded-lg transition-colors ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                                            >
-                                                {isSelected ? '✓ Selected — Edit' : 'Select & Edit'}
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
                             );
                         })}
+                    </div>
+
+                    <div className="flex justify-end pt-6 border-t border-slate-200">
+                        <button
+                            onClick={() => !isCompleted && setStep('editor')}
+                            disabled={isCompleted}
+                            title={isCompleted ? "Unmark as completed to edit" : ""}
+                            className={`font-bold py-2 px-6 rounded-lg shadow-sm transition-colors text-sm ${isCompleted ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                }`}
+                        >
+                            Continue to Customization
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══════════════════════════════════════════════════
+                PREVIEW STATE (Review customizations)
+            ═══════════════════════════════════════════════════ */}
+            {step === 'preview' && (
+                <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start py-6 w-full max-w-[1400px] mx-auto px-4 lg:px-0">
+                    {/* Left: Description */}
+                    <div className="lg:w-[380px] shrink-0 bg-white border border-slate-200 rounded-xl p-8 shadow-sm text-center lg:text-left">
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-800">Branding Preview</h2>
+                            <p className="text-sm text-slate-500 mt-3 leading-relaxed">
+                                This is a live preview of your selected template and customizations applied to your platform's login experience.
+                            </p>
+                        </div>
+
+                        <div className="pt-6 mt-6 border-t border-slate-100">
+                            <button
+                                onClick={() => !isCompleted && setStep('editor')}
+                                disabled={isCompleted}
+                                title={isCompleted ? "Unmark as completed to edit" : ""}
+                                className={`w-full font-bold py-3 px-8 rounded-xl shadow-sm transition-colors text-sm ${isCompleted ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                    }`}
+                            >
+                                Continue to Customization
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Right: Mock Browser View */}
+                    <div className="flex-1 w-full lg:w-auto">
+                        <MockBrowser>
+                            <div className="w-[150%] h-[150%] origin-top-left" style={{ transform: 'scale(0.6666)' }}>
+                                <SelectedTemplate config={branding} />
+                            </div>
+                        </MockBrowser>
                     </div>
                 </div>
             )}
@@ -431,13 +505,13 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
             {/* ═══════════════════════════════════════════════════
                 EDITOR — Left Controls + Right Live Preview
             ═══════════════════════════════════════════════════ */}
-            {isEditing && !showGallery && (
+            {step === 'editor' && (
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Left Panel: Controls */}
                     <div className="lg:w-[380px] shrink-0 space-y-5">
                         {/* Back to gallery */}
                         <button
-                            onClick={() => setShowGallery(true)}
+                            onClick={() => setStep('gallery')}
                             className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
                         >
                             <ArrowLeft className="w-3.5 h-3.5" /> Change Template
@@ -517,29 +591,57 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
                         </section>
 
                         {/* Colors */}
-                        <section className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
+                        <section className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Colors</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-xs font-medium text-slate-600 mb-1 block">Primary</label>
-                                    <div className="flex items-center gap-2">
-                                        <input type="color" value={branding.primary_color}
-                                            onChange={e => updateField('primary_color', e.target.value)}
-                                            className="w-8 h-8 rounded border border-slate-200 cursor-pointer" />
-                                        <input type="text" value={branding.primary_color}
-                                            onChange={e => updateField('primary_color', e.target.value)}
-                                            className="flex-1 text-xs font-mono px-2 py-1.5 border border-slate-200 rounded-lg outline-none focus:border-indigo-300" />
+                            <div className="grid grid-cols-2 gap-6">
+                                {/* Primary Color */}
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="text-xs font-medium text-slate-600 mb-1 block">Primary</label>
+                                        <div className="flex items-center gap-2">
+                                            <input type="color" value={branding.primary_color}
+                                                onChange={e => updateField('primary_color', e.target.value)}
+                                                className="w-8 h-8 rounded border border-slate-200 cursor-pointer" />
+                                            <input type="text" value={branding.primary_color}
+                                                onChange={e => updateField('primary_color', e.target.value)}
+                                                className="flex-1 text-xs font-mono px-2 py-1.5 border border-slate-200 rounded-lg outline-none focus:border-indigo-300" />
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {PREDEFINED_COLORS.map(color => (
+                                            <button
+                                                key={`pri-${color}`}
+                                                onClick={() => updateField('primary_color', color)}
+                                                className={`w-5 h-5 rounded-full border shadow-sm transition-transform hover:scale-110 ${branding.primary_color.toLowerCase() === color ? 'ring-2 ring-offset-1 ring-indigo-500 border-transparent' : 'border-slate-200'}`}
+                                                style={{ backgroundColor: color }}
+                                                title={color}
+                                            />
+                                        ))}
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="text-xs font-medium text-slate-600 mb-1 block">Secondary</label>
-                                    <div className="flex items-center gap-2">
-                                        <input type="color" value={branding.secondary_color}
-                                            onChange={e => updateField('secondary_color', e.target.value)}
-                                            className="w-8 h-8 rounded border border-slate-200 cursor-pointer" />
-                                        <input type="text" value={branding.secondary_color}
-                                            onChange={e => updateField('secondary_color', e.target.value)}
-                                            className="flex-1 text-xs font-mono px-2 py-1.5 border border-slate-200 rounded-lg outline-none focus:border-indigo-300" />
+                                {/* Secondary Color */}
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="text-xs font-medium text-slate-600 mb-1 block">Secondary</label>
+                                        <div className="flex items-center gap-2">
+                                            <input type="color" value={branding.secondary_color}
+                                                onChange={e => updateField('secondary_color', e.target.value)}
+                                                className="w-8 h-8 rounded border border-slate-200 cursor-pointer" />
+                                            <input type="text" value={branding.secondary_color}
+                                                onChange={e => updateField('secondary_color', e.target.value)}
+                                                className="flex-1 text-xs font-mono px-2 py-1.5 border border-slate-200 rounded-lg outline-none focus:border-indigo-300" />
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {PREDEFINED_COLORS.map(color => (
+                                            <button
+                                                key={`sec-${color}`}
+                                                onClick={() => updateField('secondary_color', color)}
+                                                className={`w-5 h-5 rounded-full border shadow-sm transition-transform hover:scale-110 ${branding.secondary_color.toLowerCase() === color ? 'ring-2 ring-offset-1 ring-slate-800 border-transparent' : 'border-slate-200'}`}
+                                                style={{ backgroundColor: color }}
+                                                title={color}
+                                            />
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -583,13 +685,17 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
                             ))}
                         </section>
 
-                        <MarkTabCompleted tabId="branding" />
+                        <div className="mt-8">
+                            <MarkTabCompleted tabId="branding" hasWritePermission={hasWriteAccess} />
+                        </div>
                     </div>
 
                     {/* Right Panel: Live Mock Browser */}
-                    <div className="flex-1 min-h-[500px] lg:sticky lg:top-[140px] lg:self-start">
+                    <div className="flex-1 lg:sticky lg:top-[140px] lg:self-start">
                         <MockBrowser>
-                            <SelectedTemplate config={branding} />
+                            <div className="w-[150%] h-[150%] origin-top-left" style={{ transform: 'scale(0.6666)' }}>
+                                <SelectedTemplate config={branding} />
+                            </div>
                         </MockBrowser>
                     </div>
                 </div>

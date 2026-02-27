@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
+import { updatePilotData } from "@/app/actions/pilotPortal";
 
 export const CustomCircleIcon = ({ className }: { className?: string }) => (
     <svg
@@ -24,40 +25,65 @@ export const CustomCircleIcon = ({ className }: { className?: string }) => (
 
 interface MarkTabCompletedProps {
     tabId: string;
-    // Granular permission check
     hasWritePermission?: boolean;
 }
 
 export function MarkTabCompleted({ tabId, hasWritePermission = true }: MarkTabCompletedProps) {
-    const { watch, setValue } = usePilotForm();
-    const rawCompletedTabs = watch("completed_tabs_jsonb");
+    const { getValues, setValue } = usePilotForm();
+    const [isPending, setIsPending] = useState(false);
 
-    // Ensure completedTabs is always a valid array
-    let completedTabs: string[] = [];
-    if (Array.isArray(rawCompletedTabs)) {
-        completedTabs = rawCompletedTabs;
-    } else if (typeof rawCompletedTabs === 'string') {
-        try {
-            const parsed = JSON.parse(rawCompletedTabs);
-            if (Array.isArray(parsed)) completedTabs = parsed;
-        } catch {
-            completedTabs = [];
+    // Read initial state from the global form Context
+    const [isCompleted, setIsCompleted] = useState<boolean>(false);
+
+    useEffect(() => {
+        const rawCompletedTabs = getValues("completed_tabs_jsonb");
+        let completedTabs: string[] = [];
+        if (Array.isArray(rawCompletedTabs)) {
+            completedTabs = rawCompletedTabs;
+        } else if (typeof rawCompletedTabs === 'string') {
+            try {
+                const parsed = JSON.parse(rawCompletedTabs);
+                if (Array.isArray(parsed)) completedTabs = parsed;
+            } catch {
+                completedTabs = [];
+            }
         }
-    }
+        setIsCompleted(completedTabs.includes(tabId));
+    }, [tabId, getValues]);
 
-    // Check if current tab is in the completed array
-    const isCompleted = completedTabs.includes(tabId);
+    if (!hasWritePermission) return null;
 
-    // If user only has Read access, they cannot mark the tab as completed
-    if (!hasWritePermission) {
-        return null;
-    }
+    const toggleCompletion = async () => {
+        setIsPending(true);
+        const originalState = isCompleted;
+        const newState = !originalState;
 
-    const toggleCompletion = () => {
-        if (isCompleted) {
-            setValue("completed_tabs_jsonb", completedTabs.filter(id => id !== tabId), { shouldDirty: true });
-        } else {
-            setValue("completed_tabs_jsonb", [...completedTabs, tabId], { shouldDirty: true });
+        // Optimistic UI updates
+        setIsCompleted(newState);
+
+        try {
+            const rawCompletedTabs = getValues("completed_tabs_jsonb");
+            let completedTabs: string[] = Array.isArray(rawCompletedTabs) ? rawCompletedTabs : [];
+
+            const newArray = newState
+                ? [...completedTabs, tabId]
+                : completedTabs.filter(id => id !== tabId);
+
+            setValue("completed_tabs_jsonb", newArray, { shouldDirty: true });
+
+            // Persist securely to DB
+            const result = await updatePilotData({ completed_tabs_jsonb: newArray });
+            if (result?.error) {
+                // Revert on failure
+                setIsCompleted(originalState);
+                setValue("completed_tabs_jsonb", completedTabs, { shouldDirty: true });
+                console.error(result.error);
+            }
+        } catch (error) {
+            setIsCompleted(originalState);
+            console.error("Failed to update tab completion status", error);
+        } finally {
+            setIsPending(false);
         }
     };
 
@@ -66,13 +92,21 @@ export function MarkTabCompleted({ tabId, hasWritePermission = true }: MarkTabCo
             <Button
                 variant={isCompleted ? "outline" : undefined}
                 size="lg"
-                className={`transition-all shadow-sm rounded-xl font-bold ${isCompleted
-                    ? 'bg-emerald-50/50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800'
-                    : 'bg-slate-900 text-white hover:bg-black'
+                disabled={isPending}
+                className={`transition-all shadow-sm rounded-xl font-bold ${isPending
+                    ? 'bg-slate-100 text-slate-400 cursor-wait border-slate-200'
+                    : isCompleted
+                        ? 'bg-emerald-50/50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800'
+                        : 'bg-slate-900 text-white hover:bg-black'
                     }`}
                 onClick={toggleCompletion}
             >
-                {isCompleted ? (
+                {isPending ? (
+                    <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Saving...
+                    </>
+                ) : isCompleted ? (
                     <>
                         <CheckCircle2 className="mr-2 h-5 w-5 text-emerald-500" />
                         Completed

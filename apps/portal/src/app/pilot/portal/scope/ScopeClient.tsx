@@ -14,6 +14,7 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [deptText, setDeptText] = useState(() => (getValues("scope_jsonb.target_departments") || []).join(", "));
+    const isCompleted = (watch("completed_tabs_jsonb") || []).includes("scope");
 
     // Watch current form state for modules and constraints
     const coreModules = watch("scope_jsonb.core_modules") || [];
@@ -146,8 +147,11 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                                     <History className="w-4 h-4" /> History
                                 </button>
                                 <button
-                                    onClick={() => setIsEditing(true)}
-                                    className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm rounded-lg transition-colors"
+                                    onClick={() => !isCompleted && setIsEditing(true)}
+                                    disabled={isCompleted}
+                                    title={isCompleted ? "Unmark as completed to edit" : ""}
+                                    className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold shadow-sm rounded-lg transition-colors ${isCompleted ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                        }`}
                                 >
                                     <Pencil className="w-4 h-4" /> Edit Scope
                                 </button>

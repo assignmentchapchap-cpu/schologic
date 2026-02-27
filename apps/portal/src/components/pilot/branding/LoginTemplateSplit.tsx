@@ -52,8 +52,10 @@ export function LoginTemplateSplit({ config }: { config: BrandingConfig }) {
                             {text_overrides.button_text}
                         </button>
                     </div>
-                    <p className="text-center text-xs" style={{ color: '#94a3b8' }}>
-                        Powered by <span className="font-semibold" style={{ color: primary_color }}>{config.institution_name || 'Schologic'}</span>
+                    <p className="text-center text-sm">
+                        <a href="#" className="font-semibold hover:underline transition-opacity" style={{ color: primary_color }}>
+                            Forgot Password?
+                        </a>
                     </p>
                 </div>
             </div>
