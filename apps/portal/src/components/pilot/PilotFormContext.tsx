@@ -48,15 +48,43 @@ export const pilotBlueprintSchema = z.object({
         delivery: { method: "dashboard", frequency: "weekly" }
     }),
 
-    // Tab 4: Branding
+    // Tab 4: Branding (Login Page Customizer)
     branding_jsonb: z.object({
-        subdomain: z.string().optional(),
-        custom_domain: z.string().optional(),
-        logo_url: z.string().optional(),
-        primary_color: z.string().default("#4f46e5"), // Indigo-600
-        secondary_color: z.string().default("#0f172a"), // Slate-900
+        subdomain: z.string().default(""),
+        use_custom_domain: z.boolean().default(false),
+        custom_domain: z.string().default(""),
+        logo_url: z.string().default(""),
+        logo_size: z.number().default(80),
+        logo_has_transparency: z.boolean().default(false),
+        primary_color: z.string().default("#4f46e5"),
+        secondary_color: z.string().default("#0f172a"),
+        template: z.enum(["split", "centered", "minimal"]).default("centered"),
+        hero_image_url: z.string().default(""),
+        text_overrides: z.object({
+            heading: z.string().default("Welcome to Schologic LMS"),
+            subtext: z.string().default("Please sign in to continue"),
+            id_label: z.string().default("Email Address"),
+            password_label: z.string().default("Password"),
+            button_text: z.string().default("Sign In"),
+        }).default({
+            heading: "Welcome to Schologic LMS",
+            subtext: "Please sign in to continue",
+            id_label: "Email Address",
+            password_label: "Password",
+            button_text: "Sign In",
+        }),
     }).default({
-        primary_color: "#4f46e5", secondary_color: "#0f172a"
+        subdomain: "", use_custom_domain: false, custom_domain: "",
+        logo_url: "", logo_size: 80, logo_has_transparency: false,
+        primary_color: "#4f46e5", secondary_color: "#0f172a",
+        template: "centered", hero_image_url: "",
+        text_overrides: {
+            heading: "Welcome to Schologic LMS",
+            subtext: "Please sign in to continue",
+            id_label: "Email Address",
+            password_label: "Password",
+            button_text: "Sign In",
+        },
     }),
 
     // Tab 5: Settings / Permissions
@@ -124,7 +152,16 @@ export function PilotFormProvider({
                 pilot_period_weeks: 4, max_students: 200, max_instructors: 5
             },
             kpis_jsonb: { kpis: [], questions: {}, delivery: { method: "dashboard", frequency: "weekly" } },
-            branding_jsonb: { primary_color: "#4f46e5", secondary_color: "#0f172a" },
+            branding_jsonb: {
+                subdomain: "", use_custom_domain: false, custom_domain: "",
+                logo_url: "", logo_size: 80, logo_has_transparency: false,
+                primary_color: "#4f46e5", secondary_color: "#0f172a",
+                template: "centered", hero_image_url: "",
+                text_overrides: {
+                    heading: "Welcome to Schologic LMS", subtext: "Please sign in to continue",
+                    id_label: "Email Address", password_label: "Password", button_text: "Sign In",
+                },
+            },
             permissions_jsonb: {
                 independent_class_management: false, allow_content_upload: true,
                 ai_assessment_override: false, allow_student_roster_management: false,

@@ -42,7 +42,30 @@ export default async function PilotPortalLayout({
                     : { method: "dashboard", frequency: "weekly" },
             }
             : undefined,
-        branding_jsonb: p.branding_jsonb || undefined,
+        branding_jsonb: (() => {
+            const raw = (p.branding_jsonb && typeof p.branding_jsonb === 'object' && !Array.isArray(p.branding_jsonb))
+                ? p.branding_jsonb : {};
+            const textRaw = (raw.text_overrides && typeof raw.text_overrides === 'object') ? raw.text_overrides : {};
+            return {
+                subdomain: raw.subdomain || "",
+                use_custom_domain: raw.use_custom_domain ?? false,
+                custom_domain: raw.custom_domain || "",
+                logo_url: raw.logo_url || "",
+                logo_size: raw.logo_size ?? 80,
+                logo_has_transparency: raw.logo_has_transparency ?? false,
+                primary_color: raw.primary_color || "#4f46e5",
+                secondary_color: raw.secondary_color || "#0f172a",
+                template: raw.template || "centered",
+                hero_image_url: raw.hero_image_url || "",
+                text_overrides: {
+                    heading: textRaw.heading || "Welcome to Schologic LMS",
+                    subtext: textRaw.subtext || "Please sign in to continue",
+                    id_label: textRaw.id_label || "Email Address",
+                    password_label: textRaw.password_label || "Password",
+                    button_text: textRaw.button_text || "Sign In",
+                },
+            };
+        })(),
         permissions_jsonb: p.permissions_jsonb || undefined,
         dashboard_layout_jsonb: p.dashboard_layout_jsonb || undefined,
         tasks_jsonb: Array.isArray(p.tasks_jsonb) ? p.tasks_jsonb : [],

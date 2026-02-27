@@ -83,3 +83,50 @@ export async function updatePilotData(updates: any) {
         return { error: err.message || 'Failed to update pilot data.' };
     }
 }
+
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+export async function uploadBrandingAsset(formData: FormData) {
+    try {
+        const cookieStore = await cookies();
+        const supabase = createSessionClient(cookieStore);
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) throw new Error('Unauthorized');
+
+        const { data: membership } = await supabase
+            .from('pilot_team_members')
+            .select('pilot_request_id')
+            .eq('user_id', user.id)
+            .limit(1)
+            .single();
+
+        if (!membership) throw new Error('No pilot access found.');
+
+        const file = formData.get('file') as File;
+        const assetType = formData.get('type') as string; // 'logo' or 'hero'
+
+        if (!file) throw new Error('No file provided.');
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) throw new Error('Invalid file type. Use PNG, JPG, SVG, or WebP.');
+        if (file.size > MAX_FILE_SIZE) throw new Error('File too large. Maximum 2MB.');
+
+        const ext = file.name.split('.').pop() || 'png';
+        const path = `${membership.pilot_request_id}/${assetType}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('pilot-branding')
+            .upload(path, file, { upsert: true, contentType: file.type });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+            .from('pilot-branding')
+            .getPublicUrl(path);
+
+        return { success: true, url: urlData.publicUrl };
+    } catch (err: any) {
+        console.error('uploadBrandingAsset Error:', err);
+        return { error: err.message || 'Failed to upload asset.' };
+    }
+}
