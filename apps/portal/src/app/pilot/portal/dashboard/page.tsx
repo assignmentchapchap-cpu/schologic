@@ -1,16 +1,25 @@
 import { Metadata } from 'next';
+import { AdminDashboardClient } from './AdminDashboardClient';
+import { getCurrentPilotRequest } from '@/app/actions/pilotPortal';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
     title: 'Admin Dashboard | Pilot Management Portal',
     description: 'Configure initial views and metrics for your team.',
 };
 
-export default function PilotDashboardConfigPage() {
+export default async function PilotDashboardConfigPage() {
+    const res = await getCurrentPilotRequest();
+
+    if (res.error || !res.data) {
+        redirect('/login');
+    }
+
+    const { pilot, profile } = res.data;
+
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">Admin Dashboard Configuration</h1>
-            <p className="text-slate-600">Select layout views and widget metrics.</p>
-            {/* Phase 4 UI goes here */}
+        <div>
+            <AdminDashboardClient pilot={pilot} profile={profile} />
         </div>
     );
 }
