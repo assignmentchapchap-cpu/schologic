@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Bell, MessageSquare, LogOut, User, ShieldCheck, ChevronDown } from "lucide-react";
+import { Bell, MessageSquare, LogOut, User, ShieldCheck, ChevronDown, ClipboardList as ListTodo, Play, Check, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { UserIdentity } from "@/lib/identity-server";
 import { createClient } from "@schologic/database";
 import { usePilotForm } from "./PilotFormContext";
+import { updatePilotData } from "@/app/actions/pilotPortal";
 
 interface PilotGlobalHeaderProps {
     identity?: UserIdentity | null;
@@ -16,14 +17,20 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const supabase = createClient();
-    const { watch } = usePilotForm();
+    const { watch, setValue, getValues } = usePilotForm();
     const tasks = watch("tasks_jsonb") || [];
+    const [isTasksOpen, setIsTasksOpen] = useState(false);
+    const tasksRef = useRef<HTMLDivElement>(null);
+    const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
     // Close menu when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setIsMenuOpen(false);
+            }
+            if (tasksRef.current && !tasksRef.current.contains(event.target as Node)) {
+                setIsTasksOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -36,6 +43,47 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
         : identity?.email?.[0]?.toUpperCase() || "U";
 
     const isChampion = identity?.pilot_permissions?.is_champion;
+
+    const currentUserId = identity?.id || '';
+    const myTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write' && t.status !== 'completed');
+    const activeCount = myTasks.length;
+
+    const handleUpdateTaskStatus = async (taskId: string) => {
+        setIsUpdating(taskId);
+        try {
+            const task = tasks.find(t => t.id === taskId);
+            const statusCycle: Record<string, 'pending' | 'in_progress' | 'completed'> = {
+                pending: 'in_progress',
+                in_progress: 'completed',
+                completed: 'pending',
+            };
+            const nextStatus = statusCycle[task?.status || 'pending'];
+            const updated = tasks.map(t =>
+                t.id === taskId ? { ...t, status: nextStatus } : t
+            );
+
+            // 1. Update form state
+            setValue("tasks_jsonb", updated, { shouldDirty: true });
+
+            // 2. Append changelog
+            const currentLog = getValues("changelog_jsonb") || {};
+            const entry = {
+                time: new Date().toISOString(),
+                user: fullName,
+                action: `${nextStatus === 'in_progress' ? 'Started' : 'Completed'} task: ${task?.title || taskId}`
+            };
+            const tab = task?.tab || 'team';
+            const logUpdate = { ...currentLog, [tab]: [entry, ...(currentLog[tab] || [])].slice(0, 20) };
+            setValue("changelog_jsonb", logUpdate);
+
+            // 3. Persist to DB
+            await updatePilotData({ tasks_jsonb: updated, changelog_jsonb: logUpdate });
+        } catch (err) {
+            console.error("Header Task Update Error:", err);
+        } finally {
+            setIsUpdating(null);
+        }
+    };
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();
@@ -52,6 +100,84 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {/* My Tasks Dropdown */}
+                    <div className="relative" ref={tasksRef}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsTasksOpen(!isTasksOpen)}
+                            className={`hidden md:flex relative ${isTasksOpen ? 'bg-slate-100 text-slate-900 border-slate-200' : 'text-slate-600 hover:text-slate-900'}`}
+                        >
+                            <ListTodo className="h-4 w-4 mr-2" />
+                            My Tasks
+                            {activeCount > 0 && (
+                                <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 rounded-full bg-indigo-600 text-[10px] font-bold text-white flex items-center justify-center border-2 border-white">
+                                    {activeCount}
+                                </span>
+                            )}
+                        </Button>
+
+                        {isTasksOpen && (
+                            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 py-0 z-[60] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-900">My Assigned Tasks</span>
+                                    <Link href="/portal/team" className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+                                        View All <ExternalLink className="w-2.5 h-2.5" />
+                                    </Link>
+                                </div>
+                                <div className="max-h-[320px] overflow-y-auto">
+                                    {myTasks.length === 0 ? (
+                                        <div className="px-4 py-8 text-center">
+                                            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-2 text-slate-300">
+                                                <ListTodo className="w-4 h-4" />
+                                            </div>
+                                            <p className="text-[11px] font-medium text-slate-400">All caught up!</p>
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-slate-50">
+                                            {myTasks.map(task => (
+                                                <div key={task.id} className="p-3 hover:bg-slate-50/50 transition-colors">
+                                                    <div className="flex flex-col gap-2">
+                                                        <span className="text-xs font-medium text-slate-700 leading-normal line-clamp-2">
+                                                            {task.title}
+                                                        </span>
+                                                        <div className="flex items-center justify-between mt-0.5">
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                                {task.tab}
+                                                            </span>
+                                                            {isUpdating === task.id ? (
+                                                                <span className="w-3.5 h-3.5 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
+                                                            ) : (
+                                                                <>
+                                                                    {task.status === 'pending' && (
+                                                                        <button
+                                                                            onClick={() => handleUpdateTaskStatus(task.id)}
+                                                                            className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-700"
+                                                                        >
+                                                                            <Play className="w-2.5 h-2.5 fill-indigo-600" /> Start Working
+                                                                        </button>
+                                                                    )}
+                                                                    {task.status === 'in_progress' && (
+                                                                        <button
+                                                                            onClick={() => handleUpdateTaskStatus(task.id)}
+                                                                            className="flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-[10px] font-bold text-amber-600"
+                                                                        >
+                                                                            <Check className="w-2.5 h-2.5" /> Mark Done
+                                                                        </button>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     <Button variant="ghost" size="sm" className="hidden md:flex text-slate-600 hover:text-slate-900">
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Discussion Board

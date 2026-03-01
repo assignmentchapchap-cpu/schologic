@@ -998,9 +998,9 @@ export function TeamTasksClient({
                                                         {task.status === 'in_progress' && (
                                                             <button
                                                                 onClick={() => updateTaskStatusAndSave(task.id)}
-                                                                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors shrink-0"
+                                                                className="flex items-center gap-1 px-3.5 py-1 text-[11px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors shrink-0"
                                                             >
-                                                                <Check className="w-3 h-3" /> Done
+                                                                <Check className="w-3 h-3" /> Mark Done
                                                             </button>
                                                         )}
                                                         {task.status === 'completed' && (
