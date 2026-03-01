@@ -15,7 +15,8 @@ export default async function PilotDashboardConfigPage() {
         redirect('/login');
     }
 
-    const { pilot, profile } = res.data;
+    const { pilot, identity } = res.data;
+    const profile = identity;
 
     return (
         <div>

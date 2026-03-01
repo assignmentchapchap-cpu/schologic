@@ -146,7 +146,7 @@ export const pilotBlueprintSchema = z.object({
         tab: z.string(),
         title: z.string(),
         status: z.enum(['pending', 'in_progress', 'completed']).default('pending'),
-        assigned_to: z.string().optional(),
+        assignments: z.record(z.string(), z.enum(["none", "read", "write"])).default({}),
         start_date: z.string().optional(),
         due_date: z.string().optional(),
         is_auto: z.boolean().default(true),

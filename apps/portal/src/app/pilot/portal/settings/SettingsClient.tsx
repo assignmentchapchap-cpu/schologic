@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
 import {
     CheckCircle2, History, Save, ChevronDown, RotateCcw,
-    BookOpen, Users, Settings, FileText, Archive, Lock
+    BookOpen, Users, Settings, FileText, Archive, Lock, AlertTriangle
 } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
 import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
@@ -87,10 +87,10 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
     // ─── Access Control ──────────────────────────────────────
-    const isChampion = profile?.id === pilot?.champion_uid;
+    const isChampion = profile?.id === pilot?.champion_id;
     const userTasks = watch("tasks_jsonb") || [];
-    const isAssigned = userTasks.some((t: any) => t.tab === 'settings' && t.assigned_to === profile?.id);
-    const hasWriteAccess = isChampion || isAssigned;
+    const hasTaskWrite = userTasks.some((t: any) => t.tab === 'settings' && t.assignments?.[profile?.id] === 'write');
+    const hasWriteAccess = isChampion || hasTaskWrite;
     const isCompleted = (watch("completed_tabs_jsonb") || []).includes("settings");
     const canEdit = hasWriteAccess && !isCompleted;
 
@@ -244,7 +244,14 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
         <div className="animate-in slide-in-from-bottom-4 duration-500 pb-20">
             {/* Top Header Row */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4 relative z-50">
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Permissions & Settings</h1>
+                <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Permissions & Settings</h1>
+                    {!hasWriteAccess && !isChampion && (
+                        <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded-full border border-amber-100">
+                            <AlertTriangle className="w-3 h-3" /> Read Only
+                        </span>
+                    )}
+                </div>
 
                 <div className="flex items-center gap-2">
                     <button
@@ -333,16 +340,6 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
                 );
             })()}
 
-            {/* Read-only notice */}
-            {!canEdit && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl mb-4 text-xs font-medium text-amber-700">
-                    <Lock className="w-3.5 h-3.5 shrink-0" />
-                    {isCompleted
-                        ? "This tab is marked as complete. Unmark it to make changes."
-                        : "You do not have edit access. Contact the Champion or get assigned to this tab."}
-                </div>
-            )
-            }
 
             {/* Split Layout */}
             <div className="flex flex-col lg:flex-row gap-8">
@@ -400,7 +397,7 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
                             </div>
                         )}
 
-                        <MarkTabCompleted tabId="settings" hasWritePermission={isChampion} />
+                        <MarkTabCompleted tabId="settings" hasWriteAccess={hasWriteAccess} />
                     </div>
                 </div>
 

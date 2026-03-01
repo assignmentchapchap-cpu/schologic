@@ -16,7 +16,9 @@ export default async function PilotTeamPage() {
         redirect('/login');
     }
 
-    const { pilot, membership, profile } = res.data;
+    const { pilot, identity } = res.data;
+    const membership = identity.pilot_permissions;
+    const profile = identity;
 
     const membersRes = await getTeamMembers();
     const members = (membersRes?.data || []).map((m: any) => ({

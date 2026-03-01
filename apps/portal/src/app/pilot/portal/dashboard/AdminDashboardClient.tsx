@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
-import { CheckCircle2, History, Layout, BarChart, ArrowLeft } from "lucide-react";
+import { CheckCircle2, History, Layout, BarChart, ArrowLeft, AlertTriangle } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
 import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
 import { MockDashboard } from "./MockDashboard";
@@ -33,10 +33,10 @@ export function AdminDashboardClient({ pilot, profile }: { pilot: any; profile: 
     const isCompleted = (watch("completed_tabs_jsonb") || []).includes("dashboard");
 
     // ─── Access Control ─────────────────────────────────────
-    const isChampion = profile?.id === pilot?.champion_uid;
+    const isChampion = profile?.id === pilot?.champion_id;
     const userTasks = watch("tasks_jsonb") || [];
-    const isAssigned = userTasks.some((t: any) => t.tab === 'dashboard' && t.assigned_to === profile?.id);
-    const hasWriteAccess = isChampion || isAssigned;
+    const hasTaskWrite = userTasks.some((t: any) => t.tab === 'dashboard' && t.assignments?.[profile?.id] === 'write');
+    const hasWriteAccess = isChampion || hasTaskWrite;
 
     // ─── LOCAL STATE ────────────────────────────────────────
     const [dashboardConfig, setDashboardConfig] = useState(() => {
@@ -183,7 +183,14 @@ export function AdminDashboardClient({ pilot, profile }: { pilot: any; profile: 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 relative z-50">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Admin Dashboard Setup</h1>
-                    <p className="text-slate-500 text-sm">Configure your default view and pinned metrics.</p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-slate-500 text-sm">Configure your default view and pinned metrics.</p>
+                        {!hasWriteAccess && !isChampion && (
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded-full border border-amber-100">
+                                <AlertTriangle className="w-3 h-3" /> Read Only
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {step === 'editor' && (
@@ -331,9 +338,7 @@ export function AdminDashboardClient({ pilot, profile }: { pilot: any; profile: 
                             </div>
                         </section>
 
-                        <div className="mt-8">
-                            <MarkTabCompleted tabId="dashboard" hasWritePermission={hasWriteAccess} />
-                        </div>
+                        <MarkTabCompleted tabId="dashboard" hasWriteAccess={hasWriteAccess} />
                     </div>
 
                     <div className="flex-1 lg:sticky lg:top-[140px] lg:self-start">

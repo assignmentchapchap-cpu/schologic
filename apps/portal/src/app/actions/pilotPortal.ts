@@ -2,6 +2,7 @@
 
 import { createSessionClient } from '@schologic/database';
 import { cookies } from 'next/headers';
+import { getUserIdentity } from '@/lib/identity-server';
 
 export async function getCurrentPilotRequest() {
     try {
@@ -11,24 +12,20 @@ export async function getCurrentPilotRequest() {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) throw new Error('Unauthorized');
 
-        // First find their pilot team membership to get the pilot_request_id
-        const { data: membership, error: membershipError } = await supabase
-            .from('pilot_team_members')
-            .select('pilot_request_id, user_id, is_champion, tab_permissions_jsonb')
-            .eq('user_id', user.id)
-            .limit(1)
-            .single();
+        // Fetch the unified identity (cached in Redis via proxy)
+        const identity = await getUserIdentity(user.id);
 
-        if (membershipError || !membership) {
-            console.error('Membership error:', membershipError);
+        if (!identity || !identity.pilot_permissions) {
             throw new Error('No pilot access found for this user.');
         }
 
-        // Now fetch the actual pilot request
+        const { pilot_request_id } = identity.pilot_permissions;
+
+        // Fetch the actual pilot request
         const { data: pilot, error: pilotError } = await supabase
             .from('pilot_requests')
             .select('*')
-            .eq('id', membership.pilot_request_id)
+            .eq('id', pilot_request_id)
             .single();
 
         if (pilotError || !pilot) {
@@ -36,14 +33,7 @@ export async function getCurrentPilotRequest() {
             throw new Error('Pilot request data not found.');
         }
 
-        // Fetch user profile to display "Last edited by"
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('first_name, last_name, email')
-            .eq('id', user.id)
-            .single();
-
-        return { data: { pilot, membership, profile } };
+        return { data: { pilot, identity } };
 
     } catch (err: any) {
         console.error('getCurrentPilotRequest Error:', err);

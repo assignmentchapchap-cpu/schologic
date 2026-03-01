@@ -25,7 +25,7 @@ interface PilotTask {
     tab: string;
     title: string;
     status: 'pending' | 'in_progress' | 'completed';
-    assigned_to?: string;
+    assignments: Record<string, "none" | "read" | "write">;
     start_date?: string;
     due_date?: string;
     is_auto: boolean;
@@ -141,7 +141,10 @@ export function GanttChart({ tasks, members, pilotWeeks, onStatusChange }: Gantt
                         {tabTasks.map((task, idx) => {
                             const statusCfg = STATUS_CONFIG[task.status];
                             const barPos = getBarPosition(task, idx, tabTasks.length);
-                            const assignee = members.find(m => m.user_id === task.assigned_to);
+
+                            const primaryAssigneeUid = Object.entries(task.assignments || {})
+                                .find(([_, level]) => level === 'write')?.[0];
+                            const assignee = primaryAssigneeUid ? members.find(m => m.user_id === primaryAssigneeUid) : null;
                             const initials = assignee?.profiles
                                 ? `${assignee.profiles.first_name?.[0] || ''}${assignee.profiles.last_name?.[0] || ''}`.toUpperCase()
                                 : '';

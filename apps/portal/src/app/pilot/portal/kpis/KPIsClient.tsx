@@ -191,6 +191,10 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
     const [filterType, setFilterType] = useState<string>("all");
     const [showDisabled, setShowDisabled] = useState(false);
     const isCompleted = (watch("completed_tabs_jsonb") || []).includes("kpis");
+    const isChampion = profile?.id === pilot?.champion_id;
+    const userTasks = watch("tasks_jsonb") || [];
+    const hasTaskWrite = userTasks.some((t: any) => t.tab === 'kpis' && t.assignments?.[profile?.id] === 'write');
+    const hasWriteAccess = isChampion || hasTaskWrite;
 
     // ─── LOCAL STATE for instant reactivity ──────────────────
     // All KPI data lives in local state. Form context is only read on init
@@ -485,7 +489,14 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
         <div className="animate-in slide-in-from-bottom-4 duration-500 pb-20">
             {/* Top Page Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4 relative z-50">
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Key Performance Indicators</h1>
+                <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Key Performance Indicators</h1>
+                    {!hasWriteAccess && !isChampion && (
+                        <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded-full border border-amber-100">
+                            <AlertTriangle className="w-3 h-3" /> Read Only
+                        </span>
+                    )}
+                </div>
 
                 <div className="flex items-center gap-2">
                     <button
@@ -516,10 +527,10 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                         </>
                     ) : (
                         <button
-                            onClick={() => !isCompleted && setIsEditing(true)}
-                            disabled={isCompleted}
-                            title={isCompleted ? "Unmark as completed to edit" : ""}
-                            className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold shadow-sm rounded-lg transition-colors ${isCompleted ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                            onClick={() => !isCompleted && hasWriteAccess && setIsEditing(true)}
+                            disabled={isCompleted || !hasWriteAccess}
+                            title={isCompleted ? "Unmark as completed to edit" : (!hasWriteAccess ? "You do not have write permissions for this tab" : "")}
+                            className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold shadow-sm rounded-lg transition-colors ${isCompleted || !hasWriteAccess ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                                 }`}
                         >
                             <Pencil className="w-4 h-4" /> Edit KPIs
@@ -722,7 +733,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                             )}
                         </div>
 
-                        <MarkTabCompleted tabId="kpis" />
+                        <MarkTabCompleted tabId="kpis" hasWriteAccess={hasWriteAccess} />
                     </div>
                 </div>
 

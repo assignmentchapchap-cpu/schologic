@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
-import { CheckCircle2, Home, Users, Monitor, GraduationCap, History, Pencil, X, Save } from "lucide-react";
+import { CheckCircle2, Home, Users, Monitor, GraduationCap, History, Pencil, X, Save, AlertTriangle } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
 import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
 
@@ -15,6 +15,11 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
     const [error, setError] = useState<string | null>(null);
     const [deptText, setDeptText] = useState(() => (getValues("scope_jsonb.target_departments") || []).join(", "));
     const isCompleted = (watch("completed_tabs_jsonb") || []).includes("scope");
+    const isChampion = profile?.id === pilot?.champion_id;
+    const userTasks = watch("tasks_jsonb") || [];
+    const hasTaskWrite = userTasks.some((t: any) => t.tab === 'scope' && t.assignments?.[profile?.id] === 'write');
+    const hasWriteAccess = isChampion || hasTaskWrite;
+    const isReadOnly = isCompleted || !hasWriteAccess;
 
     // Watch current form state for modules and constraints
     const coreModules = watch("scope_jsonb.core_modules") || [];
@@ -111,7 +116,14 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 relative z-50">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Pilot Blueprint: Scope</h1>
-                    <p className="text-slate-500 text-sm">Define what modules will be tested and constraints on the deployment.</p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-slate-500 text-sm">Define what modules will be tested and constraints on the deployment.</p>
+                        {!hasWriteAccess && !isChampion && (
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded-full border border-amber-100">
+                                <AlertTriangle className="w-3 h-3" /> Read Only
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* Action Buttons - Top right */}
@@ -147,10 +159,10 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                                     <History className="w-4 h-4" /> History
                                 </button>
                                 <button
-                                    onClick={() => !isCompleted && setIsEditing(true)}
-                                    disabled={isCompleted}
-                                    title={isCompleted ? "Unmark as completed to edit" : ""}
-                                    className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold shadow-sm rounded-lg transition-colors ${isCompleted ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                    onClick={() => !isCompleted && hasWriteAccess && setIsEditing(true)}
+                                    disabled={isCompleted || !hasWriteAccess}
+                                    title={isCompleted ? "Unmark as completed to edit" : (!hasWriteAccess ? "You do not have write permissions for this tab" : "")}
+                                    className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold shadow-sm rounded-lg transition-colors ${isCompleted || !hasWriteAccess ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                                         }`}
                                 >
                                     <Pencil className="w-4 h-4" /> Edit Scope
@@ -281,10 +293,11 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                                             <label key={opt.id} className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${isEditing ? 'cursor-pointer hover:border-slate-300' : 'pointer-events-none'} ${active ? (isEditing ? 'bg-indigo-50 border-indigo-300' : 'bg-indigo-50 border-indigo-500 shadow-sm ring-1 ring-indigo-500') : (isEditing ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-200 opacity-60 grayscale')}`}>
                                                 <input
                                                     type="checkbox"
-                                                    tabIndex={isEditing ? 0 : -1}
+                                                    tabIndex={isEditing && !isReadOnly ? 0 : -1}
                                                     value={opt.id}
+                                                    disabled={!isEditing || isReadOnly}
                                                     {...register("scope_jsonb.core_modules")}
-                                                    className="mt-1 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
+                                                    className="mt-1 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 disabled:opacity-50"
                                                 />
                                                 <div>
                                                     <p className={`text-sm font-bold ${active ? 'text-indigo-900' : 'text-slate-700'}`}>{opt.label}</p>
@@ -415,7 +428,7 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                     </div>
 
                     {/* Completion Action */}
-                    <MarkTabCompleted tabId="scope" />
+                    <MarkTabCompleted tabId="scope" hasWriteAccess={hasWriteAccess} />
                 </div>
             </div>
         </div>

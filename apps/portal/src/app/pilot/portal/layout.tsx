@@ -3,6 +3,7 @@ import { PilotTabsNav } from "@/components/pilot/PilotTabsNav";
 import { PilotDiscussionFAB } from "@/components/pilot/PilotDiscussionFAB";
 import { PilotFormProvider, PilotBlueprint } from "@/components/pilot/PilotFormContext";
 import { getCurrentPilotRequest } from "@/app/actions/pilotPortal";
+import { recordMemberPresence } from "@/app/actions/pilotTeam";
 import { redirect } from "next/navigation";
 
 export default async function PilotPortalLayout({
@@ -12,12 +13,15 @@ export default async function PilotPortalLayout({
 }) {
     const res = await getCurrentPilotRequest();
 
+    // Automatically track presence and transition status
+    await recordMemberPresence();
+
     if (res.error || !res.data) {
         // If unauthorized or no pilot, they shouldn't be here.
         redirect('/login');
     }
 
-    const { pilot } = res.data;
+    const { pilot, identity } = res.data;
     const p = pilot as any;
 
     // Map database columns to the PilotBlueprint schema
@@ -77,7 +81,7 @@ export default async function PilotPortalLayout({
         <PilotFormProvider defaultValues={defaultValues}>
             <div className="min-h-screen bg-slate-50 flex flex-col relative">
                 {/* Global Header */}
-                <PilotGlobalHeader />
+                <PilotGlobalHeader identity={identity} />
 
                 {/* Sticky Horizontal Tabs Navigation */}
                 <div className="sticky top-16 z-30">

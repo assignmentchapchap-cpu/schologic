@@ -23,7 +23,10 @@ CREATE TABLE IF NOT EXISTS public.pilot_team_members (
   tab_permissions_jsonb JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(pilot_request_id, user_id)
+  UNIQUE(pilot_request_id, user_id),
+  status TEXT DEFAULT 'invited',
+  joined_at TIMESTAMPTZ,
+  last_active_at TIMESTAMPTZ
 );
 
 -- Enable RLS for team members
@@ -108,3 +111,11 @@ USING (
     AND is_champion = true
   )
 );
+
+-- 4. Initialization
+-- Update existing members (Champions) to 'joined' status
+UPDATE public.pilot_team_members 
+SET status = 'joined', 
+    joined_at = created_at,
+    last_active_at = now()
+WHERE is_champion = true AND status = 'invited';

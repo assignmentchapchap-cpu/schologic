@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, UserPlus, Loader2 } from "lucide-react";
-import { inviteTeamMember } from "@/app/actions/pilotTeam";
+import { X, UserPlus, Loader2, Save, Edit2 } from "lucide-react";
+import { inviteTeamMember, updateMember } from "@/app/actions/pilotTeam";
 
 const TAB_KEYS = [
     { key: "scope", label: "01. Scope" },
@@ -17,13 +17,24 @@ const TAB_KEYS = [
 interface InviteTeamMemberModalProps {
     onClose: () => void;
     onSuccess: (member: any) => void;
+    initialData?: {
+        id: string;
+        profiles: {
+            first_name: string;
+            last_name: string;
+            email: string;
+        };
+        tab_permissions_jsonb: Record<string, string>;
+    } | null;
 }
 
-export function InviteTeamMemberModal({ onClose, onSuccess }: InviteTeamMemberModalProps) {
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [email, setEmail] = useState("");
+export function InviteTeamMemberModal({ onClose, onSuccess, initialData }: InviteTeamMemberModalProps) {
+    const isEditing = !!initialData;
+    const [firstName, setFirstName] = useState(initialData?.profiles?.first_name || "");
+    const [lastName, setLastName] = useState(initialData?.profiles?.last_name || "");
+    const [email, setEmail] = useState(initialData?.profiles?.email || "");
     const [permissions, setPermissions] = useState<Record<string, string>>(() => {
+        if (initialData?.tab_permissions_jsonb) return initialData.tab_permissions_jsonb;
         const defaults: Record<string, string> = {};
         TAB_KEYS.forEach(t => { defaults[t.key] = "read"; });
         return defaults;
@@ -46,26 +57,42 @@ export function InviteTeamMemberModal({ onClose, onSuccess }: InviteTeamMemberMo
         setError(null);
 
         try {
-            const res = await inviteTeamMember({
-                firstName: firstName.trim(),
-                lastName: lastName.trim(),
-                email: email.trim().toLowerCase(),
-                tabPermissions: permissions,
-            });
+            if (isEditing) {
+                const res = await updateMember(
+                    initialData.id,
+                    firstName.trim(),
+                    lastName.trim(),
+                    permissions
+                );
+                if (res?.error) throw new Error(res.error);
 
-            if (res?.error) throw new Error(res.error);
+                onSuccess({
+                    ...initialData,
+                    tab_permissions_jsonb: permissions,
+                    profiles: { ...initialData.profiles, first_name: firstName.trim(), last_name: lastName.trim() },
+                });
+            } else {
+                const res = await inviteTeamMember({
+                    firstName: firstName.trim(),
+                    lastName: lastName.trim(),
+                    email: email.trim().toLowerCase(),
+                    tabPermissions: permissions,
+                });
 
-            // Create a mock member object for immediate UI update
-            onSuccess({
-                id: crypto.randomUUID(),
-                user_id: res.userId || crypto.randomUUID(),
-                is_champion: false,
-                tab_permissions_jsonb: permissions,
-                created_at: new Date().toISOString(),
-                profiles: { first_name: firstName.trim(), last_name: lastName.trim(), email: email.trim().toLowerCase() },
-            });
+                if (res?.error) throw new Error(res.error);
+
+                // Create a mock member object for immediate UI update
+                onSuccess({
+                    id: crypto.randomUUID(),
+                    user_id: res.userId || crypto.randomUUID(),
+                    is_champion: false,
+                    tab_permissions_jsonb: permissions,
+                    created_at: new Date().toISOString(),
+                    profiles: { first_name: firstName.trim(), last_name: lastName.trim(), email: email.trim().toLowerCase() },
+                });
+            }
         } catch (err: any) {
-            setError(err.message || "Failed to invite member.");
+            setError(err.message || `Failed to ${isEditing ? 'update' : 'invite'} member.`);
         } finally {
             setIsSubmitting(false);
         }
@@ -81,8 +108,14 @@ export function InviteTeamMemberModal({ onClose, onSuccess }: InviteTeamMemberMo
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-slate-100">
                     <div className="flex items-center gap-2">
-                        <UserPlus className="w-5 h-5 text-indigo-600" />
-                        <h2 className="text-lg font-bold text-slate-900">Invite Team Member</h2>
+                        {isEditing ? (
+                            <Edit2 className="w-5 h-5 text-indigo-600" />
+                        ) : (
+                            <UserPlus className="w-5 h-5 text-indigo-600" />
+                        )}
+                        <h2 className="text-lg font-bold text-slate-900">
+                            {isEditing ? "Edit Team Member" : "Invite Team Member"}
+                        </h2>
                     </div>
                     <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                         <X className="w-5 h-5" />
@@ -124,8 +157,10 @@ export function InviteTeamMemberModal({ onClose, onSuccess }: InviteTeamMemberMo
                             onChange={e => setEmail(e.target.value)}
                             placeholder="jane.doe@university.edu"
                             required
-                            className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                            disabled={isEditing}
+                            className={`w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all ${isEditing ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`}
                         />
+                        {isEditing && <p className="text-[10px] text-slate-400 mt-1">Email cannot be changed after invitation.</p>}
                     </div>
 
                     {/* Permission Matrix */}
@@ -183,9 +218,15 @@ export function InviteTeamMemberModal({ onClose, onSuccess }: InviteTeamMemberMo
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-colors disabled:opacity-50"
                     >
                         {isSubmitting ? (
-                            <><Loader2 className="w-4 h-4 animate-spin" /> Sending Invite...</>
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                {isEditing ? "Updating..." : "Sending Invite..."}
+                            </>
                         ) : (
-                            <><UserPlus className="w-4 h-4" /> Send Invite</>
+                            <>
+                                {isEditing ? <Save className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                                {isEditing ? "Update Member" : "Send Invite"}
+                            </>
                         )}
                     </button>
                 </form>

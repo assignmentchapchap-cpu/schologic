@@ -5,10 +5,10 @@ import { usePilotForm } from "@/components/pilot/PilotFormContext";
 import {
     CheckCircle2, History, X, Save, UserPlus, User,
     Shield, Star, Trash2, ChevronDown, Plus, BarChart2,
-    Clock, Play, Check, RotateCcw
+    Clock, Play, Check, RotateCcw, AlertCircle, Edit2
 } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
-import { removeTeamMember } from "@/app/actions/pilotTeam";
+import { getTeamMembers, inviteTeamMember, removeTeamMember, updateMember, updateTaskAssignment } from "@/app/actions/pilotTeam";
 import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
 import { InviteTeamMemberModal } from "@/components/pilot/InviteTeamMemberModal";
 import { GanttChart } from "@/components/pilot/GanttChart";
@@ -87,6 +87,9 @@ interface TeamMember {
     user_id: string;
     is_champion: boolean;
     tab_permissions_jsonb: Record<string, string>;
+    status: 'invited' | 'joined';
+    joined_at: string | null;
+    last_active_at: string | null;
     created_at: string;
     profiles: { first_name: string; last_name: string; email: string } | null;
 }
@@ -102,7 +105,7 @@ interface PilotTask {
     tab: string;
     title: string;
     status: 'pending' | 'in_progress' | 'completed';
-    assigned_to?: string;
+    assignments: Record<string, "none" | "read" | "write">;
     start_date?: string;
     due_date?: string;
     is_auto: boolean;
@@ -133,6 +136,7 @@ export function TeamTasksClient({
     const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
     const [editingTitle, setEditingTitle] = useState("");
     const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+    const [editingMember, setEditingMember] = useState<any | null>(null);
     const [expandedTabs, setExpandedTabs] = useState<Set<string>>(new Set());
 
     const isChampion = membership?.is_champion === true;
@@ -173,6 +177,7 @@ export function TeamTasksClient({
             tab: act.tab,
             title: act.title,
             status: 'pending' as const,
+            assignments: {},
             is_auto: true,
             sort_order: idx,
         }));
@@ -268,7 +273,7 @@ export function TeamTasksClient({
 
     const startWorking = () => {
         const updated = tasks.map(t =>
-            t.assigned_to === currentUserId && t.status === 'pending' && !isTabCompleted(t.tab)
+            t.assignments?.[currentUserId] === 'write' && t.status === 'pending' && !isTabCompleted(t.tab)
                 ? { ...t, status: 'in_progress' as const }
                 : t
         );
@@ -276,25 +281,71 @@ export function TeamTasksClient({
         autoSaveTasks(updated, 'Started working');
     };
 
-    const updateTaskAssignee = (taskId: string, userId: string) => {
+    const updateTaskAssignee = async (taskId: string, userId: string) => {
         const task = tasks.find(t => t.id === taskId);
         if (task && isTabCompleted(task.tab)) return;
-        const updated = tasks.map(t =>
-            t.id === taskId ? { ...t, assigned_to: userId || undefined } : t
-        );
+
+        // Optimistic UI update
+        const updated = tasks.map(t => {
+            if (t.id === taskId) {
+                const newAssignments = { ...(t.assignments || {}) };
+                if (userId) {
+                    newAssignments[userId] = "write";
+                }
+                return { ...t, assignments: newAssignments };
+            }
+            return t;
+        });
+
         const assigneeName = members.find(m => m.user_id === userId);
         setValue("tasks_jsonb", updated, { shouldDirty: true });
-        autoSaveTasks(updated, `Assigned: ${task?.title || 'task'} → ${assigneeName ? getMemberName(assigneeName) : 'Unassigned'}`, task?.tab || 'team');
+
+        // Server action with reverse sync
+        try {
+            const res = await updateTaskAssignment(taskId, userId || null, task?.tab || 'team');
+            if (res.error) throw new Error(res.error);
+
+            // Auto-save the rest (changelog, etc)
+            autoSaveTasks(updated, `Assigned: ${task?.title || 'task'} → ${assigneeName ? getMemberName(assigneeName) : 'Unassigned'}`, task?.tab || 'team');
+        } catch (err: any) {
+            console.error('Task assignee update failed:', err);
+            // Revert on error if needed, but for now we'll just log
+        }
     };
 
-    const assignTabBulk = (tab: string, userId: string) => {
+    const assignTabBulk = async (tab: string, userId: string) => {
         if (isTabCompleted(tab)) return;
-        const updated = tasks.map(t =>
-            t.tab === tab ? { ...t, assigned_to: userId || undefined } : t
-        );
+        const updated = tasks.map(t => {
+            if (t.tab === tab) {
+                const newAssignments = { ...(t.assignments || {}) };
+                if (userId) {
+                    newAssignments[userId] = "write";
+                }
+                return { ...t, assignments: newAssignments };
+            }
+            return t;
+        });
+
         const assigneeName = members.find(m => m.user_id === userId);
         setValue("tasks_jsonb", updated, { shouldDirty: true });
-        autoSaveTasks(updated, `Bulk assigned → ${assigneeName ? getMemberName(assigneeName) : 'Unassigned'}`, tab);
+
+        // Server action for bulk update with sync
+        try {
+            const member = members.find(m => m.user_id === userId);
+            if (!member) return;
+
+            const res = await updateMember(
+                member.id,
+                member.profiles?.first_name || '',
+                member.profiles?.last_name || '',
+                { ...(member.tab_permissions_jsonb || {}), [tab]: 'write' }
+            );
+            if (res.error) throw new Error(res.error);
+
+            autoSaveTasks(updated, `Bulk assigned → ${assigneeName ? getMemberName(assigneeName) : 'Unassigned'}`, tab);
+        } catch (err: any) {
+            console.error('Bulk assignment failed:', err);
+        }
     };
 
     const addCustomTask = (tab: string = 'team') => {
@@ -303,6 +354,7 @@ export function TeamTasksClient({
             tab,
             title: "New task",
             status: 'pending',
+            assignments: {},
             is_auto: false,
             sort_order: tasks.length,
         };
@@ -376,10 +428,14 @@ export function TeamTasksClient({
 
     const getTabAssignee = (tab: string): string => {
         const tabTasks = tasksByTab[tab] || [];
-        const assigned = tabTasks.filter(t => t.assigned_to).map(t => t.assigned_to!);
-        if (assigned.length === 0) return '';
+        const allAssigned = tabTasks.flatMap(t =>
+            Object.entries(t.assignments || {})
+                .filter(([_, level]) => level === 'write')
+                .map(([uid]) => uid)
+        );
+        if (allAssigned.length === 0) return '';
         const counts: Record<string, number> = {};
-        assigned.forEach(a => { counts[a] = (counts[a] || 0) + 1; });
+        allAssigned.forEach(a => { counts[a] = (counts[a] || 0) + 1; });
         return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
     };
 
@@ -514,36 +570,111 @@ export function TeamTasksClient({
                                 const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
                                 return (
-                                    <div key={member.id} className="p-4 hover:bg-slate-50/50 transition-colors group">
+                                    <div key={member.id} className="p-4 hover:bg-slate-50/50 transition-colors group relative border-b border-slate-50 last:border-0">
                                         <div className="flex items-start gap-3">
+                                            {/* Avatar/Initials */}
                                             <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${member.is_champion ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}`}>
                                                 {initials || '??'}
                                             </div>
+
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-sm font-bold text-slate-900 truncate">{name}</span>
-                                                    {member.is_champion && (
-                                                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
-                                                    )}
+                                                {/* First Row: Name and Activity Monitoring */}
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-sm font-bold text-slate-900 truncate">{name}</span>
+                                                        {member.is_champion && (
+                                                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
+                                                        )}
+                                                    </div>
+
+                                                    {/* Activity Monitoring (Top Right) */}
+                                                    <div className="text-[10px] text-slate-400 font-medium whitespace-nowrap pt-0.5">
+                                                        {member.status === 'joined' ? (
+                                                            <>
+                                                                {(() => {
+                                                                    const lastActive = member.last_active_at ? new Date(member.last_active_at) : null;
+                                                                    if (!lastActive) return <span>Recently joined</span>;
+
+                                                                    const diff = Date.now() - lastActive.getTime();
+                                                                    const mins = Math.floor(diff / 60000);
+                                                                    const hours = Math.floor(mins / 60)
+                                                                    const days = Math.floor(hours / 24);
+
+                                                                    if (mins < 5) return (
+                                                                        <span className="flex items-center gap-1.5 text-emerald-500">
+                                                                            <span className="relative flex h-1.5 w-1.5">
+                                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                                                            </span>
+                                                                            Active Now
+                                                                        </span>
+                                                                    );
+                                                                    if (mins < 60) return <span>Active {mins}m ago</span>;
+                                                                    if (hours < 24) return <span>Active {hours}h ago</span>;
+                                                                    return <span>Active {days}d ago</span>;
+                                                                })()}
+                                                            </>
+                                                        ) : (
+                                                            <span>Added {new Date(member.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <p className="text-xs text-slate-500 truncate">{email}</p>
-                                                <span className={`inline-block mt-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${member.is_champion ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
-                                                    {member.is_champion ? 'Champion' : 'Member'}
-                                                </span>
+
+                                                {/* Second Row: Email */}
+                                                <p className="text-xs text-slate-500 truncate mt-0.5">{email}</p>
+
+                                                {/* Third Row: Role and Status Badge + Date/Time */}
+                                                <div className="flex items-center gap-3 mt-2.5">
+                                                    {/* Role */}
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${member.is_champion ? 'text-indigo-600' : 'text-slate-500'}`}>
+                                                        {member.is_champion ? 'Champion' : 'Member'}
+                                                    </span>
+
+                                                    {/* Status Badge Group */}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${member.status === 'joined' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                                                            }`}>
+                                                            {member.status === 'joined' ? (
+                                                                <><Check className="w-2.5 h-2.5" /> Joined</>
+                                                            ) : (
+                                                                <><Clock className="w-2.5 h-2.5" /> Invited</>
+                                                            )}
+                                                        </div>
+
+                                                        <span className="text-[10px] text-slate-400 font-medium">
+                                                            {member.status === 'joined' && member.joined_at ? (
+                                                                `${new Date(member.joined_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
+                                                            ) : (
+                                                                `${new Date(member.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
+
+                                            {/* Hover Actions */}
                                             {isChampion && !member.is_champion && (
-                                                <button
-                                                    onClick={() => handleRemoveMember(member.id)}
-                                                    disabled={removingMemberId === member.id}
-                                                    className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all shrink-0 disabled:opacity-50"
-                                                    title="Remove member"
-                                                >
-                                                    {removingMemberId === member.id ? (
-                                                        <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin block" />
-                                                    ) : (
-                                                        <Trash2 className="w-4 h-4" />
-                                                    )}
-                                                </button>
+                                                <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 bg-white/95 backdrop-blur-sm p-0.5 rounded-lg border border-slate-100 shadow-sm transition-all absolute top-2 right-2 z-10">
+                                                    <button
+                                                        onClick={() => setEditingMember(member)}
+                                                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-md transition-all"
+                                                        title="Edit permissions & details"
+                                                    >
+                                                        <Edit2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleRemoveMember(member.id)}
+                                                        disabled={removingMemberId === member.id}
+                                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-slate-50 rounded-md transition-all disabled:opacity-50"
+                                                        title="Remove member"
+                                                    >
+                                                        {removingMemberId === member.id ? (
+                                                            <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin block" />
+                                                        ) : (
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        )}
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -604,7 +735,7 @@ export function TeamTasksClient({
                         )}
 
                         {/* Start Working (My Tasks only) */}
-                        {viewMode === 'mine' && tasks.some(t => t.assigned_to === currentUserId && t.status === 'pending') && (
+                        {viewMode === 'mine' && tasks.some(t => t.assignments?.[currentUserId] === 'write' && t.status === 'pending') && (
                             <button
                                 onClick={startWorking}
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm"
@@ -687,7 +818,11 @@ export function TeamTasksClient({
                                                 {tabTasks.map(task => {
                                                     const statusCfg = STATUS_CONFIG[task.status];
                                                     const StatusIcon = statusCfg.icon;
-                                                    const taskAssignee = task.assigned_to ? members.find(m => m.user_id === task.assigned_to) : null;
+
+                                                    // Derive primary assignee: first user with 'write' access
+                                                    const primaryAssigneeUid = Object.entries(task.assignments || {})
+                                                        .find(([_, level]) => level === 'write')?.[0];
+                                                    const taskAssignee = primaryAssigneeUid ? members.find(m => m.user_id === primaryAssigneeUid) : null;
                                                     const taskAssigneeName = taskAssignee ? getMemberName(taskAssignee) : '';
 
                                                     return (
@@ -745,7 +880,7 @@ export function TeamTasksClient({
                                                             <div className="flex items-center gap-1 w-28 shrink-0">
                                                                 {isChampion ? (
                                                                     <select
-                                                                        value={task.assigned_to || ''}
+                                                                        value={primaryAssigneeUid || ''}
                                                                         onChange={e => updateTaskAssignee(task.id, e.target.value)}
                                                                         disabled={isTabCompleted(tab)}
                                                                         className={`text-[11px] font-medium bg-transparent border border-transparent rounded-lg px-1 py-0.5 outline-none w-full truncate ${isTabCompleted(tab) ? 'text-slate-400 cursor-not-allowed' : 'text-slate-600 hover:border-slate-200 focus:border-indigo-300 cursor-pointer transition-colors'
@@ -808,7 +943,10 @@ export function TeamTasksClient({
 
                     {/* My Tasks View */}
                     {viewMode === 'mine' && (() => {
-                        const myTasks = tasks.filter(t => t.assigned_to === currentUserId);
+                        const myTasks = tasks.filter(t =>
+                            t.assignments?.[currentUserId] === 'write' ||
+                            t.assignments?.[currentUserId] === 'read'
+                        );
                         const statusOrder: ('in_progress' | 'pending' | 'completed')[] = ['in_progress', 'pending', 'completed'];
                         const statusLabels = { in_progress: 'In Progress', pending: 'Pending', completed: 'Completed' };
 
@@ -880,20 +1018,26 @@ export function TeamTasksClient({
                         );
                     })()}
 
-                    {/* Completion Action (Grid view only) */}
-                    {viewMode === 'grid' && (
-                        <MarkTabCompleted tabId="team" hasWritePermission={isChampion} />
-                    )}
+                    <MarkTabCompleted tabId="team" hasWriteAccess={isChampion} />
                 </div>
             </div>
 
-            {/* Invite Modal */}
-            {showInviteModal && (
+            {/* Invitation/Edit Modal */}
+            {(showInviteModal || editingMember) && (
                 <InviteTeamMemberModal
-                    onClose={() => setShowInviteModal(false)}
-                    onSuccess={(newMember: TeamMember) => {
-                        setMembers(prev => [...prev, newMember]);
+                    initialData={editingMember}
+                    onClose={() => {
                         setShowInviteModal(false);
+                        setEditingMember(null);
+                    }}
+                    onSuccess={(updatedMember) => {
+                        if (editingMember) {
+                            setMembers(prev => prev.map(m => m.id === updatedMember.id ? updatedMember : m));
+                        } else {
+                            setMembers(prev => [...prev, updatedMember]);
+                        }
+                        setShowInviteModal(false);
+                        setEditingMember(null);
                     }}
                 />
             )}

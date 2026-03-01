@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
-import { CheckCircle2, History, Pencil, X, Save, Upload, ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { CheckCircle2, History, Pencil, X, Save, Upload, ArrowLeft, Image as ImageIcon, AlertTriangle } from "lucide-react";
 import { updatePilotData, uploadBrandingAsset } from "@/app/actions/pilotPortal";
 import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
 import { BrandingConfig, DEFAULT_BRANDING } from "@/components/pilot/branding/types";
@@ -148,10 +148,11 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
 
     // ─── Access Control ─────────────────────────────────────
 
-    const isChampion = profile?.id === pilot?.champion_uid;
+    const isChampion = profile?.id === pilot?.champion_id;
     const userTasks = watch("tasks_jsonb") || [];
-    const isAssigned = userTasks.some((t: any) => t.tab === 'branding' && t.assigned_to === profile?.id);
-    const hasWriteAccess = isChampion || isAssigned;
+    const hasTaskWrite = userTasks.some((t: any) => t.tab === 'branding' && t.assignments?.[profile?.id] === 'write');
+    const hasWriteAccess = isChampion || hasTaskWrite;
+    const isReadOnly = isCompleted || !hasWriteAccess;
 
     // ─── Update helpers ─────────────────────────────────────
 
@@ -322,7 +323,14 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 relative z-50">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Login Page Branding</h1>
-                    <p className="text-slate-500 text-sm">Customize how your institution's login page looks and feels.</p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-slate-500 text-sm">Customize how your institution's login page looks and feels.</p>
+                        {!hasWriteAccess && !isChampion && (
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded-full border border-amber-100">
+                                <AlertTriangle className="w-3 h-3" /> Read Only
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {step === 'editor' && (
@@ -452,10 +460,10 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
 
                     <div className="flex justify-end pt-6 border-t border-slate-200">
                         <button
-                            onClick={() => !isCompleted && setStep('editor')}
-                            disabled={isCompleted}
-                            title={isCompleted ? "Unmark as completed to edit" : ""}
-                            className={`font-bold py-2 px-6 rounded-lg shadow-sm transition-colors text-sm ${isCompleted ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                            onClick={() => !isReadOnly && setStep('editor')}
+                            disabled={isReadOnly}
+                            title={isReadOnly ? (isCompleted ? "Unmark as completed to edit" : "You do not have write permissions for this tab") : ""}
+                            className={`font-bold py-2 px-6 rounded-lg shadow-sm transition-colors text-sm ${isReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                                 }`}
                         >
                             Continue to Customization
@@ -480,10 +488,10 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
 
                         <div className="pt-6 mt-6 border-t border-slate-100">
                             <button
-                                onClick={() => !isCompleted && setStep('editor')}
-                                disabled={isCompleted}
-                                title={isCompleted ? "Unmark as completed to edit" : ""}
-                                className={`w-full font-bold py-3 px-8 rounded-xl shadow-sm transition-colors text-sm ${isCompleted ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                onClick={() => !isReadOnly && setStep('editor')}
+                                disabled={isReadOnly}
+                                title={isReadOnly ? (isCompleted ? "Unmark as completed to edit" : "You do not have write permissions for this tab") : ""}
+                                className={`w-full font-bold py-3 px-8 rounded-xl shadow-sm transition-colors text-sm ${isReadOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                                     }`}
                             >
                                 Continue to Customization
@@ -526,9 +534,10 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
                                     <input
                                         type="text"
                                         value={branding.subdomain}
+                                        disabled={isReadOnly}
                                         onChange={e => updateField('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                                         placeholder="your-institution"
-                                        className="flex-1 text-sm font-medium px-3 py-2 border border-slate-200 rounded-l-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                        className="flex-1 text-sm font-medium px-3 py-2 border border-slate-200 rounded-l-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:bg-slate-50 disabled:text-slate-400"
                                     />
                                     <span className="text-xs font-medium text-slate-400 bg-slate-50 border border-l-0 border-slate-200 px-2.5 py-2.5 rounded-r-lg whitespace-nowrap">.schologic.com</span>
                                 </div>
@@ -685,9 +694,7 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
                             ))}
                         </section>
 
-                        <div className="mt-8">
-                            <MarkTabCompleted tabId="branding" hasWritePermission={hasWriteAccess} />
-                        </div>
+                        <MarkTabCompleted tabId="branding" hasWriteAccess={hasWriteAccess} />
                     </div>
 
                     {/* Right Panel: Live Mock Browser */}
