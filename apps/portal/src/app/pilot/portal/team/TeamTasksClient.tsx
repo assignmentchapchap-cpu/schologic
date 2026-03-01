@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
 import { getTeamMembers, inviteTeamMember, removeTeamMember, updateMember, updateTaskAssignment } from "@/app/actions/pilotTeam";
-import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
+
 import { InviteTeamMemberModal } from "@/components/pilot/InviteTeamMemberModal";
 import { GanttChart } from "@/components/pilot/GanttChart";
 
@@ -110,6 +110,7 @@ interface PilotTask {
     due_date?: string;
     is_auto: boolean;
     sort_order: number;
+    finalized: boolean;
 }
 
 // ─── Component ───────────────────────────────────────────────
@@ -180,6 +181,7 @@ export function TeamTasksClient({
             assignments: act.tab === 'team' ? { [currentUserId]: 'write' } : {},
             is_auto: true,
             sort_order: idx,
+            finalized: false,
         }));
 
         setValue("tasks_jsonb", generated, { shouldDirty: true });
@@ -258,7 +260,7 @@ export function TeamTasksClient({
     // Status cycle — My Tasks (auto-saves immediately)
     const updateTaskStatusAndSave = (taskId: string) => {
         const task = tasks.find(t => t.id === taskId);
-        if (task && isTabCompleted(task.tab)) return;
+        if (task && (isTabCompleted(task.tab) || task.finalized)) return;
         const statusCycle: Record<string, 'pending' | 'in_progress' | 'completed'> = {
             pending: 'in_progress',
             in_progress: 'completed',
@@ -273,12 +275,26 @@ export function TeamTasksClient({
 
     const startWorking = () => {
         const updated = tasks.map(t =>
-            t.assignments?.[currentUserId] === 'write' && t.status === 'pending' && !isTabCompleted(t.tab)
+            t.assignments?.[currentUserId] === 'write' && t.status === 'pending' && !isTabCompleted(t.tab) && !t.finalized
                 ? { ...t, status: 'in_progress' as const }
                 : t
         );
-        setValue("tasks_jsonb", updated, { shouldDirty: true });
         autoSaveTasks(updated, 'Started working');
+    };
+
+    const confirmFinalStatus = async () => {
+        const myTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write');
+        if (!myTasks.every(t => t.status === 'completed')) return;
+
+        const confirmed = window.confirm("This action will finalize your current tasks and disable further changes. Are you sure you want to proceed?");
+        if (!confirmed) return;
+
+        const updated = tasks.map(t =>
+            t.assignments?.[currentUserId] === 'write' ? { ...t, finalized: true } : t
+        );
+
+        setValue("tasks_jsonb", updated, { shouldDirty: true });
+        await autoSaveTasks(updated, 'Confirmed final status');
     };
 
     const updateTaskAssignee = async (taskId: string, userId: string) => {
@@ -357,6 +373,7 @@ export function TeamTasksClient({
             assignments: {},
             is_auto: false,
             sort_order: tasks.length,
+            finalized: false,
         };
         const updated = [...tasks, newTask];
         setValue("tasks_jsonb", updated, { shouldDirty: true });
@@ -734,14 +751,39 @@ export function TeamTasksClient({
                             </button>
                         )}
 
-                        {/* Start Working (My Tasks only) */}
-                        {viewMode === 'mine' && tasks.some(t => t.assignments?.[currentUserId] === 'write' && t.status === 'pending') && (
-                            <button
-                                onClick={startWorking}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm"
-                            >
-                                <Play className="w-3 h-3 fill-white" /> Start Working
-                            </button>
+                        {/* Start Working / Finalize (My Tasks only) */}
+                        {viewMode === 'mine' && (
+                            <div className="flex items-center gap-2">
+                                {tasks.some(t => t.assignments?.[currentUserId] === 'write' && t.status === 'pending') && (
+                                    <button
+                                        onClick={startWorking}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm"
+                                    >
+                                        <Play className="w-3 h-3 fill-white" /> Start Working
+                                    </button>
+                                )}
+
+                                {(() => {
+                                    const myTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write');
+                                    const allDone = myTasks.length > 0 && myTasks.every(t => t.status === 'completed');
+                                    const anyFinalized = myTasks.some(t => t.finalized);
+
+                                    if (anyFinalized) return null;
+
+                                    return (
+                                        <button
+                                            onClick={confirmFinalStatus}
+                                            disabled={!allDone}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${allDone
+                                                ? 'text-white bg-indigo-600 border-indigo-600 hover:bg-indigo-700 shadow-sm'
+                                                : 'text-slate-400 border-slate-200 bg-slate-50 opacity-40 cursor-not-allowed'
+                                                }`}
+                                        >
+                                            <Shield className="w-3 h-3" /> Confirm Final Status
+                                        </button>
+                                    );
+                                })()}
+                            </div>
                         )}
                     </div>
 
@@ -994,22 +1036,36 @@ export function TeamTasksClient({
                                                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 px-2 py-1 rounded-md shrink-0 hidden sm:inline">
                                                             {TAB_LABELS[task.tab]}
                                                         </span>
-                                                        {/* Mark Complete / Undo */}
-                                                        {task.status === 'in_progress' && (
+                                                        {/* Mark Complete / Undo / Start */}
+                                                        {task.status === 'pending' && !task.finalized && (
                                                             <button
                                                                 onClick={() => updateTaskStatusAndSave(task.id)}
-                                                                className="flex items-center gap-1 px-3.5 py-1 text-[11px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors shrink-0"
+                                                                className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-700"
+                                                            >
+                                                                <Play className="w-3 h-3 fill-indigo-600" /> Start Working
+                                                            </button>
+                                                        )}
+                                                        {task.status === 'in_progress' && !task.finalized && (
+                                                            <button
+                                                                onClick={() => updateTaskStatusAndSave(task.id)}
+                                                                className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-md ring-1 ring-inset ring-amber-200/50 shadow-sm transition-all"
                                                             >
                                                                 <Check className="w-3 h-3" /> Mark Done
                                                             </button>
                                                         )}
-                                                        {task.status === 'completed' && (
+                                                        {task.status === 'completed' && !task.finalized && (
                                                             <button
                                                                 onClick={() => updateTaskStatusAndSave(task.id)}
-                                                                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
+                                                                className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                                                                title="Undo"
                                                             >
-                                                                <RotateCcw className="w-3 h-3" /> Undo
+                                                                <RotateCcw className="w-3 h-3" />
                                                             </button>
+                                                        )}
+                                                        {task.finalized && (
+                                                            <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold text-slate-500 ring-1 ring-inset ring-slate-200">
+                                                                <Shield className="w-2.5 h-2.5" /> Finalized
+                                                            </div>
                                                         )}
                                                     </div>
                                                 );
@@ -1021,7 +1077,7 @@ export function TeamTasksClient({
                         );
                     })()}
 
-                    <MarkTabCompleted tabId="team" hasWriteAccess={isChampion} />
+
                 </div>
             </div>
 

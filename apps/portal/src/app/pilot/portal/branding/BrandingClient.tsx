@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
 import { CheckCircle2, History, Pencil, X, Save, Upload, ArrowLeft, Image as ImageIcon, AlertTriangle } from "lucide-react";
 import { updatePilotData, uploadBrandingAsset } from "@/app/actions/pilotPortal";
-import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
+
 import { BrandingConfig, DEFAULT_BRANDING } from "@/components/pilot/branding/types";
 import { LoginTemplateSplit } from "@/components/pilot/branding/LoginTemplateSplit";
 import { LoginTemplateCentered } from "@/components/pilot/branding/LoginTemplateCentered";
@@ -694,7 +694,7 @@ export function BrandingClient({ pilot, profile }: { pilot: any; profile: any })
                             ))}
                         </section>
 
-                        <MarkTabCompleted tabId="branding" hasWriteAccess={hasWriteAccess} />
+
                     </div>
 
                     {/* Right Panel: Live Mock Browser */}

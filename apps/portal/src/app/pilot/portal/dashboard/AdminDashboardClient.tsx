@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
 import { CheckCircle2, History, Layout, BarChart, ArrowLeft, AlertTriangle } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
-import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
+
 import { MockDashboard } from "./MockDashboard";
 
 // ─── Constants ───────────────────────────────────────────────
@@ -338,7 +338,7 @@ export function AdminDashboardClient({ pilot, profile }: { pilot: any; profile: 
                             </div>
                         </section>
 
-                        <MarkTabCompleted tabId="dashboard" hasWriteAccess={hasWriteAccess} />
+
                     </div>
 
                     <div className="flex-1 lg:sticky lg:top-[140px] lg:self-start">

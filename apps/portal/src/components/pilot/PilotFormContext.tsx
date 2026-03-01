@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, ReactNode } from "react";
 import { useForm, UseFormReturn, FormProvider } from "react-hook-form";
+import { PilotAutomationObserver } from "./PilotAutomationObserver";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
@@ -151,6 +152,7 @@ export const pilotBlueprintSchema = z.object({
         due_date: z.string().optional(),
         is_auto: z.boolean().default(true),
         sort_order: z.number().default(0),
+        finalized: z.boolean().default(false),
     })).default([]),
 
     // Per-tab Edit History
@@ -216,6 +218,7 @@ export function PilotFormProvider({
     return (
         <PilotFormContext.Provider value={formMethods}>
             <FormProvider {...formMethods}>
+                <PilotAutomationObserver />
                 {children}
             </FormProvider>
         </PilotFormContext.Provider>

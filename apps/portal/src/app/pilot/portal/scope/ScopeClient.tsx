@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
 import { CheckCircle2, Home, Users, Monitor, GraduationCap, History, Pencil, X, Save, AlertTriangle } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
-import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
+
 
 export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
     const { register, watch, setValue, getValues, formState, reset } = usePilotForm();
@@ -428,7 +428,7 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                     </div>
 
                     {/* Completion Action */}
-                    <MarkTabCompleted tabId="scope" hasWriteAccess={hasWriteAccess} />
+
                 </div>
             </div>
         </div>

@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useCallback } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
 import { CheckCircle2, History, Pencil, X, Save, Plus, Trash2, ChevronDown, AlertTriangle, Filter } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
-import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
+
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -733,7 +733,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                             )}
                         </div>
 
-                        <MarkTabCompleted tabId="kpis" hasWriteAccess={hasWriteAccess} />
+
                     </div>
                 </div>
 

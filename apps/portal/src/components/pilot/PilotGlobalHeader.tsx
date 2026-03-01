@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Bell, MessageSquare, LogOut, User, ShieldCheck, ChevronDown, ClipboardList as ListTodo, Play, Check, ExternalLink } from "lucide-react";
+import { Bell, MessageSquare, LogOut, User, ShieldCheck, ChevronDown, ClipboardList as ListTodo, Play, Check, ExternalLink, Shield } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { UserIdentity } from "@/lib/identity-server";
 import { createClient } from "@schologic/database";
@@ -46,12 +46,17 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
 
     const currentUserId = identity?.id || '';
     const myTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write' && t.status !== 'completed');
+    const allMyAssignedTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write');
     const activeCount = myTasks.length;
+    const allMyTasksCompleted = allMyAssignedTasks.length > 0 && allMyAssignedTasks.every(t => t.status === 'completed');
+    const allMyTasksFinalized = allMyAssignedTasks.length > 0 && allMyAssignedTasks.every(t => t.finalized);
 
     const handleUpdateTaskStatus = async (taskId: string) => {
         setIsUpdating(taskId);
         try {
             const task = tasks.find(t => t.id === taskId);
+            if (task?.finalized) return;
+
             const statusCycle: Record<string, 'pending' | 'in_progress' | 'completed'> = {
                 pending: 'in_progress',
                 in_progress: 'completed',
@@ -83,6 +88,35 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
         } finally {
             setIsUpdating(null);
         }
+    };
+
+    const handleFinalizeTasks = async () => {
+        const myTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write');
+        if (myTasks.length === 0 || !myTasks.every(t => t.status === 'completed')) return;
+
+        const confirmed = window.confirm("This action will finalize your current tasks and disable further changes. Are you sure you want to proceed?");
+        if (!confirmed) return;
+
+        const updated = tasks.map(t =>
+            t.assignments?.[currentUserId] === 'write' ? { ...t, finalized: true } : t
+        );
+
+        setValue("tasks_jsonb", updated, { shouldDirty: true });
+
+        // 2. Append changelog
+        const currentLog = getValues("changelog_jsonb") || {};
+        const entry = {
+            time: new Date().toISOString(),
+            user: fullName,
+            action: `Confirmed final status for all tasks`
+        };
+        const logUpdate = { ...currentLog, team: [entry, ...(currentLog['team'] || [])].slice(0, 20) };
+        setValue("changelog_jsonb", logUpdate);
+
+        await updatePilotData({
+            tasks_jsonb: updated,
+            changelog_jsonb: logUpdate
+        });
     };
 
     const handleSignOut = async () => {
@@ -173,6 +207,32 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
                                             ))}
                                         </div>
                                     )}
+                                </div>
+                                <div className="p-3 bg-slate-50/50 border-t border-slate-100">
+                                    {(() => {
+                                        const allMyTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write');
+                                        const allDone = allMyTasks.length > 0 && allMyTasks.every(t => t.status === 'completed');
+                                        const anyFinalized = allMyAssignedTasks.some(t => t.finalized);
+
+                                        if (anyFinalized) return (
+                                            <div className="flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-bold text-slate-400 bg-white border border-slate-100 rounded-lg">
+                                                <Shield className="w-3 h-3" /> All Tasks Finalized
+                                            </div>
+                                        );
+
+                                        return (
+                                            <button
+                                                onClick={handleFinalizeTasks}
+                                                disabled={!allDone}
+                                                className={`w-full flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-bold rounded-lg transition-all border ${allDone
+                                                    ? 'text-white bg-indigo-600 border-indigo-600 hover:bg-indigo-700 shadow-sm'
+                                                    : 'text-slate-400 border-slate-200 bg-white opacity-40 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                <Shield className="w-3 h-3" /> Confirm Final Status
+                                            </button>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         )}

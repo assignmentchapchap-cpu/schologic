@@ -7,7 +7,7 @@ import {
     BookOpen, Users, Settings, FileText, Archive, Lock, AlertTriangle
 } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
-import { MarkTabCompleted } from "@/components/pilot/MarkTabCompleted";
+
 
 // ─── Full Permissions Matrix ────────────────────────────────
 // Mirrors: permission_matrix.md — all fields and their defaults
@@ -397,7 +397,7 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
                             </div>
                         )}
 
-                        <MarkTabCompleted tabId="settings" hasWriteAccess={hasWriteAccess} />
+
                     </div>
                 </div>
 
