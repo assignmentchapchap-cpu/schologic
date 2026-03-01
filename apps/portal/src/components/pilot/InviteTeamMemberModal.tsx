@@ -25,6 +25,7 @@ interface InviteTeamMemberModalProps {
             email: string;
         };
         tab_permissions_jsonb: Record<string, string>;
+        status?: 'invited' | 'joined';
     } | null;
 }
 
@@ -176,29 +177,43 @@ export function InviteTeamMemberModal({ onClose, onSuccess, initialData }: Invit
                             </div>
 
                             {/* Rows */}
-                            {TAB_KEYS.map(tab => (
-                                <div key={tab.key} className="grid grid-cols-[1fr_70px_70px_70px] gap-0 px-4 py-2.5 border-b last:border-b-0 border-slate-100 items-center hover:bg-slate-50/50 transition-colors">
-                                    <span className="text-xs font-medium text-slate-700">{tab.label}</span>
-                                    {['none', 'read', 'write'].map(level => (
-                                        <div key={level} className="flex justify-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => togglePermission(tab.key, level)}
-                                                className={`w-5 h-5 rounded-full border-2 transition-all ${permissions[tab.key] === level
-                                                    ? 'border-indigo-500 bg-indigo-500'
-                                                    : 'border-slate-300 hover:border-slate-400'
-                                                    }`}
-                                            >
-                                                {permissions[tab.key] === level && (
-                                                    <div className="w-full h-full flex items-center justify-center">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                                                    </div>
-                                                )}
-                                            </button>
+                            {TAB_KEYS.map(tab => {
+                                const isTeamTab = tab.key === 'team';
+                                const canWriteTeam = isTeamTab ? initialData?.status === 'joined' : true;
+
+                                return (
+                                    <div key={tab.key} className="grid grid-cols-[1fr_70px_70px_70px] gap-0 px-4 py-2.5 border-b last:border-b-0 border-slate-100 items-center hover:bg-slate-50/50 transition-colors">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-medium text-slate-700">{tab.label}</span>
+                                            {isTeamTab && !canWriteTeam && (
+                                                <span className="text-[9px] text-amber-500 font-bold leading-tight">Requires Joined status</span>
+                                            )}
                                         </div>
-                                    ))}
-                                </div>
-                            ))}
+                                        {['none', 'read', 'write'].map(level => {
+                                            const disabled = level === 'write' && !canWriteTeam;
+                                            return (
+                                                <div key={level} className="flex justify-center">
+                                                    <button
+                                                        type="button"
+                                                        disabled={disabled}
+                                                        onClick={() => togglePermission(tab.key, level)}
+                                                        className={`w-5 h-5 rounded-full border-2 transition-all ${permissions[tab.key] === level
+                                                            ? (disabled ? 'border-slate-300 bg-slate-200' : 'border-indigo-500 bg-indigo-500')
+                                                            : 'border-slate-300 hover:border-slate-400'
+                                                            } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                                                    >
+                                                        {permissions[tab.key] === level && (
+                                                            <div className="w-full h-full flex items-center justify-center">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })}
                         </div>
                         <p className="text-[10px] text-slate-400 mt-2">
                             <strong>None</strong> = tab hidden · <strong>Read</strong> = view only · <strong>Write</strong> = can edit & mark complete

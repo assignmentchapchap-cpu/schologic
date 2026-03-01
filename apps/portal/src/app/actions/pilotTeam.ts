@@ -45,6 +45,15 @@ async function syncTaskAssignments(
             newAssignments[userId] = permission as "none" | "read" | "write";
         }
 
+        // CHAMPION FALLBACK FOR TEAM TAB
+        // If this is a team task and it now has no 'write' assignee, revert to champion
+        if (task.tab === 'team') {
+            const hasWriteAssignee = Object.values(newAssignments).some(level => level === 'write');
+            if (!hasWriteAssignee && pilot.champion_id) {
+                newAssignments[pilot.champion_id] = 'write';
+            }
+        }
+
         // Remove the legacy assigned_to field if it exists
         const { assigned_to, ...taskWithoutLegacy } = task;
         return { ...taskWithoutLegacy, assignments: newAssignments };
@@ -212,6 +221,12 @@ export async function inviteTeamMember({
                 const existingUser = users?.find(u => u.email === email);
                 if (!existingUser) throw new Error('User exists but could not be found.');
 
+                // For newly invited members, 'team' tab must be read-only until they join
+                const enforcedPermissions = { ...tabPermissions };
+                if (enforcedPermissions['team'] === 'write') {
+                    enforcedPermissions['team'] = 'read';
+                }
+
                 // Add them to the team
                 const { error: memberError } = await supabase
                     .from('pilot_team_members')
@@ -219,14 +234,14 @@ export async function inviteTeamMember({
                         pilot_request_id: membership.pilot_request_id,
                         user_id: existingUser.id,
                         is_champion: false,
-                        tab_permissions_jsonb: tabPermissions,
+                        tab_permissions_jsonb: enforcedPermissions,
                         status: 'invited'
                     });
 
                 if (memberError) throw memberError;
 
                 // Sync assignments
-                await syncTaskAssignments(supabase, membership.pilot_request_id, existingUser.id, tabPermissions);
+                await syncTaskAssignments(supabase, membership.pilot_request_id, existingUser.id, enforcedPermissions);
 
                 return { success: true, userId: existingUser.id };
             }
@@ -244,6 +259,12 @@ export async function inviteTeamMember({
             role: 'instructor',
         });
 
+        // For newly invited members, 'team' tab must be read-only until they join
+        const enforcedPermissions = { ...tabPermissions };
+        if (enforcedPermissions['team'] === 'write') {
+            enforcedPermissions['team'] = 'read';
+        }
+
         // Add to pilot team
         const { error: memberError } = await supabase
             .from('pilot_team_members')
@@ -251,14 +272,14 @@ export async function inviteTeamMember({
                 pilot_request_id: membership.pilot_request_id,
                 user_id: newUserId,
                 is_champion: false,
-                tab_permissions_jsonb: tabPermissions,
+                tab_permissions_jsonb: enforcedPermissions,
                 status: 'invited'
             });
 
         if (memberError) throw memberError;
 
         // Sync assignments
-        await syncTaskAssignments(supabase, membership.pilot_request_id, newUserId, tabPermissions);
+        await syncTaskAssignments(supabase, membership.pilot_request_id, newUserId, enforcedPermissions);
 
         // Send invite email
         try {
@@ -419,11 +440,17 @@ export async function updateTaskAssignment(
                 const newAssignments = { ...(t.assignments || {}) };
                 if (userId) {
                     newAssignments[userId] = "write";
+                } else if (tab === 'team' && pilot.champion_id) {
+                    // Revert to champion if unassigned
+                    newAssignments[pilot.champion_id] = "write";
                 }
 
                 // If there was a previous write assignee and they are NOT the new one, demote them in THIS task
                 if (currentUserId && currentUserId !== userId) {
-                    newAssignments[currentUserId] = "none";
+                    // Only demote if we actually assigned to someone else or reverted to champion
+                    if (userId || (tab === 'team' && currentUserId !== pilot.champion_id)) {
+                        newAssignments[currentUserId] = "none";
+                    }
                 }
 
                 return { ...t, assignments: newAssignments };

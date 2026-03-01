@@ -140,7 +140,7 @@ export function TeamTasksClient({
     const [expandedTabs, setExpandedTabs] = useState<Set<string>>(new Set());
 
     const isChampion = membership?.is_champion === true;
-    const currentUserId = membership?.user_id || '';
+    const currentUserId = profile?.id || '';
     const tasks: PilotTask[] = watch("tasks_jsonb") || [];
     const scopeModules = watch("scope_jsonb.core_modules") || [];
     const scopeAddOns = watch("scope_jsonb.add_ons") || [];
@@ -177,7 +177,7 @@ export function TeamTasksClient({
             tab: act.tab,
             title: act.title,
             status: 'pending' as const,
-            assignments: {},
+            assignments: act.tab === 'team' ? { [currentUserId]: 'write' } : {},
             is_auto: true,
             sort_order: idx,
         }));
@@ -800,9 +800,11 @@ export function TeamTasksClient({
                                                             }`}
                                                     >
                                                         <option value="">Unassigned</option>
-                                                        {members.map(m => (
-                                                            <option key={m.user_id} value={m.user_id}>{getMemberName(m)}</option>
-                                                        ))}
+                                                        {members
+                                                            .filter(m => tab !== 'team' || m.status === 'joined')
+                                                            .map(m => (
+                                                                <option key={m.user_id} value={m.user_id}>{getMemberName(m)}</option>
+                                                            ))}
                                                     </select>
                                                 ) : (
                                                     <span className="text-xs font-medium text-slate-500 truncate w-28 block text-right">
@@ -887,9 +889,11 @@ export function TeamTasksClient({
                                                                             }`}
                                                                     >
                                                                         <option value="">Unassigned</option>
-                                                                        {members.map(m => (
-                                                                            <option key={m.user_id} value={m.user_id}>{getMemberName(m)}</option>
-                                                                        ))}
+                                                                        {members
+                                                                            .filter(m => tab !== 'team' || m.status === 'joined')
+                                                                            .map(m => (
+                                                                                <option key={m.user_id} value={m.user_id}>{getMemberName(m)}</option>
+                                                                            ))}
                                                                     </select>
                                                                 ) : (
                                                                     <span className="text-[11px] font-medium text-slate-500 truncate">
@@ -944,8 +948,7 @@ export function TeamTasksClient({
                     {/* My Tasks View */}
                     {viewMode === 'mine' && (() => {
                         const myTasks = tasks.filter(t =>
-                            t.assignments?.[currentUserId] === 'write' ||
-                            t.assignments?.[currentUserId] === 'read'
+                            t.assignments?.[currentUserId] === 'write'
                         );
                         const statusOrder: ('in_progress' | 'pending' | 'completed')[] = ['in_progress', 'pending', 'completed'];
                         const statusLabels = { in_progress: 'In Progress', pending: 'Pending', completed: 'Completed' };
