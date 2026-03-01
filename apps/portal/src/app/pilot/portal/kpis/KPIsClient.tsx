@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useRef, useCallback } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
-import { CheckCircle2, History, Pencil, X, Save, Plus, Trash2, ChevronDown, AlertTriangle, Filter } from "lucide-react";
-import { updatePilotData } from "@/app/actions/pilotPortal";
+import { Home, Users, Monitor, GraduationCap, CheckCircle2, Pencil, X, Save, Plus, Trash2, ChevronDown, AlertTriangle, Filter } from "lucide-react";
+import { usePilotAutosave } from "@/hooks/usePilotAutosave";
+import { TabHeader } from "@/components/pilot/common/TabHeader";
 
 
 // ─── Types ───────────────────────────────────────────────────
@@ -182,10 +183,6 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
 
     // ─── UI State ───────────────────────────────────────────
     const [showChangelog, setShowChangelog] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [lastSaved, setLastSaved] = useState<Date | null>(null);
-    const [error, setError] = useState<string | null>(null);
     const [expandedKpis, setExpandedKpis] = useState<Set<string>>(new Set());
     const [filterModule, setFilterModule] = useState<string>("all");
     const [filterType, setFilterType] = useState<string>("all");
@@ -195,6 +192,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
     const userTasks = watch("tasks_jsonb") || [];
     const hasTaskWrite = userTasks.some((t: any) => t.tab === 'kpis' && t.assignments?.[profile?.id] === 'write');
     const hasWriteAccess = isChampion || hasTaskWrite;
+    const isReadOnly = isCompleted || !hasWriteAccess;
 
     // ─── LOCAL STATE for instant reactivity ──────────────────
     // All KPI data lives in local state. Form context is only read on init
@@ -216,6 +214,9 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
         method: initData?.delivery?.method || "dashboard",
         frequency: initData?.delivery?.frequency || "weekly",
     }));
+
+    const saveTimeout = useRef<NodeJS.Timeout | null>(null);
+    const lastSavedDataRef = useRef<string>(JSON.stringify({ kpis: initData?.kpis || [], questions: initData?.questions || {}, delivery: initData?.delivery || { method: 'dashboard', frequency: 'weekly' } }));
 
     // Scope context (from form since scope tab owns this)
     const coreModules: string[] = watch("scope_jsonb.core_modules") || [];
@@ -285,103 +286,14 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [coreModules.join(","), addOns.join(",")]);
 
-    // ─── Changelog (granular diff) ────────────────────────────
-
-    const buildChangeDescriptions = useCallback((): string[] => {
-        const saved = getValues("kpis_jsonb");
-        const rawOldKpis = saved?.kpis || [];
-        const oldKpis: KPI[] = rawOldKpis.map((k: any) => {
-            let description = k.description || "";
-            if (!description) {
-                const tpl = KPI_TEMPLATES.find(t => t.title === k.title);
-                if (tpl) description = tpl.description;
-            }
-            return { ...k, description };
-        });
-        const oldQuestions = saved?.questions || {};
-        const oldDelivery = saved?.delivery || {};
-        const changes: string[] = [];
-
-        // Map old KPIs by id
-        const oldMap = new Map(oldKpis.map(k => [k.id, k]));
-        const newMap = new Map(kpis.map(k => [k.id, k]));
-
-        // Added KPIs
-        kpis.forEach(k => { if (!oldMap.has(k.id)) changes.push(`Added KPI "${k.title}"`); });
-        // Removed KPIs
-        oldKpis.forEach(k => { if (!newMap.has(k.id)) changes.push(`Removed KPI "${k.title}"`); });
-        // Modified KPIs
-        kpis.forEach(k => {
-            const old = oldMap.get(k.id);
-            if (!old) return;
-            if (old.title !== k.title) changes.push(`Renamed "${old.title}" → "${k.title}"`);
-            if (old.enabled !== k.enabled) changes.push(`${k.enabled ? 'Enabled' : 'Disabled'} "${k.title}"`);
-            if (old.frequency !== k.frequency) changes.push(`Changed "${k.title}" frequency to ${FREQUENCY_LABEL[k.frequency]}`);
-        });
-        // Delivery changes
-        if (oldDelivery.method !== delivery.method) changes.push(`Changed delivery method to ${delivery.method === 'dashboard' ? 'Instructor Dashboard' : 'Manual'}`);
-        if (oldDelivery.frequency !== delivery.frequency) changes.push(`Changed delivery frequency to ${FREQUENCY_LABEL[delivery.frequency] || delivery.frequency}`);
-        // Question changes (high-level)
-        kpis.forEach(k => {
-            const oldQs = (oldQuestions[k.id] || []) as Question[];
-            const newQs = questions[k.id] || [];
-            if (oldQs.length !== newQs.length) changes.push(`Updated questions for "${k.title}"`);
-            else if (JSON.stringify(oldQs) !== JSON.stringify(newQs)) changes.push(`Edited questions for "${k.title}"`);
-        });
-
-        return changes.length > 0 ? changes : ['Updated KPI settings'];
-    }, [getValues, kpis, questions, delivery]);
-
-    const appendChangelogEntries = useCallback((actions: string[]) => {
-        const currentLog: Record<string, any[]> = getValues("changelog_jsonb") || {};
-        const now = new Date().toISOString();
-        const newEntries = actions.map(action => ({ time: now, user: editorName, action }));
-        const tabEntries = currentLog['kpis'] || [];
-        const updated = { ...currentLog, kpis: [...newEntries, ...tabEntries].slice(0, 30) };
-        setValue("changelog_jsonb", updated);
-        return updated;
-    }, [getValues, setValue, editorName]);
-
-    // ─── Save (syncs local state → form context → database) ─
-
-    const handleSave = async () => {
-        setIsSaving(true);
-        setError(null);
-        try {
-            const changeDescriptions = buildChangeDescriptions();
-            const kpisPayload = { kpis, questions, delivery };
-            setValue("kpis_jsonb", kpisPayload);
-            const logUpdate = appendChangelogEntries(changeDescriptions);
-            const res = await updatePilotData({ kpis_jsonb: kpisPayload, changelog_jsonb: logUpdate });
-            if (res?.error) throw new Error(res.error);
-            setLastSaved(new Date());
-            setIsEditing(false);
-        } catch (err: any) {
-            setError(err.message || "Failed to save.");
-        } finally {
-            setIsSaving(false);
-        }
-    };
+    const { isSaving, lastSaved, error, handleManualSave, hasUnsavedChanges } = usePilotAutosave({
+        tabKey: "kpis",
+        currentValues: { kpis, questions, delivery },
+        editorName: editorName
+    });
 
     const handleCancel = () => {
-        // Revert local state to form context values
-        const saved = getValues("kpis_jsonb");
-        const rawSavedKpis = saved?.kpis || [];
-        setKpis(rawSavedKpis.map((k: any) => {
-            let description = k.description || "";
-            if (!description) {
-                const tpl = KPI_TEMPLATES.find(t => t.title === k.title);
-                if (tpl) description = tpl.description;
-            }
-            return { ...k, description };
-        }));
-        setQuestions(saved?.questions || {});
-        setDelivery({
-            method: saved?.delivery?.method || "dashboard",
-            frequency: saved?.delivery?.frequency || "weekly",
-        });
-        setIsEditing(false);
-        setError(null);
+        // No longer used in direct editing pattern, but kept for reference if needed
     };
 
     // ─── KPI mutations (all local state — instant) ──────────
@@ -408,6 +320,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
     };
 
     const addCustomKpi = (type: "automated" | "self_assessment") => {
+        if (isReadOnly) return;
         const id = crypto.randomUUID();
         const newKpi: KPI = {
             id, module: "generic", title: "New KPI", description: "",
@@ -487,62 +400,26 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
 
     return (
         <div className="animate-in slide-in-from-bottom-4 duration-500 pb-20">
-            {/* Top Page Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4 relative z-50">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Key Performance Indicators</h1>
-                    {!hasWriteAccess && !isChampion && (
-                        <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded-full border border-amber-100">
-                            <AlertTriangle className="w-3 h-3" /> Read Only
-                        </span>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setShowChangelog(!showChangelog)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold transition-colors rounded-lg ${showChangelog ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'}`}
-                    >
-                        <History className="w-4 h-4" /> History
-                    </button>
-                    {isEditing ? (
-                        <>
-                            <button
-                                onClick={handleCancel}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-lg transition-colors"
-                            >
-                                <X className="w-4 h-4" /> Cancel
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={isSaving}
-                                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors disabled:opacity-50"
-                            >
-                                {isSaving ? (
-                                    <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</>
-                                ) : (
-                                    <><Save className="w-4 h-4" /> Save KPIs</>
-                                )}
-                            </button>
-                        </>
-                    ) : (
-                        <button
-                            onClick={() => !isCompleted && hasWriteAccess && setIsEditing(true)}
-                            disabled={isCompleted || !hasWriteAccess}
-                            title={isCompleted ? "Unmark as completed to edit" : (!hasWriteAccess ? "You do not have write permissions for this tab" : "")}
-                            className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold shadow-sm rounded-lg transition-colors ${isCompleted || !hasWriteAccess ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                                }`}
-                        >
-                            <Pencil className="w-4 h-4" /> Edit KPIs
-                        </button>
-                    )}
-                </div>
-            </div>
+            <TabHeader
+                title="Key Performance Indicators"
+                description="Define how success will be measured during the pilot."
+                tabKey="kpis"
+                tabLabel="KPIs"
+                isReadOnly={isReadOnly}
+                isSaving={isSaving}
+                lastSaved={lastSaved}
+                error={error}
+                hasErrors={false} // No hard validation errors for KPIs yet
+                hasUnsavedChanges={hasUnsavedChanges}
+                onManualSave={handleManualSave}
+                showChangelog={showChangelog}
+                setShowChangelog={setShowChangelog}
+            />
 
             {/* Subtitle & Expand Row mapped to grid */}
             <div className="flex flex-col lg:flex-row gap-8 mb-6 relative z-50">
                 <div className="lg:w-1/3">
-                    <p className="text-slate-500 text-sm">Define how success will be measured during the pilot.</p>
+                    {/* Description removed as it is now in TabHeader */}
                 </div>
                 <div className="lg:w-2/3 flex justify-between items-center">
                     <div className="flex items-center gap-4">
@@ -582,73 +459,12 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                         </div>
                     </div>
 
-                    {/* Status Text */}
-                    {!isEditing && (
-                        <div className="text-xs font-medium text-slate-400">
-                            {lastSaved ? (
-                                <span className="flex items-center gap-1.5">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                    Last edited by {editorName} at {lastSaved.toLocaleTimeString()}
-                                </span>
-                            ) : (() => {
-                                const allLog = watch("changelog_jsonb") || {};
-                                const kpiEntries = (allLog['kpis'] || []).sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime());
-                                const latest = kpiEntries[0] as any;
-                                if (latest) {
-                                    return (
-                                        <span className="flex items-center gap-1.5">
-                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                            Last edited by {latest.user} at {new Date(latest.time).toLocaleTimeString()}
-                                        </span>
-                                    );
-                                }
-                                return (
-                                    <span className="flex items-center gap-1.5">
-                                        <CheckCircle2 className="w-3.5 h-3.5" /> No changes recorded
-                                    </span>
-                                );
-                            })()}
-                        </div>
-                    )}
+                    <div />
                 </div>
             </div>
 
             {error && <span className="text-xs font-bold text-red-500 block mb-2">{error}</span>}
 
-            {/* Changelog Dropdown — filtered to kpis, with tab badge */}
-            {!isEditing && showChangelog && (() => {
-                const allLog = watch("changelog_jsonb") || {};
-                const kpiEntries = (allLog['kpis'] || [])
-                    .map((e: any) => ({ ...e, tab: 'kpis' }))
-                    .sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime())
-                    .slice(0, 30);
-
-                if (kpiEntries.length === 0) return (
-                    <div className="absolute top-full mt-2 right-0 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-4 z-50 animate-in fade-in slide-in-from-top-2">
-                        <p className="text-xs text-slate-400 text-center">No edit history yet.</p>
-                    </div>
-                );
-
-                return (
-                    <div className="absolute top-full mt-2 right-0 w-80 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                        <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Edit History</h4>
-                        <div className="max-h-64 overflow-y-auto">
-                            {kpiEntries.map((log: any, idx: number) => (
-                                <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <span className="text-slate-700 text-xs font-medium truncate">{log.user}</span>
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">KPIs</span>
-                                            <span className="text-slate-400 text-[10px]">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-[11px] text-slate-500 mt-0.5 truncate">{log.action}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            })()}
 
             {/* Main content: two-column layout */}
             <div className="flex flex-col lg:flex-row gap-8">
@@ -679,58 +495,48 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
 
                         <div className="border-t border-slate-100 pt-4">
                             <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Questionnaire Delivery</h4>
-                            {isEditing ? (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-xs font-medium text-slate-600 mb-2 block">Method</label>
-                                        <div className="space-y-2">
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="delivery_method"
-                                                    checked={delivery.method === "dashboard"}
-                                                    onChange={() => setDelivery(prev => ({ ...prev, method: "dashboard" }))}
-                                                    className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
-                                                />
-                                                <span className="text-sm text-slate-700">Instructor Dashboard</span>
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="delivery_method"
-                                                    checked={delivery.method === "manual"}
-                                                    onChange={() => setDelivery(prev => ({ ...prev, method: "manual" }))}
-                                                    className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500"
-                                                />
-                                                <span className="text-sm text-slate-700">Run Internally (Manual)</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-medium text-slate-600 mb-1.5 block">Frequency</label>
-                                        <select
-                                            value={delivery.frequency}
-                                            onChange={e => setDelivery(prev => ({ ...prev, frequency: e.target.value as DeliverySettings['frequency'] }))}
-                                            className="w-full text-sm font-medium px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                                        >
-                                            {DELIVERY_FREQUENCY_OPTIONS.map(o => (
-                                                <option key={o.value} value={o.value}>{o.label}</option>
-                                            ))}
-                                        </select>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-medium text-slate-600 mb-2 block">Method</label>
+                                    <div className="space-y-2">
+                                        <label className={`flex items-center gap-2 ${!isReadOnly ? 'cursor-pointer' : ''}`}>
+                                            <input
+                                                type="radio"
+                                                name="delivery_method"
+                                                checked={delivery.method === "dashboard"}
+                                                disabled={isReadOnly}
+                                                onChange={() => setDelivery(prev => ({ ...prev, method: "dashboard" }))}
+                                                className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500 disabled:opacity-50"
+                                            />
+                                            <span className="text-sm text-slate-700">Instructor Dashboard</span>
+                                        </label>
+                                        <label className={`flex items-center gap-2 ${!isReadOnly ? 'cursor-pointer' : ''}`}>
+                                            <input
+                                                type="radio"
+                                                name="delivery_method"
+                                                checked={delivery.method === "manual"}
+                                                disabled={isReadOnly}
+                                                onChange={() => setDelivery(prev => ({ ...prev, method: "manual" }))}
+                                                className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500 disabled:opacity-50"
+                                            />
+                                            <span className="text-sm text-slate-700">Run Internally (Manual)</span>
+                                        </label>
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Method</span>
-                                        <span className="font-bold text-slate-900">{delivery.method === "dashboard" ? "Instructor Dashboard" : "Manual"}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Frequency</span>
-                                        <span className="font-bold text-slate-900 capitalize">{delivery.frequency.replace('_', ' ')}</span>
-                                    </div>
+                                <div>
+                                    <label className="text-xs font-medium text-slate-600 mb-1.5 block">Frequency</label>
+                                    <select
+                                        value={delivery.frequency}
+                                        disabled={isReadOnly}
+                                        onChange={e => setDelivery(prev => ({ ...prev, frequency: e.target.value as DeliverySettings['frequency'] }))}
+                                        className="w-full text-sm font-medium px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:bg-slate-50 disabled:text-slate-500"
+                                    >
+                                        {DELIVERY_FREQUENCY_OPTIONS.map(o => (
+                                            <option key={o.value} value={o.value}>{o.label}</option>
+                                        ))}
+                                    </select>
                                 </div>
-                            )}
+                            </div>
                         </div>
 
 
@@ -756,7 +562,10 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                         return (
                             <div key={kpi.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                                 <div className="flex items-center px-5 py-4 gap-4 transition-colors">
-                                    {isEditing && (
+                                    {isReadOnly && (
+                                        <CheckCircle2 className={`w-5 h-5 shrink-0 ${kpi.enabled ? 'text-indigo-600' : 'text-slate-200'}`} />
+                                    )}
+                                    {!isReadOnly && (
                                         <button
                                             onClick={() => toggleKpi(kpi.id)}
                                             className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${kpi.enabled ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'}`}
@@ -765,20 +574,20 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                                         </button>
                                     )}
                                     <div className="flex-1 min-w-0">
-                                        {isEditing ? (
+                                        {!isReadOnly ? (
                                             <div className="space-y-1">
                                                 <input
                                                     type="text"
                                                     value={kpi.title}
                                                     onChange={e => updateKpiTitle(kpi.id, e.target.value)}
-                                                    className="text-base font-bold text-slate-900 px-2 py-1 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none w-full leading-snug"
+                                                    className="text-base font-bold text-slate-900 px-2 py-1 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none w-full leading-snug"
                                                 />
                                                 <input
                                                     type="text"
                                                     value={kpi.description}
                                                     placeholder="Description"
                                                     onChange={e => updateKpiDescription(kpi.id, e.target.value)}
-                                                    className="text-[11px] text-slate-500 px-2 py-0.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/10 outline-none w-full"
+                                                    className="text-[11px] text-slate-500 px-2 py-0.5 border border-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none w-full"
                                                 />
                                             </div>
                                         ) : (
@@ -794,7 +603,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded shrink-0">
                                         {MODULE_LABELS[kpi.module] || kpi.module}
                                     </span>
-                                    {isEditing ? (
+                                    {!isReadOnly ? (
                                         <select
                                             value={kpi.frequency}
                                             onChange={e => updateKpiFrequency(kpi.id, e.target.value as KPI['frequency'])}
@@ -810,7 +619,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                                         </span>
                                     )}
                                     <div className="flex items-center gap-1 shrink-0 w-8 justify-end">
-                                        {isEditing && !kpi.is_auto && (
+                                        {!isReadOnly && !kpi.is_auto && (
                                             <button onClick={() => deleteKpi(kpi.id)} className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
@@ -828,7 +637,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                                         {kpiQuestions.map((q, idx) => (
                                             <div key={q.id} className="flex items-start gap-2">
                                                 <span className="text-xs font-bold text-slate-400 mt-2 shrink-0 w-5 text-right">{idx + 1}.</span>
-                                                {isEditing ? (
+                                                {!isReadOnly ? (
                                                     <>
                                                         <input type="text" value={q.text} onChange={e => updateQuestionText(kpi.id, q.id, e.target.value)}
                                                             className="flex-1 text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white" />
@@ -843,7 +652,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                                                 )}
                                             </div>
                                         ))}
-                                        {isEditing && kpiQuestions.length < 5 && (
+                                        {!isReadOnly && kpiQuestions.length < 5 && (
                                             <button onClick={() => addQuestion(kpi.id)} className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 mt-2 ml-7">
                                                 <Plus className="w-3.5 h-3.5" /> Add Question
                                             </button>
@@ -855,7 +664,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                     })}
 
                     {/* Add Custom KPI */}
-                    {isEditing && (
+                    {!isReadOnly && (
                         <div className="flex items-center gap-3 pt-2">
                             <button onClick={() => addCustomKpi("automated")}
                                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors">
@@ -887,7 +696,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                                         return (
                                             <div key={kpi.id} className={`border rounded-xl shadow-sm overflow-hidden opacity-50 ${moduleRemoved ? 'border-amber-300 bg-amber-50/30' : 'bg-white border-slate-200'}`}>
                                                 <div className="flex items-center px-5 py-3 gap-4">
-                                                    {isEditing && (
+                                                    {!isReadOnly && (
                                                         <button
                                                             onClick={() => toggleKpi(kpi.id)}
                                                             className="w-5 h-5 rounded-md border-2 border-slate-300 bg-white flex items-center justify-center shrink-0 transition-colors"
@@ -911,7 +720,7 @@ export function KPIsClient({ pilot, profile }: { pilot: any; profile: any }) {
                                                     <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider shrink-0 w-20 text-right">
                                                         {FREQUENCY_LABEL[kpi.frequency] || kpi.frequency}
                                                     </span>
-                                                    {isEditing && !kpi.is_auto && (
+                                                    {!isReadOnly && !kpi.is_auto && (
                                                         <button onClick={() => deleteKpi(kpi.id)} className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0">
                                                             <Trash2 className="w-3.5 h-3.5" />
                                                         </button>

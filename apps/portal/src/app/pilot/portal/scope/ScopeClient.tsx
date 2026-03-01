@@ -1,19 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
-import { CheckCircle2, Home, Users, Monitor, GraduationCap, History, Pencil, X, Save, AlertTriangle } from "lucide-react";
-import { updatePilotData } from "@/app/actions/pilotPortal";
+import { Home, Users, Monitor, GraduationCap } from "lucide-react";
+import { usePilotAutosave } from "@/hooks/usePilotAutosave";
+import { TabHeader } from "@/components/pilot/common/TabHeader";
 
 
 export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
-    const { register, watch, setValue, getValues, formState, reset } = usePilotForm();
+    const { watch, setValue, getValues } = usePilotForm();
     const [showChangelog, setShowChangelog] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [lastSaved, setLastSaved] = useState<Date | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [deptText, setDeptText] = useState(() => (getValues("scope_jsonb.target_departments") || []).join(", "));
+
     const isCompleted = (watch("completed_tabs_jsonb") || []).includes("scope");
     const isChampion = profile?.id === pilot?.champion_id;
     const userTasks = watch("tasks_jsonb") || [];
@@ -21,23 +18,30 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
     const hasWriteAccess = isChampion || hasTaskWrite;
     const isReadOnly = isCompleted || !hasWriteAccess;
 
-    // Watch current form state for modules and constraints
-    const coreModules = watch("scope_jsonb.core_modules") || [];
-    const addOns = watch("scope_jsonb.add_ons") || [];
-    const pilotWeeks = watch("scope_jsonb.pilot_period_weeks") || 4;
-    const maxInstructors = watch("scope_jsonb.max_instructors") || 5;
-    const maxStudents = watch("scope_jsonb.max_students") || 200;
+    // ─── LOCAL STATE for Responsiveness ────────────────────
+    const [scopeConfig, setScopeConfig] = useState(() => {
+        const saved = getValues("scope_jsonb") || {
+            core_modules: [],
+            add_ons: [],
+            pilot_period_weeks: 4,
+            max_instructors: 5,
+            max_students: 200,
+            target_departments: []
+        };
+        return saved;
+    });
 
-    // Real-time Inline Validation
+    const [deptText, setDeptText] = useState(() => (scopeConfig.target_departments || []).join(", "));
+
+    // ─── Real-time Validation ──────────────────────────────
     const validationErrors = {
-        coreModules: coreModules.length === 0 ? "Select at least 1 Core Foundation module." : null,
-        addOns: addOns.length === 0 ? "Select at least 1 Value Accelerator." : null,
-        pilotWeeks: (pilotWeeks > 4 || pilotWeeks < 1) ? "Period must be 1 to 4 weeks." : null,
-        maxInstructors: (maxInstructors > 5 || maxInstructors < 1) ? "Instructors must be 1 to 5." : null,
-        maxStudents: (maxStudents > 200 || maxStudents < 20) ? "Students must be 20 to 200." : null,
+        coreModules: scopeConfig.core_modules.length === 0 ? "Select at least 1 Core Foundation module." : null,
+        addOns: scopeConfig.add_ons.length === 0 ? "Select at least 1 Value Accelerator." : null,
+        pilotWeeks: (scopeConfig.pilot_period_weeks > 4 || scopeConfig.pilot_period_weeks < 1) ? "Period must be 1 to 4 weeks." : null,
+        maxInstructors: (scopeConfig.max_instructors > 5 || scopeConfig.max_instructors < 1) ? "Instructors must be 1 to 5." : null,
+        maxStudents: (scopeConfig.max_students > 200 || scopeConfig.max_students < 20) ? "Students must be 20 to 200." : null,
     };
     const hasErrors = Object.values(validationErrors).some(err => err !== null);
-
 
     let EditorName = 'Unknown Member';
     if (profile) {
@@ -48,55 +52,28 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
         }
     }
 
-    const handleManualSave = async () => {
-        setIsSaving(true);
-        setError(null);
-        try {
-            const data = getValues();
-            const scope = data.scope_jsonb;
+    const { isSaving, lastSaved, error, handleManualSave, hasUnsavedChanges } = usePilotAutosave({
+        tabKey: "scope",
+        currentValues: scopeConfig,
+        validationErrors,
+        editorName: EditorName
+    });
 
-            // Core Validations
-            if (!scope.core_modules || scope.core_modules.length === 0) {
-                throw new Error("You must select at least one Core Foundation module.");
-            }
-            if (!scope.add_ons || scope.add_ons.length === 0) {
-                throw new Error("You must select at least one Value Accelerator.");
-            }
-            if (scope.pilot_period_weeks > 4) {
-                throw new Error("Pilot period cannot exceed 4 weeks.");
-            }
-            if (scope.max_instructors < 1 || scope.max_instructors > 5) {
-                throw new Error("Max Instructors must be between 1 and 5.");
-            }
-            if (scope.max_students < 20 || scope.max_students > 200) {
-                throw new Error("Max Students must be between 20 and 200.");
-            }
-
-            // Append to persistent changelog
-            const currentLog = getValues("changelog_jsonb") || {};
-            const entry = { time: new Date().toISOString(), user: EditorName, action: 'Saved scope changes' };
-            const scopeEntries = currentLog['scope'] || [];
-            const updatedLog = { ...currentLog, scope: [entry, ...scopeEntries].slice(0, 20) };
-            setValue("changelog_jsonb", updatedLog);
-
-            const res = await updatePilotData({ scope_jsonb: scope, changelog_jsonb: updatedLog });
-            if (res?.error) throw new Error(res.error);
-
-            setLastSaved(new Date());
-            setIsEditing(false);
-        } catch (err: any) {
-            console.error("Save error:", err);
-            setError(err.message || "Failed to save.");
-        } finally {
-            setIsSaving(false);
-        }
+    // ─── Update Helpers ─────────────────────────────────────
+    const updateField = (key: string, value: any) => {
+        if (isReadOnly) return;
+        setScopeConfig((prev: any) => ({ ...prev, [key]: value }));
     };
 
-    const handleCancel = () => {
-        reset(); // Revert any unsaved changes
-        setDeptText((getValues("scope_jsonb.target_departments") || []).join(", ")); // Revert input string
-        setIsEditing(false);
-        setError(null);
+    const toggleModule = (collection: 'core_modules' | 'add_ons', moduleId: string) => {
+        if (isReadOnly) return;
+        setScopeConfig((prev: any) => {
+            const current = prev[collection] || [];
+            if (current.includes(moduleId)) {
+                return { ...prev, [collection]: current.filter((m: string) => m !== moduleId) };
+            }
+            return { ...prev, [collection]: [...current, moduleId] };
+        });
     };
 
     const CORE_OPTIONS = [
@@ -112,137 +89,22 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
 
     return (
         <div className="animate-in slide-in-from-bottom-4 duration-500 pb-20">
-            {/* Top Page Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 relative z-50">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Pilot Blueprint: Scope</h1>
-                    <div className="flex items-center gap-2">
-                        <p className="text-slate-500 text-sm">Define what modules will be tested and constraints on the deployment.</p>
-                        {!hasWriteAccess && !isChampion && (
-                            <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded-full border border-amber-100">
-                                <AlertTriangle className="w-3 h-3" /> Read Only
-                            </span>
-                        )}
-                    </div>
-                </div>
+            <TabHeader
+                title="Pilot Blueprint: Scope"
+                description="Define what modules will be tested and constraints on the deployment."
+                tabKey="scope"
+                tabLabel="Scope"
+                isReadOnly={isReadOnly}
+                isSaving={isSaving}
+                lastSaved={lastSaved}
+                error={error}
+                hasErrors={hasErrors}
+                hasUnsavedChanges={hasUnsavedChanges}
+                onManualSave={handleManualSave}
+                showChangelog={showChangelog}
+                setShowChangelog={setShowChangelog}
+            />
 
-                {/* Action Buttons - Top right */}
-                <div className="flex flex-col items-end gap-3 relative z-50">
-                    <div className="flex items-center gap-2">
-                        {isEditing ? (
-                            <>
-                                <button
-                                    onClick={handleCancel}
-                                    disabled={isSaving}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                                >
-                                    <X className="w-4 h-4" /> Cancel
-                                </button>
-                                <button
-                                    onClick={handleManualSave}
-                                    disabled={isSaving || hasErrors}
-                                    className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors disabled:opacity-50"
-                                >
-                                    {isSaving ? (
-                                        <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</>
-                                    ) : (
-                                        <><Save className="w-4 h-4" /> Save Changes</>
-                                    )}
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button
-                                    onClick={() => setShowChangelog(!showChangelog)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold transition-colors rounded-lg ${showChangelog ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'}`}
-                                >
-                                    <History className="w-4 h-4" /> History
-                                </button>
-                                <button
-                                    onClick={() => !isCompleted && hasWriteAccess && setIsEditing(true)}
-                                    disabled={isCompleted || !hasWriteAccess}
-                                    title={isCompleted ? "Unmark as completed to edit" : (!hasWriteAccess ? "You do not have write permissions for this tab" : "")}
-                                    className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold shadow-sm rounded-lg transition-colors ${isCompleted || !hasWriteAccess ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                                        }`}
-                                >
-                                    <Pencil className="w-4 h-4" /> Edit Scope
-                                </button>
-                            </>
-                        )}
-                    </div>
-
-                    {/* Status Text under buttons */}
-                    {!isEditing && (
-                        <div className="text-xs font-medium text-slate-400">
-                            {lastSaved ? (
-                                <span className="flex items-center gap-1.5">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                    Last edited by {EditorName} at {lastSaved.toLocaleTimeString()}
-                                </span>
-                            ) : (() => {
-                                // Show most recent entry from persistent changelog for this tab
-                                const allLog = watch("changelog_jsonb") || {};
-                                const scopeEntries = (allLog['scope'] || []).sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime());
-                                const latest = scopeEntries[0] as any;
-                                if (latest) {
-                                    return (
-                                        <span className="flex items-center gap-1.5">
-                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                            Last edited by {latest.user} at {new Date(latest.time).toLocaleTimeString()}
-                                        </span>
-                                    );
-                                }
-                                return (
-                                    <span className="flex items-center gap-1.5">
-                                        <CheckCircle2 className="w-3.5 h-3.5" /> No changes recorded
-                                    </span>
-                                );
-                            })()}
-                        </div>
-                    )}
-
-                    {error && <span className="text-xs font-bold text-red-500">{error}</span>}
-
-                    {/* Changelog Dropdown */}
-                    {!isEditing && showChangelog && (() => {
-                        const TAB_LABELS: Record<string, string> = {
-                            scope: 'Scope', team: 'Team', kpis: 'KPIs', branding: 'Branding',
-                            settings: 'Settings', dashboard: 'Dashboard', preview: 'Preview',
-                        };
-                        const allLog = watch("changelog_jsonb") || {};
-                        const scopeEntries = (allLog['scope'] || [])
-                            .map((e: any) => ({ ...e, tab: 'scope' }))
-                            .sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime())
-                            .slice(0, 30);
-
-                        if (scopeEntries.length === 0) return (
-                            <div className="absolute top-full mt-2 right-0 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-4 z-50 animate-in fade-in slide-in-from-top-2">
-                                <p className="text-xs text-slate-400 text-center">No edit history yet.</p>
-                            </div>
-                        );
-
-                        return (
-                            <div className="absolute top-full mt-2 right-0 w-80 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                                <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Edit History</h4>
-                                <div className="max-h-64 overflow-y-auto">
-                                    {scopeEntries.map((log: any, idx: number) => (
-                                        <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className="text-slate-700 text-xs font-medium truncate">{log.user}</span>
-                                                <div className="flex items-center gap-1.5 shrink-0">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">{TAB_LABELS[log.tab] || log.tab}</span>
-                                                    <span className="text-slate-400 text-[10px]">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                </div>
-                                            </div>
-                                            <p className="text-[11px] text-slate-500 mt-0.5 truncate">{log.action}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })()}
-                </div>
-            </div>
 
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Left Column: Context / Summary */}
@@ -281,22 +143,21 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
 
                         <div className="grid md:grid-cols-2 gap-6">
                             {/* Core Foundations */}
-                            <div className={`bg-white rounded-xl border p-5 shadow-sm space-y-4 transition-colors ${isEditing && validationErrors.coreModules ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}>
+                            <div className={`bg-white rounded-xl border p-5 shadow-sm space-y-4 transition-colors ${validationErrors.coreModules ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}>
                                 <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-widest flex items-center justify-between">
                                     <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500" /> Core Foundations</span>
-                                    {isEditing && validationErrors.coreModules && <span className="text-xs text-red-500 normal-case">{validationErrors.coreModules}</span>}
+                                    {validationErrors.coreModules && <span className="text-xs text-red-500 normal-case">{validationErrors.coreModules}</span>}
                                 </h3>
                                 <div className="space-y-3">
                                     {CORE_OPTIONS.map(opt => {
-                                        const active = coreModules.includes(opt.id);
+                                        const active = (scopeConfig.core_modules || []).includes(opt.id);
                                         return (
-                                            <label key={opt.id} className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${isEditing ? 'cursor-pointer hover:border-slate-300' : 'pointer-events-none'} ${active ? (isEditing ? 'bg-indigo-50 border-indigo-300' : 'bg-indigo-50 border-indigo-500 shadow-sm ring-1 ring-indigo-500') : (isEditing ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-200 opacity-60 grayscale')}`}>
+                                            <label key={opt.id} className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${!isReadOnly ? 'cursor-pointer hover:border-slate-300' : 'pointer-events-none'} ${active ? 'bg-indigo-50 border-indigo-500 shadow-sm ring-1 ring-indigo-500' : 'bg-white border-slate-200'} ${isReadOnly && !active ? 'opacity-60 grayscale' : ''}`}>
                                                 <input
                                                     type="checkbox"
-                                                    tabIndex={isEditing && !isReadOnly ? 0 : -1}
-                                                    value={opt.id}
-                                                    disabled={!isEditing || isReadOnly}
-                                                    {...register("scope_jsonb.core_modules")}
+                                                    checked={active}
+                                                    onChange={() => toggleModule('core_modules', opt.id)}
+                                                    disabled={isReadOnly}
                                                     className="mt-1 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 disabled:opacity-50"
                                                 />
                                                 <div>
@@ -310,21 +171,21 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                             </div>
 
                             {/* Value Accelerators */}
-                            <div className={`bg-white rounded-xl border p-5 shadow-sm space-y-4 transition-colors ${isEditing && validationErrors.addOns ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}>
+                            <div className={`bg-white rounded-xl border p-5 shadow-sm space-y-4 transition-colors ${validationErrors.addOns ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}>
                                 <h3 className="text-sm font-bold text-amber-600 uppercase tracking-widest flex items-center justify-between">
                                     <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500" /> Value Accelerators</span>
-                                    {isEditing && validationErrors.addOns && <span className="text-xs text-red-500 normal-case">{validationErrors.addOns}</span>}
+                                    {validationErrors.addOns && <span className="text-xs text-red-500 normal-case">{validationErrors.addOns}</span>}
                                 </h3>
                                 <div className="space-y-3">
                                     {ADDON_OPTIONS.map(opt => {
-                                        const active = addOns.includes(opt.id);
+                                        const active = (scopeConfig.add_ons || []).includes(opt.id);
                                         return (
-                                            <label key={opt.id} className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${isEditing ? 'cursor-pointer hover:border-slate-300' : 'pointer-events-none'} ${active ? (isEditing ? 'bg-amber-50 border-amber-300' : 'bg-amber-50 border-amber-500 shadow-sm ring-1 ring-amber-500') : (isEditing ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-200 opacity-60 grayscale')}`}>
+                                            <label key={opt.id} className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${!isReadOnly ? 'cursor-pointer hover:border-slate-300' : 'pointer-events-none'} ${active ? 'bg-amber-50 border-amber-500 shadow-sm ring-1 ring-amber-500' : 'bg-white border-slate-200'} ${isReadOnly && !active ? 'opacity-60 grayscale' : ''}`}>
                                                 <input
                                                     type="checkbox"
-                                                    tabIndex={isEditing ? 0 : -1}
-                                                    value={opt.id}
-                                                    {...register("scope_jsonb.add_ons")}
+                                                    checked={active}
+                                                    onChange={() => toggleModule('add_ons', opt.id)}
+                                                    disabled={isReadOnly}
                                                     className="mt-1 w-4 h-4 rounded text-amber-500 focus:ring-amber-500 border-slate-300"
                                                 />
                                                 <div>
@@ -339,7 +200,7 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                         </div>
                     </div>
 
-                    {/* 3. Constraints & Limits */}
+                    {/* 3. Constraints & Logistics */}
                     <div className="space-y-4">
                         <div>
                             <h2 className="text-lg font-bold text-slate-900">Constraints & Logistics</h2>
@@ -354,13 +215,14 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                                     <input
                                         type="number"
                                         min={1} max={4}
-                                        disabled={!isEditing}
-                                        {...register("scope_jsonb.pilot_period_weeks", { valueAsNumber: true })}
-                                        className={`w-full pl-4 pr-12 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium disabled:bg-slate-50 disabled:text-slate-900 disabled:opacity-100 ${isEditing && validationErrors.pilotWeeks ? 'border-red-400 text-red-900 bg-red-50/10' : 'border-slate-200'}`}
+                                        value={scopeConfig.pilot_period_weeks}
+                                        disabled={isReadOnly}
+                                        onChange={(e) => updateField('pilot_period_weeks', parseInt(e.target.value) || 0)}
+                                        className={`w-full pl-4 pr-12 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium disabled:bg-slate-50 disabled:text-slate-900 disabled:opacity-100 ${validationErrors.pilotWeeks ? 'border-red-400 text-red-900 bg-red-50/10' : 'border-slate-200'}`}
                                     />
-                                    <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold ${isEditing && validationErrors.pilotWeeks ? 'text-red-400' : 'text-slate-400'}`}>WKS</span>
+                                    <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold ${validationErrors.pilotWeeks ? 'text-red-400' : 'text-slate-400'}`}>WKS</span>
                                 </div>
-                                {isEditing && validationErrors.pilotWeeks ? (
+                                {validationErrors.pilotWeeks ? (
                                     <p className="text-xs font-bold text-red-500 mt-2">{validationErrors.pilotWeeks}</p>
                                 ) : (
                                     <p className="text-xs text-slate-500 mt-2">Standard pilots run 1 to 4 weeks.</p>
@@ -374,13 +236,14 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                                     <input
                                         type="number"
                                         min={1} max={5}
-                                        disabled={!isEditing}
-                                        {...register("scope_jsonb.max_instructors", { valueAsNumber: true })}
-                                        className={`w-full pl-4 pr-12 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium disabled:bg-slate-50 disabled:text-slate-900 disabled:opacity-100 ${isEditing && validationErrors.maxInstructors ? 'border-red-400 text-red-900 bg-red-50/10' : 'border-slate-200'}`}
+                                        value={scopeConfig.max_instructors}
+                                        disabled={isReadOnly}
+                                        onChange={(e) => updateField('max_instructors', parseInt(e.target.value) || 0)}
+                                        className={`w-full pl-4 pr-12 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium disabled:bg-slate-50 disabled:text-slate-900 disabled:opacity-100 ${validationErrors.maxInstructors ? 'border-red-400 text-red-900 bg-red-50/10' : 'border-slate-200'}`}
                                     />
-                                    <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold ${isEditing && validationErrors.maxInstructors ? 'text-red-400' : 'text-slate-400'}`}>SEATS</span>
+                                    <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold ${validationErrors.maxInstructors ? 'text-red-400' : 'text-slate-400'}`}>SEATS</span>
                                 </div>
-                                {isEditing && validationErrors.maxInstructors ? (
+                                {validationErrors.maxInstructors ? (
                                     <p className="text-xs font-bold text-red-500 mt-2">{validationErrors.maxInstructors}</p>
                                 ) : (
                                     <p className="text-xs text-slate-500 mt-2">Limit the number of staff actively testing the platform.</p>
@@ -394,13 +257,14 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                                     <input
                                         type="number"
                                         min={20} max={200} step={10}
-                                        disabled={!isEditing}
-                                        {...register("scope_jsonb.max_students", { valueAsNumber: true })}
-                                        className={`w-full pl-4 pr-12 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium disabled:bg-slate-50 disabled:text-slate-900 disabled:opacity-100 ${isEditing && validationErrors.maxStudents ? 'border-red-400 text-red-900 bg-red-50/10' : 'border-slate-200'}`}
+                                        value={scopeConfig.max_students}
+                                        disabled={isReadOnly}
+                                        onChange={(e) => updateField('max_students', parseInt(e.target.value) || 0)}
+                                        className={`w-full pl-4 pr-12 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium disabled:bg-slate-50 disabled:text-slate-900 disabled:opacity-100 ${validationErrors.maxStudents ? 'border-red-400 text-red-900 bg-red-50/10' : 'border-slate-200'}`}
                                     />
-                                    <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold ${isEditing && validationErrors.maxStudents ? 'text-red-400' : 'text-slate-400'}`}>SEATS</span>
+                                    <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold ${validationErrors.maxStudents ? 'text-red-400' : 'text-slate-400'}`}>SEATS</span>
                                 </div>
-                                {isEditing && validationErrors.maxStudents ? (
+                                {validationErrors.maxStudents ? (
                                     <p className="text-xs font-bold text-red-500 mt-2">{validationErrors.maxStudents}</p>
                                 ) : (
                                     <p className="text-xs text-slate-500 mt-2">Maximum test student capability across all sandbox courses.</p>
@@ -416,11 +280,11 @@ export function ScopeClient({ pilot, profile }: { pilot: any, profile: any }) {
                             type="text"
                             placeholder="e.g. Computer Science, Business School, Nursing..."
                             value={deptText}
-                            disabled={!isEditing}
+                            disabled={isReadOnly}
                             onChange={(e) => {
                                 setDeptText(e.target.value);
                                 const depts = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                                setValue("scope_jsonb.target_departments", depts, { shouldDirty: true });
+                                updateField('target_departments', depts);
                             }}
                             className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium disabled:bg-slate-50 disabled:text-slate-900 disabled:opacity-100"
                         />

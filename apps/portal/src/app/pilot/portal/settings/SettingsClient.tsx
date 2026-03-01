@@ -3,10 +3,11 @@
 import { useState, useCallback, useMemo } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
 import {
-    CheckCircle2, History, Save, ChevronDown, RotateCcw,
-    BookOpen, Users, Settings, FileText, Archive, Lock, AlertTriangle
+    CheckCircle2, Save, ChevronDown, RotateCcw,
+    BookOpen, Users, Settings, FileText, Archive, AlertTriangle
 } from "lucide-react";
-import { updatePilotData } from "@/app/actions/pilotPortal";
+import { usePilotAutosave } from "@/hooks/usePilotAutosave";
+import { TabHeader } from "@/components/pilot/common/TabHeader";
 
 
 // ─── Full Permissions Matrix ────────────────────────────────
@@ -80,9 +81,6 @@ const PERMISSION_GROUPS = [
 
 export function SettingsClient({ pilot, profile }: { pilot: any; profile: any }) {
     const { watch, setValue, getValues } = usePilotForm();
-    const [isSaving, setIsSaving] = useState(false);
-    const [lastSaved, setLastSaved] = useState<Date | null>(null);
-    const [error, setError] = useState<string | null>(null);
     const [showChangelog, setShowChangelog] = useState(false);
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
@@ -95,10 +93,7 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
     const canEdit = hasWriteAccess && !isCompleted;
 
     // ─── Data & Scope ────────────────────────────────────────
-    const permissions = watch("permissions_jsonb") || {};
-    const p = permissions as Record<string, any>;
-    const communicationRules = permissions.communication_rules || "standard";
-    const aiOverride = permissions.ai_assessment_override || false;
+    // Data dependencies
 
     // Scope dependencies
     const scopeData = watch("scope_jsonb") || {};
@@ -125,42 +120,32 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
         editorName = profile.email.split('@')[0];
     }
 
-    // ─── Save & Changelog ────────────────────────────────────
+    const [permissions, setPermissions] = useState(() => {
+        const saved = getValues("permissions_jsonb") || {
+            manage_classes: true, class_create: true, class_edit: true, class_delete: false,
+            manage_assignments: true, manage_resources: true,
+            manage_practicums: true, practicum_create: true, practicum_edit: true,
+            manage_logs: true, manage_supervisors: true,
+            allow_content_upload: true, library_upload: true, create_manual_assets: true,
+            library_edit: true, library_delete: false, distribute_content: true,
+            manage_students: true, view_roster: true, remove_students: false, message_students: true,
+            ai_assessment_override: true, communication_rules: "standard" as const
+        };
+        return saved;
+    });
 
-    const appendChangelogEntry = useCallback((action: string) => {
-        const currentLog: Record<string, any[]> = getValues("changelog_jsonb") || {};
-        const entry = { time: new Date().toISOString(), user: editorName, action };
-        const updated = { ...currentLog, settings: [entry, ...(currentLog['settings'] || [])].slice(0, 30) };
-        setValue("changelog_jsonb", updated);
-        return updated;
-    }, [getValues, setValue, editorName]);
+    const p = permissions as Record<string, any>;
+    const communicationRules = permissions.communication_rules || "standard";
+    const aiOverride = permissions.ai_assessment_override || false;
 
-    const handleSave = useCallback(async () => {
-        setIsSaving(true); setError(null);
-        try {
-            const currentPerms = getValues("permissions_jsonb");
-            const logUpdate = appendChangelogEntry('Updated permissions manually');
-            const res = await updatePilotData({ permissions_jsonb: currentPerms, changelog_jsonb: logUpdate });
-            if (res?.error) throw new Error(res.error);
-            setLastSaved(new Date());
-        } catch (err: any) {
-            setError(err.message || "Failed to save.");
-        } finally { setIsSaving(false); }
-    }, [getValues, appendChangelogEntry]);
+    const { isSaving, lastSaved, error, handleManualSave, hasUnsavedChanges } = usePilotAutosave({
+        tabKey: "settings",
+        dataKey: "permissions_jsonb",
+        currentValues: permissions,
+        editorName: editorName
+    });
 
-    const autoSave = useCallback(async (updatedPerms: any, actionDesc: string) => {
-        setIsSaving(true); setError(null);
-        try {
-            const logUpdate = appendChangelogEntry(actionDesc);
-            const res = await updatePilotData({ permissions_jsonb: updatedPerms, changelog_jsonb: logUpdate });
-            if (res?.error) throw new Error(res.error);
-            setLastSaved(new Date());
-        } catch (err: any) {
-            setError(err.message || "Auto-save failed.");
-        } finally { setIsSaving(false); }
-    }, [appendChangelogEntry]);
-
-    const handleResetToDefaults = useCallback(async () => {
+    const handleResetToDefaults = useCallback(() => {
         if (!canEdit) return;
         const defaultPerms = {
             manage_classes: true, class_create: true, class_edit: true, class_delete: false,
@@ -172,31 +157,26 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
             manage_students: true, view_roster: true, remove_students: false, message_students: true,
             ai_assessment_override: true, communication_rules: "standard" as const
         };
-        setValue("permissions_jsonb", defaultPerms, { shouldDirty: true });
-        await autoSave(defaultPerms, "Reset permissions to defaults");
-    }, [canEdit, setValue, autoSave]);
+        setPermissions(defaultPerms);
+        // Manual save trigger for reset
+        setTimeout(() => handleManualSave(), 100);
+    }, [canEdit, handleManualSave]);
 
     // ─── Toggle Handlers ─────────────────────────────────────
 
-    const toggleMaster = (field: string, value: boolean, label: string) => {
+    const toggleMaster = (field: string, value: boolean) => {
         if (!canEdit) return;
-        const updated = { ...permissions, [field]: value };
-        setValue("permissions_jsonb", updated, { shouldDirty: true });
-        autoSave(updated, `${value ? 'Enabled' : 'Disabled'} ${label}`);
+        setPermissions((prev: any) => ({ ...prev, [field]: value }));
     };
 
-    const toggleSub = (field: string, value: boolean, masterField: string, label: string) => {
+    const toggleSub = (field: string, value: boolean, masterField: string) => {
         if (!canEdit || !p[masterField]) return;
-        const updated = { ...permissions, [field]: value };
-        setValue("permissions_jsonb", updated, { shouldDirty: true });
-        autoSave(updated, `${value ? 'Enabled' : 'Disabled'} ${label}`);
+        setPermissions((prev: any) => ({ ...prev, [field]: value }));
     };
 
-    const updateAdvanced = (field: string, value: any, label: string) => {
+    const updateAdvanced = (field: string, value: any) => {
         if (!canEdit) return;
-        const updated = { ...permissions, [field]: value };
-        setValue("permissions_jsonb", updated, { shouldDirty: true });
-        autoSave(updated, `Updated ${label}`);
+        setPermissions((prev: any) => ({ ...prev, [field]: value }));
     };
 
     const toggleAccordion = (id: string) => {
@@ -242,43 +222,25 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
 
     return (
         <div className="animate-in slide-in-from-bottom-4 duration-500 pb-20">
-            {/* Top Header Row */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4 relative z-50">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Permissions & Settings</h1>
-                    {!hasWriteAccess && !isChampion && (
-                        <span className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded-full border border-amber-100">
-                            <AlertTriangle className="w-3 h-3" /> Read Only
-                        </span>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setShowChangelog(!showChangelog)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold transition-colors rounded-lg ${showChangelog ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-50'}`}
-                    >
-                        <History className="w-4 h-4" /> History
-                    </button>
-                    {canEdit && (
-                        <button
-                            onClick={handleSave}
-                            disabled={isSaving}
-                            className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors disabled:opacity-50"
-                        >
-                            {isSaving
-                                ? <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</>
-                                : <><Save className="w-4 h-4" /> Save</>}
-                        </button>
-                    )}
-                </div>
-            </div>
+            <TabHeader
+                title="Permissions & Settings"
+                description="Govern instructor capabilities and global sandbox policies."
+                tabKey="settings"
+                tabLabel="Settings"
+                isReadOnly={!hasWriteAccess || isCompleted}
+                isSaving={isSaving}
+                lastSaved={lastSaved}
+                error={error}
+                hasErrors={false}
+                hasUnsavedChanges={hasUnsavedChanges}
+                onManualSave={handleManualSave}
+                showChangelog={showChangelog}
+                setShowChangelog={setShowChangelog}
+            />
 
             {/* Subtitle & Expand Row mapped to grid */}
             <div className="flex flex-col lg:flex-row gap-8 mb-6 relative z-50">
-                <div className="lg:w-1/3">
-                    <p className="text-slate-500 text-sm">Govern instructor capabilities and global sandbox policies.</p>
-                </div>
+                <div className="lg:w-1/3" />
                 <div className="lg:w-2/3 flex justify-between items-center">
                     {/* Expand/Collapse All */}
                     <button
@@ -288,57 +250,8 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
                         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${allExpanded ? 'rotate-180' : ''}`} />
                         {allExpanded ? 'Collapse All' : 'Expand All'}
                     </button>
-
-                    {/* Last saved */}
-                    <div className="text-xs font-medium text-slate-400">
-                        {(() => {
-                            if (lastSaved) return (
-                                <span className="flex items-center gap-1.5">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                    Last edited by {editorName} at {lastSaved.toLocaleTimeString()}
-                                </span>
-                            );
-                            const allLog = watch("changelog_jsonb") || {};
-                            const latest = [...(allLog['settings'] || [])].sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime())[0] as any;
-                            if (latest) return (
-                                <span className="flex items-center gap-1.5">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                    Last edited by {latest.user} at {new Date(latest.time).toLocaleTimeString()}
-                                </span>
-                            );
-                            return <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> No changes recorded</span>;
-                        })()}
-                    </div>
                 </div>
             </div>
-            {error && <span className="text-xs font-bold text-red-500">{error}</span>}
-
-            {/* Changelog Dropdown */}
-            {showChangelog && (() => {
-                const allLog = watch("changelog_jsonb") || {};
-                const entries = [...(allLog['settings'] || [])].sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 30);
-                return (
-                    <div className="absolute top-full mt-2 right-0 w-80 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                        <h4 className="text-xs font-bold text-slate-900 px-3 py-2 border-b border-slate-100 mb-1">Edit History</h4>
-                        <div className="max-h-64 overflow-y-auto">
-                            {entries.length === 0 ? (
-                                <p className="text-xs text-slate-400 text-center py-4">No edit history yet.</p>
-                            ) : entries.map((log: any, idx: number) => (
-                                <div key={idx} className="px-3 py-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <span className="text-slate-700 text-xs font-medium truncate">{log.user}</span>
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-teal-500 bg-teal-50 px-1.5 py-0.5 rounded">Settings</span>
-                                            <span className="text-slate-400 text-[10px]">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-[11px] text-slate-500 mt-0.5 truncate">{log.action}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            })()}
 
 
             {/* Split Layout */}
@@ -436,7 +349,7 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
                                                 className="sr-only peer"
                                                 checked={isMasterOn}
                                                 disabled={!canEdit}
-                                                onChange={e => toggleMaster(group.masterSwitch, e.target.checked, group.title)}
+                                                onChange={e => toggleMaster(group.masterSwitch, e.target.checked)}
                                             />
                                             <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-60"></div>
                                         </label>
@@ -477,7 +390,7 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
                                                                 className="sr-only peer"
                                                                 checked={isSubOn}
                                                                 disabled={subDisabled}
-                                                                onChange={e => toggleSub(sub.id, e.target.checked, group.masterSwitch, sub.label)}
+                                                                onChange={e => toggleSub(sub.id, e.target.checked, group.masterSwitch)}
                                                             />
                                                             <div className="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-50"></div>
                                                         </label>
@@ -519,7 +432,7 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
                                                 className="sr-only peer"
                                                 checked={Boolean(aiOverride)}
                                                 disabled={!canEdit}
-                                                onChange={e => updateAdvanced("ai_assessment_override", e.target.checked, "AI Assessment Override")}
+                                                onChange={e => updateAdvanced("ai_assessment_override", e.target.checked)}
                                             />
                                             <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-disabled:opacity-60"></div>
                                         </label>
@@ -535,7 +448,7 @@ export function SettingsClient({ pilot, profile }: { pilot: any; profile: any })
                                 <select
                                     value={communicationRules}
                                     disabled={!canEdit}
-                                    onChange={e => updateAdvanced("communication_rules", e.target.value, "Communication Rules")}
+                                    onChange={e => updateAdvanced("communication_rules", e.target.value)}
                                     className={`w-full text-sm font-medium px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white ${!canEdit ? 'opacity-60 cursor-not-allowed' : ''}`}
                                 >
                                     <option value="standard">Standard: Direct messaging enabled</option>
