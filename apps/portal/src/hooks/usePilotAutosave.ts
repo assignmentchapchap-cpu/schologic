@@ -66,6 +66,19 @@ export function usePilotAutosave({
             return changes.length > 0 ? changes : ['Updated permission settings'];
         }
 
+        if (tabKey === 'dashboard') {
+            const changes: string[] = [];
+            if (saved.view_type !== current.view_type) {
+                const layoutName = current.view_type === 'academic' ? 'Academic View' : 'Analytics View';
+                changes.push(`Changed layout to "${layoutName}"`);
+            }
+            const added = (current.selected_widgets || []).filter((w: string) => !(saved.selected_widgets || []).includes(w));
+            const removed = (saved.selected_widgets || []).filter((w: string) => !(current.selected_widgets || []).includes(w));
+            if (added.length > 0) changes.push(`Added ${added.length} metrics to dashboard`);
+            if (removed.length > 0) changes.push(`Removed ${removed.length} metrics from dashboard`);
+            return changes.length > 0 ? changes : ['Updated dashboard layout'];
+        }
+
         return [`Updated ${tabKey} settings`];
     }, [tabKey, getValues]);
 
@@ -126,7 +139,7 @@ export function usePilotAutosave({
         isSaving,
         lastSaved,
         error,
-        handleManualSave: () => handleSave(currentValues, false),
+        handleManualSave: async (data?: any) => await handleSave(data || currentValues, false),
         hasUnsavedChanges: JSON.stringify(currentValues) !== lastSavedData.current
     };
 }

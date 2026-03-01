@@ -64,7 +64,7 @@ function getDemoKpiProps(title: string) {
     }
 }
 
-export function MockDashboard({ layoutId, selectedWidgets }: { layoutId: string, selectedWidgets: string[] }) {
+export function MockDashboard({ layoutId, selectedWidgets = [] }: { layoutId: string, selectedWidgets?: string[] }) {
     // Default system metrics if none selected or space available
     const systemWidgets = [
         <KPICard key="sys_users" icon={Users} label="Total Users" value={DEMO_STUDENTS.length + 5} sub={`5 instructors · ${DEMO_STUDENTS.length} students`} color="indigo" />,
@@ -88,7 +88,7 @@ export function MockDashboard({ layoutId, selectedWidgets }: { layoutId: string,
                 <div className="flex-1 p-6 overflow-hidden min-h-0 bg-slate-50/50">
                     {/* Metrics Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        {selectedWidgets.map(widgetTitle => {
+                        {(selectedWidgets || []).map(widgetTitle => {
                             const props = getDemoKpiProps(widgetTitle);
                             return <KPICard key={widgetTitle} label={widgetTitle} {...props} />;
                         })}
