@@ -45,9 +45,9 @@ async function syncTaskAssignments(
             newAssignments[userId] = permission as "none" | "read" | "write";
         }
 
-        // CHAMPION FALLBACK FOR TEAM TAB
-        // If this is a team task and it now has no 'write' assignee, revert to champion
-        if (task.tab === 'team') {
+        // CHAMPION FALLBACK FOR TEAM & PREVIEW TABS
+        // If this is a team or preview task and it now has no 'write' assignee, revert to champion
+        if (task.tab === 'team' || task.tab === 'preview') {
             const hasWriteAssignee = Object.values(newAssignments).some(level => level === 'write');
             if (!hasWriteAssignee && pilot.champion_id) {
                 newAssignments[pilot.champion_id] = 'write';
@@ -440,7 +440,7 @@ export async function updateTaskAssignment(
                 const newAssignments = { ...(t.assignments || {}) };
                 if (userId) {
                     newAssignments[userId] = "write";
-                } else if (tab === 'team' && pilot.champion_id) {
+                } else if ((tab === 'team' || tab === 'preview') && pilot.champion_id) {
                     // Revert to champion if unassigned
                     newAssignments[pilot.champion_id] = "write";
                 }

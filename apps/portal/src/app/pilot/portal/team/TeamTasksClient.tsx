@@ -843,7 +843,7 @@ export function TeamTasksClient({
                                                     >
                                                         <option value="">Unassigned</option>
                                                         {members
-                                                            .filter(m => tab !== 'team' || m.status === 'joined')
+                                                            .filter(m => (tab !== 'team' && tab !== 'preview') || m.status === 'joined')
                                                             .map(m => (
                                                                 <option key={m.user_id} value={m.user_id}>{getMemberName(m)}</option>
                                                             ))}
@@ -932,7 +932,7 @@ export function TeamTasksClient({
                                                                     >
                                                                         <option value="">Unassigned</option>
                                                                         {members
-                                                                            .filter(m => tab !== 'team' || m.status === 'joined')
+                                                                            .filter(m => (tab !== 'team' && tab !== 'preview') || m.status === 'joined')
                                                                             .map(m => (
                                                                                 <option key={m.user_id} value={m.user_id}>{getMemberName(m)}</option>
                                                                             ))}
