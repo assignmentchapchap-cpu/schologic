@@ -13,7 +13,10 @@ import {
     Award,
     Globe,
     Zap,
-    Activity
+    Activity,
+    BookOpen,
+    FileText,
+    Archive
 } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
 import { ExecutiveSummaryCard } from "@/components/pilot/preview/ExecutiveSummaryCard";
@@ -64,9 +67,39 @@ export function PreviewClient({
         return Math.min(Math.round((values / 20) * 100), 100);
     }, [permissions]);
 
+    const teamTasks = useMemo(() => tasks.filter((t: any) => t.tab === 'team'), [tasks]);
+    const teamCompletionRate = useMemo(() => {
+        if (teamTasks.length === 0) return 0;
+        const completed = teamTasks.filter((t: any) => t.status === 'completed').length;
+        return Math.round((completed / teamTasks.length) * 100);
+    }, [teamTasks]);
+
+    const lateTeamRate = useMemo(() => {
+        if (teamTasks.length === 0) return 0;
+        const now = new Date();
+        const lateCount = teamTasks.filter((t: any) =>
+            t.status !== 'completed' && t.due_date && new Date(t.due_date) < now
+        ).length;
+        return Math.round((lateCount / teamTasks.length) * 100);
+    }, [teamTasks]);
+
+    const topPerformer = useMemo(() => {
+        if (teamTasks.length === 0) return null;
+        const memberCounts: Record<string, number> = {};
+        teamTasks.filter((t: any) => t.status === 'completed').forEach((t: any) => {
+            Object.entries(t.assignments || {}).forEach(([uid, level]) => {
+                if (level === 'write') {
+                    memberCounts[uid] = (memberCounts[uid] || 0) + 1;
+                }
+            });
+        });
+        const topUid = Object.entries(memberCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+        return members.find(m => m.user_id === topUid) || null;
+    }, [teamTasks, members]);
+
     const taskCompletionRate = useMemo(() => {
         if (tasks.length === 0) return 0;
-        const fullyCompleted = tasks.filter((t: any) => t.finalized).length;
+        const fullyCompleted = tasks.filter((t: any) => t.status === 'completed').length;
         return Math.round((fullyCompleted / tasks.length) * 100);
     }, [tasks]);
 
@@ -105,11 +138,11 @@ export function PreviewClient({
             {/* Header Area */}
             <div className="mb-6 px-4 md:px-0">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4 relative z-50">
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Final Blueprint Review</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Final Pilot Configuration</h1>
 
                     <div className="bg-white border border-slate-200/60 rounded-2xl p-3 shadow-sm flex items-center gap-4 min-w-[220px]">
                         <div className="flex-1">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Blueprint Integrity</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Tabs Finalized</p>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm font-bold text-slate-700">{completedTabs.length} / 6</span>
                                 <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase tracking-tight ${completedTabs.length === 6 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-slate-500 border border-slate-100'}`}>
@@ -227,25 +260,89 @@ export function PreviewClient({
                     primaryMetric={`${activeKpis.length} Indicators`}
                     className="h-[310px]"
                 >
-                    <div className="flex flex-col h-full space-y-4">
-                        <div className="flex items-center justify-between gap-3 flex-1 pb-2">
-                            <div className="flex-1 bg-slate-50/50 rounded-2xl p-3 border border-slate-100 flex flex-col items-center justify-center">
-                                <span className="text-2xl font-bold text-slate-800 tracking-tighter">{automatedCount}</span>
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Auto</span>
-                                <div className="mt-1 w-4 h-1 bg-indigo-500 rounded-full" />
+                    <div className="flex flex-col h-full space-y-[10px] relative">
+                        {/* Row 1: Types & Percentage Split */}
+                        <div className="py-[8px] border-b border-slate-100">
+                            <p className="text-[9px] font-bold text-blue-900 uppercase tracking-widest mb-1.5">Types</p>
+                            <div className="flex items-center gap-4">
+                                <div className="flex-1">
+                                    <div className="flex justify-between text-[10px] mb-1">
+                                        <span className="text-slate-400 font-medium">Automated</span>
+                                        <span className="font-bold text-indigo-600">{activeKpis.length > 0 ? Math.round((automatedCount / activeKpis.length) * 100) : 0}%</span>
+                                    </div>
+                                    <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                                            style={{ width: `${activeKpis.length > 0 ? (automatedCount / activeKpis.length) * 100 : 0}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex-1 text-right">
+                                    <div className="flex justify-between text-[10px] mb-1">
+                                        <span className="font-bold text-amber-600">{activeKpis.length > 0 ? Math.round((selfCount / activeKpis.length) * 100) : 0}%</span>
+                                        <span className="text-slate-400 font-medium">Manual</span>
+                                    </div>
+                                    <div className="h-1 bg-slate-100 rounded-full overflow-hidden flex justify-end">
+                                        <div
+                                            className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                                            style={{ width: `${activeKpis.length > 0 ? (selfCount / activeKpis.length) * 100 : 0}%` }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex-1 bg-slate-50/50 rounded-2xl p-3 border border-slate-100 flex flex-col items-center justify-center">
-                                <span className="text-2xl font-bold text-slate-800 tracking-tighter">{selfCount}</span>
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Manual</span>
-                                <div className="mt-1 w-4 h-1 bg-slate-200 rounded-full" />
+                        </div>
+
+                        {/* Row 2: KPI Lists Side-by-Side */}
+                        <div className="grid grid-cols-2 gap-4 py-[8px] border-b border-slate-100 flex-1 h-[140px]">
+                            <div className="overflow-hidden">
+                                <p className="text-[9px] font-bold text-blue-900 uppercase tracking-widest mb-2">Automated</p>
+                                <div className="space-y-1.5">
+                                    {activeKpis.filter((k: any) => k.type === 'automated').slice(0, 4).map((k: any) => (
+                                        <div key={k.id} className="flex items-start gap-1.5">
+                                            <div className="w-1 h-1 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                                            <span className="text-[10px] font-medium text-slate-600 leading-tight line-clamp-1">{k.title}</span>
+                                        </div>
+                                    ))}
+                                    {automatedCount > 4 && (
+                                        <p className="text-[9px] font-bold text-slate-400 mt-1 pl-2.5">+{automatedCount - 4} more</p>
+                                    )}
+                                    {automatedCount === 0 && <span className="text-[10px] text-slate-400 italic">None Active</span>}
+                                </div>
+                            </div>
+                            <div className="text-right overflow-hidden flex flex-col items-end">
+                                <p className="text-[9px] font-bold text-blue-900 uppercase tracking-widest mb-2">Self-Assessment</p>
+                                <div className="space-y-1.5 w-full">
+                                    {activeKpis.filter((k: any) => k.type === 'self_assessment').slice(0, 4).map((k: any) => (
+                                        <div key={k.id} className="flex items-start justify-end gap-1.5">
+                                            <span className="text-[10px] font-medium text-slate-600 leading-tight line-clamp-1">{k.title}</span>
+                                            <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+                                        </div>
+                                    ))}
+                                    {selfCount > 4 && (
+                                        <p className="text-[9px] font-bold text-slate-400 mt-1 pr-2.5">+{selfCount - 4} more</p>
+                                    )}
+                                    {selfCount === 0 && <span className="text-[10px] text-slate-400 italic">None Active</span>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Row 3: Delivery Governance (Absolute Position) */}
+                        <div className="absolute bottom-0 inset-x-0 bg-white pt-2 pb-[8px]">
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-[10px] font-bold text-blue-900 uppercase tracking-widest shrink-0">Delivery:</span>
+                                <p className="text-[11px] font-semibold text-slate-600 leading-tight truncate">
+                                    {kpisData.delivery?.method === "dashboard" ? "Instructor Dashboard" : "Manual Offline"}
+                                    <span className="text-slate-300 mx-1.5">•</span>
+                                    <span className="capitalize">{kpisData.delivery?.frequency || "Weekly"}</span>
+                                </p>
                             </div>
                         </div>
                     </div>
                 </ExecutiveSummaryCard>
 
-                {/* 3. Governance & Rules */}
+                {/* 3. Instructor Permissions */}
                 <ExecutiveSummaryCard
-                    title="Governance & Rules"
+                    title="Instructor Permissions"
                     tabKey="settings"
                     isLocked={isTabLocked("settings")}
                     isChampion={hasAuthority}
@@ -254,32 +351,125 @@ export function PreviewClient({
                     primaryMetric={`${autonomy}% Autonomy`}
                     className="h-[310px]"
                 >
-                    <div className="flex flex-col h-full space-y-4">
-                        <div className="space-y-1.5 flex-1 p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
-                            <div className="flex justify-between items-end">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em]">Agency</span>
-                                <span className="text-[11px] font-bold text-emerald-600">{autonomy}%</span>
-                            </div>
-                            <div className="w-full h-1.5 bg-white border border-slate-100 rounded-full overflow-hidden mt-1">
-                                <div
-                                    className={`h-full rounded-full transition-all duration-1000 ${autonomy > 75 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.3)]'}`}
-                                    style={{ width: `${autonomy}%` }}
-                                />
+                    <div className="flex flex-col h-full space-y-[10px] relative">
+                        {/* Row 1 & 2: Access Matrix (2x2 Grid) */}
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-0 flex-1 min-h-0">
+                            {/* Classes */}
+                            <div className="pt-[2px] pb-[4px] border-b border-slate-100 flex flex-col justify-start">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <div className="w-5 h-5 rounded-lg bg-blue-50 flex items-center justify-center">
+                                        <BookOpen className="w-3 h-3 text-blue-500" />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-700">Classes</span>
+                                </div>
+                                <div className="space-y-1">
+                                    {permissions.manage_classes ? (
+                                        <>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center gap-1 leading-tight">
+                                                <div className="w-0.5 h-0.5 rounded-full bg-slate-400" /> Create & Edit
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center gap-1 leading-tight">
+                                                <div className="w-0.5 h-0.5 rounded-full bg-slate-400" /> Manage Assignments
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center gap-1 leading-tight">
+                                                <div className="w-0.5 h-0.5 rounded-full bg-slate-400" /> Grade Assets
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <span className="text-[10px] text-slate-400 italic">Locked</span>
+                                    )}
+                                </div>
                             </div>
 
-                            <div className="mt-4 space-y-3">
-                                <div className="flex justify-between items-center text-[10px] font-bold">
-                                    <span className="text-slate-400 uppercase tracking-widest">Deletion</span>
-                                    <span className={`uppercase tracking-widest ${permissions.class_delete ? 'text-amber-500' : 'text-emerald-500'}`}>
-                                        {permissions.class_delete ? 'Open' : 'Locked'}
-                                    </span>
+                            {/* Practicums */}
+                            <div className="pt-[2px] pb-[4px] border-b border-slate-100 flex flex-col justify-start text-right items-end">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <span className="text-[10px] font-bold text-slate-700">Practicums</span>
+                                    <div className="w-5 h-5 rounded-lg bg-emerald-50 flex items-center justify-center">
+                                        <FileText className="w-3 h-3 text-emerald-500" />
+                                    </div>
                                 </div>
-                                <div className="flex justify-between items-center text-[10px] font-bold border-t border-slate-100 pt-2">
-                                    <span className="text-slate-400 uppercase tracking-widest">AI Override</span>
-                                    <span className="text-indigo-600 uppercase tracking-widest">
-                                        {permissions.ai_assessment_override ? 'Active' : 'N/A'}
-                                    </span>
+                                <div className="space-y-1">
+                                    {permissions.manage_practicums ? (
+                                        <>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center justify-end gap-1 leading-tight">
+                                                Define Rubrics <div className="w-0.5 h-0.5 rounded-full bg-slate-400" />
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center justify-end gap-1 leading-tight">
+                                                Verify Logs <div className="w-0.5 h-0.5 rounded-full bg-slate-400" />
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center justify-end gap-1 leading-tight">
+                                                Supervisor Final <div className="w-0.5 h-0.5 rounded-full bg-slate-400" />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <span className="text-[10px] text-slate-400 italic">Locked</span>
+                                    )}
                                 </div>
+                            </div>
+
+                            {/* OER Content */}
+                            <div className="pt-[2px] pb-[8px] flex flex-col justify-start border-b border-slate-100 mt-1">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <div className="w-5 h-5 rounded-lg bg-amber-50 flex items-center justify-center">
+                                        <Archive className="w-3 h-3 text-amber-500" />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-700">OER Content</span>
+                                </div>
+                                <div className="space-y-1">
+                                    {permissions.allow_content_upload ? (
+                                        <>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center gap-1 leading-tight">
+                                                <div className="w-0.5 h-0.5 rounded-full bg-slate-400" /> Upload Assets
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center gap-1 leading-tight">
+                                                <div className="w-0.5 h-0.5 rounded-full bg-slate-400" /> Author Native
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center gap-1 leading-tight">
+                                                <div className="w-0.5 h-0.5 rounded-full bg-slate-400" /> Push to Class
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <span className="text-[10px] text-slate-400 italic">Locked</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Students */}
+                            <div className="pt-[2px] pb-[8px] flex flex-col justify-start text-right items-end border-b border-slate-100 mt-1">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <span className="text-[10px] font-bold text-slate-700">Student Roster</span>
+                                    <div className="w-5 h-5 rounded-lg bg-indigo-50 flex items-center justify-center">
+                                        <Users className="w-3 h-3 text-indigo-500" />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    {permissions.manage_students ? (
+                                        <>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center justify-end gap-1 leading-tight">
+                                                View Enrollment <div className="w-0.5 h-0.5 rounded-full bg-slate-400" />
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center justify-end gap-1 leading-tight">
+                                                Direct Message <div className="w-0.5 h-0.5 rounded-full bg-slate-400" />
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 font-medium flex items-center justify-end gap-1 leading-tight">
+                                                Broadcast Alert <div className="w-0.5 h-0.5 rounded-full bg-slate-400" />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <span className="text-[10px] text-slate-400 italic">Locked</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Row 3: Critical Guardrails (Absolute Position) */}
+                        <div className="absolute bottom-0 inset-x-0 bg-white pt-2 pb-[8px]">
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-[10px] font-bold text-blue-900 uppercase tracking-widest shrink-0">Guardrails:</span>
+                                <p className="text-[11px] font-semibold text-slate-600 leading-tight truncate">
+                                    AI Override: {permissions.ai_assessment_override ? "Active" : "Inactive"}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -293,47 +483,83 @@ export function PreviewClient({
                     isChampion={hasAuthority}
                     onReactivate={handleReactivateTab}
                     icon={Users}
-                    primaryMetric={`${members.length} Members`}
+                    primaryMetric={`${teamCompletionRate}% Ready`}
                     className="h-[310px]"
                 >
-                    <div className="flex flex-col h-full space-y-4">
-                        <div className="bg-slate-50/50 rounded-2xl border border-slate-100 p-3 flex-1 flex flex-col justify-between">
+                    <div className="flex flex-col h-full space-y-[10px] relative">
+                        {/* Row 1: Performance Pulse */}
+                        <div className="py-[8px] border-b border-slate-100">
+                            <p className="text-[9px] font-bold text-blue-900 uppercase tracking-widest mb-1.5">Performance</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <span className="text-[10px] text-slate-400">Completion</span>
+                                        <span className="text-[10px] font-bold text-indigo-600">{teamCompletionRate}%</span>
+                                    </div>
+                                    <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${teamCompletionRate}%` }} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <span className="text-[10px] text-slate-400">Late Tasks</span>
+                                        <span className="text-[10px] font-bold text-amber-600">{lateTeamRate}%</span>
+                                    </div>
+                                    <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${lateTeamRate}%` }} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Row 2: Top Performer */}
+                        <div className="py-[12px] border-b border-slate-100 flex-1">
+                            <p className="text-[9px] font-bold text-blue-900 uppercase tracking-widest mb-3">Top Performer</p>
+                            {topPerformer ? (
+                                <div className="flex items-center gap-3 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/50">
+                                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 border-2 border-white shadow-sm uppercase">
+                                        {topPerformer.profiles?.email?.charAt(0) || '?'}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[11px] font-bold text-slate-700 truncate">
+                                            {topPerformer.profiles?.first_name
+                                                ? `${topPerformer.profiles.first_name} ${topPerformer.profiles.last_name || ''}`
+                                                : topPerformer.profiles?.email?.split('@')[0] || 'Member'}
+                                        </p>
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-tight">Best Pace</span>
+                                            <span className="text-[9px] font-medium text-slate-400 uppercase tracking-tight">Achievement</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="h-[60px] flex items-center justify-center border border-dashed border-slate-200 rounded-xl">
+                                    <p className="text-[10px] text-slate-400 italic">No tasks completed yet</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Row 3: Team Members (Absolute Position) */}
+                        <div className="absolute bottom-0 inset-x-0 bg-white pt-2 pb-[8px]">
                             <div className="flex items-center justify-between">
-                                <div className="flex -space-x-2.5">
-                                    {members.slice(0, 3).map((m: any, i: number) => (
-                                        <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-bold text-slate-400 shadow-sm relative z-[3] uppercase">
+                                <p className="text-[9px] font-bold text-blue-900 uppercase tracking-widest shrink-0">Team Members</p>
+                                <div className="flex -space-x-2">
+                                    {members.slice(0, 5).map((m: any, i: number) => (
+                                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[9px] font-bold text-slate-500 shadow-sm uppercase shrink-0">
                                             {m.profiles?.email?.charAt(0) || '?'}
                                         </div>
                                     ))}
-                                    {members.length > 3 && (
-                                        <div className="w-8 h-8 rounded-full border-2 border-white bg-indigo-50 flex items-center justify-center text-[9px] font-bold text-indigo-600 shadow-sm relative z-[0]">
-                                            +{members.length - 3}
+                                    {members.length > 5 && (
+                                        <div className="w-6 h-6 rounded-full border-2 border-white bg-indigo-50 flex items-center justify-center text-[8px] font-bold text-indigo-600 shadow-sm shrink-0">
+                                            +{members.length - 5}
                                         </div>
                                     )}
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Collaborators</p>
-                                    <p className="text-lg font-bold text-slate-800 leading-none">{members.length}</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 pt-4 border-t border-slate-100/50">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Readiness</span>
-                                    </div>
-                                    <span className="text-sm font-bold text-emerald-600">{taskCompletionRate}%</span>
-                                </div>
-                                <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mt-1.5">
-                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${taskCompletionRate}%` }} />
                                 </div>
                             </div>
                         </div>
                     </div>
                 </ExecutiveSummaryCard>
 
-                {/* 5. Branding Preview (Hero) */}
                 <ExecutiveSummaryCard
                     title="Branding Preview"
                     tabKey="branding"
@@ -344,7 +570,11 @@ export function PreviewClient({
                     size="large"
                     noPadding={true}
                     className="lg:col-span-2"
-                    primaryMetric={branding.subdomain ? `${branding.subdomain}.schologic.com` : "Platform Identity"}
+                    primaryMetric={
+                        <>
+                            Domain / URL: <span className="text-emerald-600 ml-1.5">{branding.subdomain ? `${branding.subdomain}.schologic.com` : "Not Set"}</span>
+                        </>
+                    }
                 >
                     <div className="flex flex-col h-full">
                         <div className="relative w-full aspect-[16/10] bg-white overflow-hidden border-b border-slate-100 shrink-0">
@@ -367,9 +597,9 @@ export function PreviewClient({
                     </div>
                 </ExecutiveSummaryCard>
 
-                {/* 6. Admin Experience (Hero) */}
+                {/* 6. Admin Dashboard (Hero) */}
                 <ExecutiveSummaryCard
-                    title="Admin Experience"
+                    title="Admin Dashboard"
                     tabKey="dashboard"
                     isLocked={isTabLocked("dashboard")}
                     isChampion={hasAuthority}
@@ -378,7 +608,11 @@ export function PreviewClient({
                     size="large"
                     noPadding={true}
                     className="lg:col-span-2"
-                    primaryMetric={`Focus: ${dashboard.view_type || "Academic"}`}
+                    primaryMetric={
+                        <>
+                            Dashboard Focus: <span className="text-indigo-600 ml-1.5">{dashboard.view_type || "Academic"}</span>
+                        </>
+                    }
                 >
                     <div className="flex flex-col h-full">
                         <div className="relative w-full aspect-[16/10] bg-slate-900 overflow-hidden border-b border-slate-100 shrink-0">
