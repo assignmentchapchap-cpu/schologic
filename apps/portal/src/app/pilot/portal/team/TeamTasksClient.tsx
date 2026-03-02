@@ -766,9 +766,9 @@ export function TeamTasksClient({
                                 {(() => {
                                     const myTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write');
                                     const allDone = myTasks.length > 0 && myTasks.every(t => t.status === 'completed');
-                                    const anyFinalized = myTasks.some(t => t.finalized);
+                                    const allFinalized = myTasks.length > 0 && myTasks.every(t => t.finalized);
 
-                                    if (anyFinalized) return null;
+                                    if (allFinalized) return null;
 
                                     return (
                                         <button

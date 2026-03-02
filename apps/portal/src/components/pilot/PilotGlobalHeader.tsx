@@ -212,9 +212,9 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
                                     {(() => {
                                         const allMyTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write');
                                         const allDone = allMyTasks.length > 0 && allMyTasks.every(t => t.status === 'completed');
-                                        const anyFinalized = allMyAssignedTasks.some(t => t.finalized);
+                                        const allFinalized = allMyAssignedTasks.length > 0 && allMyAssignedTasks.every(t => t.finalized);
 
-                                        if (anyFinalized) return (
+                                        if (allFinalized) return (
                                             <div className="flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-bold text-slate-400 bg-white border border-slate-100 rounded-lg">
                                                 <Shield className="w-3 h-3" /> All Tasks Finalized
                                             </div>
