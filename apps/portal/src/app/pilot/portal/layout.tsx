@@ -3,6 +3,7 @@ import { PilotTabsNav } from "@/components/pilot/PilotTabsNav";
 import { PilotDiscussionFAB } from "@/components/pilot/PilotDiscussionFAB";
 import { PilotFormProvider, PilotBlueprint } from "@/components/pilot/PilotFormContext";
 import { PilotMessageProvider } from "@/context/PilotMessageContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 import { PilotMessagingPanel } from "@/components/pilot/PilotMessagingPanel";
 import { getCurrentPilotRequest } from "@/app/actions/pilotPortal";
 import { recordMemberPresence } from "@/app/actions/pilotTeam";
@@ -113,24 +114,26 @@ export default async function PilotPortalLayout({
                 pilotRequestId={p.id}
                 initialMembers={initialMembers}
             >
-                <div className="min-h-screen bg-slate-50 flex flex-col relative">
-                    {/* Global Header */}
-                    <PilotGlobalHeader identity={identity} />
+                <NotificationProvider>
+                    <div className="min-h-screen bg-slate-50 flex flex-col relative">
+                        {/* Global Header */}
+                        <PilotGlobalHeader identity={identity} />
 
-                    {/* Sticky Horizontal Tabs Navigation */}
-                    <div className="sticky top-16 z-30">
-                        <PilotTabsNav />
+                        {/* Sticky Horizontal Tabs Navigation */}
+                        <div className="sticky top-16 z-30">
+                            <PilotTabsNav />
+                        </div>
+
+                        {/* Main scrollable content area wrapper */}
+                        <main className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 relative">
+                            {children}
+                        </main>
+
+                        {/* Messaging */}
+                        <PilotDiscussionFAB />
+                        <PilotMessagingPanel />
                     </div>
-
-                    {/* Main scrollable content area wrapper */}
-                    <main className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 relative">
-                        {children}
-                    </main>
-
-                    {/* Messaging */}
-                    <PilotDiscussionFAB />
-                    <PilotMessagingPanel />
-                </div>
+                </NotificationProvider>
             </PilotMessageProvider>
         </PilotFormProvider>
     );

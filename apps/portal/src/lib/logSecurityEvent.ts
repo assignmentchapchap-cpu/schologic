@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { createAdminNotification } from '@/app/actions/adminNotifications';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,6 +38,13 @@ export async function logSecurityEvent(payload: SecurityEventPayload): Promise<v
             ip_address: payload.ipAddress ?? null,
             user_agent: payload.userAgent ?? null,
         });
+
+        // In-app admin notification (fire-and-forget)
+        createAdminNotification({
+            message: `Security: ${payload.eventType.replace(/_/g, ' ')} on ${payload.path}`,
+            type: 'admin_security',
+            link: '/admin/security',
+        }).catch(() => { });
     } catch (err) {
         console.error('[logSecurityEvent] Failed to log event:', err);
     }

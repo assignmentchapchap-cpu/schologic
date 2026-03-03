@@ -19,6 +19,7 @@ import {
     Archive
 } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
+import { notifyTabReactivated, notifyPilotSubmitted } from "@/app/actions/pilotSubmission";
 import { ExecutiveSummaryCard } from "@/components/pilot/preview/ExecutiveSummaryCard";
 
 // Actual Design Previews
@@ -111,6 +112,9 @@ export function PreviewClient({
         );
         setValue("tasks_jsonb", updatedTasks, { shouldDirty: true });
         await updatePilotData({ tasks_jsonb: updatedTasks });
+        // Notify team (fire-and-forget)
+        const tabLabel = tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
+        notifyTabReactivated(pilot.id, tabLabel, profile?.id || '').catch(() => { });
     };
 
     const handleFinalSubmit = async () => {
@@ -118,7 +122,11 @@ export function PreviewClient({
         setIsSubmitting(true);
         try {
             const res = await updatePilotData({ status: 'submitted' });
-            if (res.success) window.location.reload();
+            if (res.success) {
+                // Notify team + superadmin (fire-and-forget)
+                notifyPilotSubmitted(pilot.id, pilot.institution || 'Unknown').catch(() => { });
+                window.location.reload();
+            }
         } finally {
             setIsSubmitting(false);
         }

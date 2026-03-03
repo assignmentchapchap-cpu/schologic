@@ -4,6 +4,7 @@ import { createSessionClient } from '@schologic/database';
 import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
+import { createNotification } from './pilotNotifications';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -355,6 +356,14 @@ export async function updateMember(
         // 4. Sync assignments
         await syncTaskAssignments(supabase, membership.pilot_request_id, memberRecord.user_id, tabPermissions);
 
+        // 5. Notify member of permission changes (fire-and-forget)
+        createNotification({
+            userId: memberRecord.user_id,
+            message: 'Your pilot permissions have been updated',
+            type: 'pilot_permissions',
+            link: '/pilot/portal/team',
+        }).catch(() => { });
+
         return { success: true };
     } catch (err: any) {
         console.error('updateMember Error:', err);
@@ -474,6 +483,24 @@ export async function updateTaskAssignment(
             await syncMemberPermissionFromTasks(supabase, membership.pilot_request_id, targetUserId, tab);
         }
 
+        // 3. Notifications (fire-and-forget)
+        const tabLabel = tab.charAt(0).toUpperCase() + tab.slice(1);
+        if (userId) {
+            createNotification({
+                userId,
+                message: `You've been assigned to the ${tabLabel} tab`,
+                type: 'pilot_task_assigned',
+                link: `/pilot/portal/${tab}`,
+            }).catch(() => { });
+        }
+        if (targetUserId && targetUserId !== userId) {
+            createNotification({
+                userId: targetUserId,
+                message: `You've been unassigned from the ${tabLabel} tab`,
+                type: 'pilot_task_unassigned',
+            }).catch(() => { });
+        }
+
         return { success: true };
     } catch (err: any) {
         console.error('updateTaskAssignment Error:', err);
@@ -511,6 +538,37 @@ export async function recordMemberPresence() {
             updates.status = 'joined';
             if (!membership.joined_at) {
                 updates.joined_at = new Date().toISOString();
+            }
+
+            // Notify the champion that a member joined
+            const { data: pilotMembership } = await (supabase
+                .from('pilot_team_members')
+                .select('pilot_request_id')
+                .eq('user_id', user.id)
+                .single() as any);
+
+            if (pilotMembership) {
+                const { data: champion } = await supabaseAdmin
+                    .from('pilot_team_members')
+                    .select('user_id')
+                    .eq('pilot_request_id', pilotMembership.pilot_request_id)
+                    .eq('is_champion', true)
+                    .single();
+
+                if (champion && champion.user_id !== user.id) {
+                    const { data: profile } = await supabaseAdmin
+                        .from('profiles')
+                        .select('full_name')
+                        .eq('id', user.id)
+                        .single();
+                    const name = profile?.full_name || user.email || 'A team member';
+                    createNotification({
+                        userId: champion.user_id,
+                        message: `${name} has joined the pilot portal`,
+                        type: 'pilot_member_joined',
+                        link: '/pilot/portal/team',
+                    }).catch(() => { });
+                }
             }
 
             // Invalidate identity cache to reflect the joined state

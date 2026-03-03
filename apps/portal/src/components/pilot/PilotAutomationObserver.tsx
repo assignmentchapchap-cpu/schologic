@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePilotForm } from "./PilotFormContext";
 import { updatePilotData } from "@/app/actions/pilotPortal";
+import { notifyTabFinalized } from "@/app/actions/pilotSubmission";
 
 /**
  * PilotAutomationObserver
@@ -37,6 +38,12 @@ export function PilotAutomationObserver() {
             if (allFinalized && !isMarked) {
                 newCompletedTabs.push(tab);
                 changed = true;
+                // Notify team about tab finalization (fire-and-forget)
+                const pilotId = getValues('id');
+                if (pilotId) {
+                    const tabLabel = tab.charAt(0).toUpperCase() + tab.slice(1);
+                    notifyTabFinalized(pilotId, tabLabel, '').catch(() => { });
+                }
             } else if (!allFinalized && isMarked) {
                 // Reactivation: if any task in a previously completed tab is no longer finalized, unlock the tab
                 newCompletedTabs = newCompletedTabs.filter(t => t !== tab);

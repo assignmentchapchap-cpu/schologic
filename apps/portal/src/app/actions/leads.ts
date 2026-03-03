@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 import { logSystemError } from '@/lib/logSystemError';
 import { invalidateCache } from '@/lib/cache';
+import { createAdminNotification } from './adminNotifications';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -73,6 +74,13 @@ export async function submitPilotRequest(data: PilotRequestData) {
 
     // Clear the active cache for pilots
     await invalidateCache('admin:leads:pilots');
+
+    // In-app admin notification (fire-and-forget)
+    createAdminNotification({
+      message: `New pilot request from ${data.firstName} ${data.lastName} at ${data.institution}`,
+      type: 'admin_new_pilot',
+      link: '/admin/leads',
+    }).catch(() => { });
 
     // 2. Send Admin Notification
     const { error: resendError } = await resend.emails.send({
@@ -255,6 +263,13 @@ export async function submitDemoInvite(data: ShareDemoData) {
 
     // Clear the active cache for invites
     await invalidateCache('admin:leads:invites');
+
+    // In-app admin notification (fire-and-forget)
+    createAdminNotification({
+      message: `New instructor invite: ${data.recipientName} referred by ${data.senderName}`,
+      type: 'admin_invite',
+      link: '/admin/leads',
+    }).catch(() => { });
 
     // 2. Send Invitation to Recipient
     const { error: inviteEmailError } = await resend.emails.send({
@@ -449,6 +464,13 @@ export async function submitContactForm(data: ContactFormData) {
 
     // Clear the active cache for contacts
     await invalidateCache('admin:leads:contacts');
+
+    // In-app admin notification (fire-and-forget)
+    createAdminNotification({
+      message: `New contact message: "${data.subject}" from ${data.name}`,
+      type: 'admin_feedback',
+      link: '/admin/leads',
+    }).catch(() => { });
 
     // 2. Send notification to admin
     const { error: adminContactError } = await resend.emails.send({

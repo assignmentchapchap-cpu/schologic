@@ -9,6 +9,7 @@ import { createClient } from "@schologic/database";
 import { usePilotForm } from "./PilotFormContext";
 import { updatePilotData } from "@/app/actions/pilotPortal";
 import { usePilotMessages } from "@/context/PilotMessageContext";
+import { useNotifications } from "@/context/NotificationContext";
 
 interface PilotGlobalHeaderProps {
     identity?: UserIdentity | null;
@@ -24,6 +25,9 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
     const tasksRef = useRef<HTMLDivElement>(null);
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
     const { openToSupport, directMessages, superadminId } = usePilotMessages();
+    const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+    const [isNotiOpen, setIsNotiOpen] = useState(false);
+    const notiRef = useRef<HTMLDivElement>(null);
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -33,6 +37,9 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
             }
             if (tasksRef.current && !tasksRef.current.contains(event.target as Node)) {
                 setIsTasksOpen(false);
+            }
+            if (notiRef.current && !notiRef.current.contains(event.target as Node)) {
+                setIsNotiOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -254,10 +261,68 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
                             </span>
                         )}
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 relative">
-                        <Bell className="h-5 w-5" />
-                        <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-                    </Button>
+                    <div className="relative" ref={notiRef}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-slate-600 hover:text-slate-900 relative"
+                            onClick={() => setIsNotiOpen(!isNotiOpen)}
+                        >
+                            <Bell className="h-5 w-5" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1 right-1.5 bg-rose-500 text-white text-[8px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center animate-pulse">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </Button>
+
+                        {isNotiOpen && (
+                            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-[60] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
+                                <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                                    <h3 className="text-sm font-bold text-slate-800">Notifications</h3>
+                                    {unreadCount > 0 && (
+                                        <button
+                                            className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wide"
+                                            onClick={() => { markAllAsRead(); }}
+                                        >
+                                            Mark all read
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="max-h-[320px] overflow-y-auto">
+                                    {notifications.length === 0 ? (
+                                        <div className="py-10 text-center">
+                                            <Bell className="h-6 w-6 text-slate-300 mx-auto mb-2" />
+                                            <p className="text-xs text-slate-400">No notifications yet</p>
+                                        </div>
+                                    ) : (
+                                        notifications.map(n => (
+                                            <button
+                                                key={n.id}
+                                                className={`w-full text-left px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors flex gap-3 items-start ${!n.is_read ? 'bg-indigo-50/30' : ''
+                                                    }`}
+                                                onClick={() => {
+                                                    markAsRead(n.id);
+                                                    if (n.link) window.location.href = n.link;
+                                                    setIsNotiOpen(false);
+                                                }}
+                                            >
+                                                <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-transparent'}`} />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-[12px] leading-snug ${!n.is_read ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>
+                                                        {n.message}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-400 mt-0.5">
+                                                        {n.created_at ? formatTimeAgo(new Date(n.created_at)) : ''}
+                                                    </p>
+                                                </div>
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Profile Dropdown */}
                     <div className="relative ml-2" ref={menuRef}>
@@ -363,4 +428,16 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
             </div>
         </header>
     );
+}
+
+function formatTimeAgo(date: Date): string {
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    const mins = Math.floor(seconds / 60);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
 }
