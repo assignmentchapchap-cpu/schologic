@@ -10,6 +10,7 @@ import * as z from "zod";
 export const pilotBlueprintSchema = z.object({
     id: z.string().uuid().optional(),
     champion_id: z.string().uuid().optional(),
+    status: z.enum(['pending', 'submitted', 'provisioned']).default('pending'),
 
     // Tab 2: Scope
     scope_jsonb: z.object({
@@ -210,7 +211,8 @@ export function PilotFormProvider({
             dashboard_layout_jsonb: { view_type: "academic", selected_widgets: [] },
             tasks_jsonb: [],
             changelog_jsonb: {},
-            completed_tabs_jsonb: []
+            completed_tabs_jsonb: [],
+            status: 'pending'
         },
         mode: "onChange"
     });

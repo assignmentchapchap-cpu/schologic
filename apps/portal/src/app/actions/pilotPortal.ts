@@ -60,12 +60,16 @@ export async function updatePilotData(updates: any) {
         if (membershipError || !membership) throw new Error('No pilot access found.');
 
         // Proceed to update
-        const { error: updateError } = await supabase
+        const { data: updatedPilot, error: updateError } = await supabase
             .from('pilot_requests')
             .update(updates)
-            .eq('id', membership.pilot_request_id);
+            .eq('id', membership.pilot_request_id)
+            .select('id')
+            .single();
 
-        if (updateError) throw updateError;
+        if (updateError || !updatedPilot) {
+            throw new Error(updateError?.message || 'Update rejected by database policies. Are you authorized?');
+        }
 
         return { success: true };
     } catch (err: any) {

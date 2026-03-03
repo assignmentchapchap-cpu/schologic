@@ -16,7 +16,8 @@ import {
     Activity,
     BookOpen,
     FileText,
-    Archive
+    Archive,
+    AlertTriangle
 } from "lucide-react";
 import { updatePilotData } from "@/app/actions/pilotPortal";
 import { notifyTabReactivated, notifyPilotSubmitted } from "@/app/actions/pilotSubmission";
@@ -41,8 +42,10 @@ export function PreviewClient({
 }) {
     const { watch, setValue } = usePilotForm();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const tasks = watch("tasks_jsonb") || [];
     const completedTabs = watch("completed_tabs_jsonb") || [];
+    const status = watch("status") || "pending";
 
     // Auth logic
     const isChampion = membership?.is_champion === true;
@@ -106,7 +109,7 @@ export function PreviewClient({
 
     // Actions
     const handleReactivateTab = async (tabKey: string) => {
-        if (!hasAuthority) return;
+        if (!hasAuthority || status === 'submitted') return;
         const updatedTasks = tasks.map((t: any) =>
             t.tab === tabKey ? { ...t, finalized: false, status: 'in_progress' as const } : t
         );
@@ -120,13 +123,18 @@ export function PreviewClient({
     const handleFinalSubmit = async () => {
         if (!hasAuthority || isSubmitting) return;
         setIsSubmitting(true);
+        setError(null);
         try {
             const res = await updatePilotData({ status: 'submitted' });
             if (res.success) {
                 // Notify team + superadmin (fire-and-forget)
                 notifyPilotSubmitted(pilot.id, pilot.institution || 'Unknown').catch(() => { });
                 window.location.reload();
+            } else {
+                setError(res.error || 'Failed to provision sandbox. Database policies may have rejected the update.');
             }
+        } catch (err: any) {
+            setError(err.message || 'An unexpected error occurred during provisioning.');
         } finally {
             setIsSubmitting(false);
         }
@@ -650,34 +658,63 @@ export function PreviewClient({
 
             {/* Submission Section */}
             <div className="mt-12 bg-white border border-slate-200 rounded-3xl p-8 md:p-12 shadow-sm flex flex-col items-center text-center px-4">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6">
-                    <Shield className="w-8 h-8" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Deployment Authorization</h2>
-
-                {!hasAuthority ? (
-                    <div className="mt-4 max-w-lg">
-                        <p className="text-slate-500 text-sm leading-relaxed mb-6 font-medium">
-                            The blueprint is undergoing final validation. Only the <strong>Pilot Champion</strong> or authorized team members can trigger the production sandbox provisioning.
-                        </p>
-                        <div className="inline-flex items-center gap-3 px-5 py-3 bg-amber-50 rounded-2xl border border-amber-100/50">
-                            <RotateCcw className="w-4 h-4 text-amber-500 animate-spin-slow" />
-                            <span className="text-[11px] font-bold text-amber-700 uppercase tracking-widest">Awaiting Authorized Action</span>
+                {status === 'submitted' ? (
+                    <>
+                        <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6">
+                            <CheckCircle2 className="w-8 h-8" />
                         </div>
-                    </div>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Sandbox Provisioning Initiated</h2>
+                        <div className="mt-4 max-w-lg">
+                            <p className="text-slate-500 text-sm leading-relaxed mb-6 font-medium">
+                                The pilot blueprint has been permanently locked and sent for provisioning. You will receive an email once the secure sandbox environment is ready for access.
+                            </p>
+                            <div className="inline-flex items-center gap-3 px-5 py-3 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                <span className="relative flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                </span>
+                                <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-widest">Environment Building...</span>
+                            </div>
+                        </div>
+                    </>
                 ) : (
-                    <div className="mt-4 max-w-lg">
-                        <p className="text-slate-500 text-sm leading-relaxed mb-8 font-medium">
-                            All systems are verified. Provisioning the production sandbox will freeze this blueprint and initiate the secure environment setup.
-                        </p>
-                        <button
-                            onClick={handleFinalSubmit}
-                            disabled={isSubmitting}
-                            className={`px-12 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50`}
-                        >
-                            {isSubmitting ? 'Provisioning...' : 'Provision Sandbox Now'}
-                        </button>
-                    </div>
+                    <>
+                        <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6">
+                            <Shield className="w-8 h-8" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Deployment Authorization</h2>
+
+                        {!hasAuthority ? (
+                            <div className="mt-4 max-w-lg">
+                                <p className="text-slate-500 text-sm leading-relaxed mb-6 font-medium">
+                                    The blueprint is undergoing final validation. Only the <strong>Pilot Champion</strong> or authorized team members can trigger the production sandbox provisioning.
+                                </p>
+                                <div className="inline-flex items-center gap-3 px-5 py-3 bg-amber-50 rounded-2xl border border-amber-100/50">
+                                    <RotateCcw className="w-4 h-4 text-amber-500 animate-spin-slow" />
+                                    <span className="text-[11px] font-bold text-amber-700 uppercase tracking-widest">Awaiting Authorized Action</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="mt-4 max-w-lg">
+                                <p className="text-slate-500 text-sm leading-relaxed mb-8 font-medium">
+                                    All systems are verified. Provisioning the production sandbox will freeze this blueprint and initiate the secure environment setup.
+                                </p>
+                                {error && (
+                                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 text-red-700 text-sm font-medium text-left shadow-sm">
+                                        <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
+                                        <span className="leading-relaxed">{error}</span>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={handleFinalSubmit}
+                                    disabled={isSubmitting}
+                                    className={`px-12 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50`}
+                                >
+                                    {isSubmitting ? 'Provisioning...' : 'Provision Sandbox Now'}
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

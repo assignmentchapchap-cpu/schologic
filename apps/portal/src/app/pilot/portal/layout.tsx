@@ -80,6 +80,7 @@ export default async function PilotPortalLayout({
         tasks_jsonb: Array.isArray(p.tasks_jsonb) ? p.tasks_jsonb : [],
         changelog_jsonb: (p.changelog_jsonb && typeof p.changelog_jsonb === 'object' && !Array.isArray(p.changelog_jsonb)) ? p.changelog_jsonb : {},
         completed_tabs_jsonb: p.completed_tabs_jsonb || [],
+        status: p.status || 'pending',
     };
 
     // Fetch team members for the messaging recipient list
