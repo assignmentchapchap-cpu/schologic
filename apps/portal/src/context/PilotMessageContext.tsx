@@ -187,6 +187,7 @@ export function PilotMessageProvider({ children, identity, pilotRequestId, initi
         }
     }, [pilotRequestId]);
 
+    // Fetch superadmin
     const fetchSuperadmin = useCallback(async () => {
         const { data } = await getSuperadminId();
         if (data) {

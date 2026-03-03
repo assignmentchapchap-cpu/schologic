@@ -23,7 +23,7 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
     const [isTasksOpen, setIsTasksOpen] = useState(false);
     const tasksRef = useRef<HTMLDivElement>(null);
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
-    const { openToSupport } = usePilotMessages();
+    const { openToSupport, directMessages, superadminId } = usePilotMessages();
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -47,6 +47,11 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
     const isChampion = identity?.pilot_permissions?.is_champion;
 
     const currentUserId = identity?.id || '';
+
+    // Count unread support messages (DMs from superadmin to current user)
+    const unreadSupportCount = superadminId ? directMessages.filter(
+        m => m.sender_id === superadminId && m.receiver_id === currentUserId && !m.is_read
+    ).length : 0;
     const myTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write' && t.status !== 'completed');
     const allMyAssignedTasks = tasks.filter(t => t.assignments?.[currentUserId] === 'write');
     const activeCount = myTasks.length;
@@ -240,9 +245,14 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
                         )}
                     </div>
 
-                    <Button variant="ghost" size="sm" className="hidden md:flex text-slate-600 hover:text-slate-900" onClick={openToSupport}>
+                    <Button variant="ghost" size="sm" className="hidden md:flex text-slate-600 hover:text-slate-900 relative" onClick={openToSupport}>
                         <Headphones className="h-4 w-4 mr-2" />
                         Support
+                        {unreadSupportCount > 0 && (
+                            <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[8px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center animate-pulse">
+                                {unreadSupportCount}
+                            </span>
+                        )}
                     </Button>
                     <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 relative">
                         <Bell className="h-5 w-5" />

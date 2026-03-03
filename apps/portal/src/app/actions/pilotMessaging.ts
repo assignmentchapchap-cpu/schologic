@@ -13,7 +13,9 @@ const supabaseAdmin = createClient(
 );
 
 /**
- * Returns the superadmin's user ID for the "Support" channel.
+ * Returns the superadmin's user ID and name for the "Support" channel.
+ * The superadmin role lives in auth app_metadata (not profiles.role),
+ * so we must check auth users via admin API.
  */
 export async function getSuperadminId(): Promise<{ data: { id: string; name: string } | null; error: string | null }> {
     try {
@@ -23,23 +25,63 @@ export async function getSuperadminId(): Promise<{ data: { id: string; name: str
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) return { data: null, error: 'Unauthorized' };
 
-        const data = await fetchWithCache('pilot:superadmin_info', async () => {
-            // Use admin client — RLS on profiles blocks pilot users from seeing superadmin rows
-            const { data: admins, error } = await supabaseAdmin
+        // Check cache first
+        const cached = await fetchWithCache('pilot:superadmin_info', async () => {
+            // Strategy 1: env var (instant)
+            const envAdminId = process.env.SUPERADMIN_USER_ID;
+            if (envAdminId) {
+                const { data: profile } = await supabaseAdmin
+                    .from('profiles')
+                    .select('full_name')
+                    .eq('id', envAdminId)
+                    .single();
+                return { id: envAdminId, name: (profile?.full_name as string) || 'Support' };
+            }
+
+            // Strategy 2: Search auth users for app_metadata.role = 'superadmin'
+            let page = 1;
+            const perPage = 50;
+            while (page <= 20) { // safety cap at 1000 users
+                const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+                    page,
+                    perPage,
+                });
+                if (listError || !users || users.length === 0) break;
+
+                const adminUser = users.find(u =>
+                    u.app_metadata?.role === 'superadmin' ||
+                    u.user_metadata?.role === 'superadmin'
+                );
+
+                if (adminUser) {
+                    const { data: profile } = await supabaseAdmin
+                        .from('profiles')
+                        .select('full_name')
+                        .eq('id', adminUser.id)
+                        .single();
+                    return { id: adminUser.id, name: (profile?.full_name as string) || adminUser.email || 'Support' };
+                }
+
+                if (users.length < perPage) break; // last page
+                page++;
+            }
+
+            // Strategy 3: Fallback — profiles.role (in case it was synced)
+            const { data: admins } = await supabaseAdmin
                 .from('profiles')
-                .select('id, first_name, last_name')
+                .select('id, full_name')
                 .eq('role', 'superadmin')
                 .limit(1);
+            if (admins && admins.length > 0) {
+                return { id: admins[0].id as string, name: (admins[0].full_name as string) || 'Support' };
+            }
 
-            if (error || !admins || admins.length === 0) return null;
-            const admin = admins[0];
-            const name = `${admin.first_name || ''} ${admin.last_name || ''}`.trim() || 'Support';
-            return { id: admin.id as string, name };
-        }, 600); // 10 min TTL
+            return null;
+        }, 600); // 10 min cache
 
-        return { data, error: null };
+        return { data: cached, error: cached ? null : 'No superadmin found' };
     } catch (err: any) {
-        console.error('getSuperadminId Error:', err);
+        console.error('[getSuperadminId] Exception:', err);
         return { data: null, error: err.message };
     }
 }
