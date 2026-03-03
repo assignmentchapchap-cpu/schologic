@@ -2,9 +2,13 @@ import { PilotGlobalHeader } from "@/components/pilot/PilotGlobalHeader";
 import { PilotTabsNav } from "@/components/pilot/PilotTabsNav";
 import { PilotDiscussionFAB } from "@/components/pilot/PilotDiscussionFAB";
 import { PilotFormProvider, PilotBlueprint } from "@/components/pilot/PilotFormContext";
+import { PilotMessageProvider } from "@/context/PilotMessageContext";
+import { PilotMessagingPanel } from "@/components/pilot/PilotMessagingPanel";
 import { getCurrentPilotRequest } from "@/app/actions/pilotPortal";
 import { recordMemberPresence } from "@/app/actions/pilotTeam";
 import { redirect } from "next/navigation";
+import { createSessionClient } from "@schologic/database";
+import { cookies } from "next/headers";
 
 export default async function PilotPortalLayout({
     children,
@@ -77,25 +81,57 @@ export default async function PilotPortalLayout({
         completed_tabs_jsonb: p.completed_tabs_jsonb || [],
     };
 
+    // Fetch team members for the messaging recipient list
+    const cookieStore = await cookies();
+    const supabase = createSessionClient(cookieStore);
+    const { data: teamMembersData } = await supabase
+        .from('pilot_team_members')
+        .select(`
+            user_id,
+            is_champion,
+            status,
+            profiles:user_id (
+                first_name,
+                last_name,
+                email
+            )
+        `)
+        .eq('pilot_request_id', p.id)
+        .order('created_at', { ascending: true });
+
+    const initialMembers = (teamMembersData || []).map((m: any) => ({
+        user_id: m.user_id,
+        is_champion: m.is_champion,
+        status: m.status,
+        profiles: m.profiles,
+    }));
+
     return (
         <PilotFormProvider defaultValues={defaultValues}>
-            <div className="min-h-screen bg-slate-50 flex flex-col relative">
-                {/* Global Header */}
-                <PilotGlobalHeader identity={identity} />
+            <PilotMessageProvider
+                identity={{ id: identity.id, full_name: identity.full_name, email: identity.email }}
+                pilotRequestId={p.id}
+                initialMembers={initialMembers}
+            >
+                <div className="min-h-screen bg-slate-50 flex flex-col relative">
+                    {/* Global Header */}
+                    <PilotGlobalHeader identity={identity} />
 
-                {/* Sticky Horizontal Tabs Navigation */}
-                <div className="sticky top-16 z-30">
-                    <PilotTabsNav />
+                    {/* Sticky Horizontal Tabs Navigation */}
+                    <div className="sticky top-16 z-30">
+                        <PilotTabsNav />
+                    </div>
+
+                    {/* Main scrollable content area wrapper */}
+                    <main className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 relative">
+                        {children}
+                    </main>
+
+                    {/* Messaging */}
+                    <PilotDiscussionFAB />
+                    <PilotMessagingPanel />
                 </div>
-
-                {/* Main scrollable content area wrapper */}
-                <main className="flex-1 w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 relative">
-                    {children}
-                </main>
-
-                {/* Persistent Discussion Interface */}
-                <PilotDiscussionFAB />
-            </div>
+            </PilotMessageProvider>
         </PilotFormProvider>
     );
 }

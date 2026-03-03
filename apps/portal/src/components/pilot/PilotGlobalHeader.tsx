@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Bell, MessageSquare, LogOut, User, ShieldCheck, ChevronDown, ClipboardList as ListTodo, Play, Check, ExternalLink, Shield } from "lucide-react";
+import { Bell, MessageSquare, LogOut, User, ShieldCheck, ChevronDown, ClipboardList as ListTodo, Play, Check, ExternalLink, Shield, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { UserIdentity } from "@/lib/identity-server";
 import { createClient } from "@schologic/database";
 import { usePilotForm } from "./PilotFormContext";
 import { updatePilotData } from "@/app/actions/pilotPortal";
+import { usePilotMessages } from "@/context/PilotMessageContext";
 
 interface PilotGlobalHeaderProps {
     identity?: UserIdentity | null;
@@ -22,6 +23,7 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
     const [isTasksOpen, setIsTasksOpen] = useState(false);
     const tasksRef = useRef<HTMLDivElement>(null);
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
+    const { openToSupport } = usePilotMessages();
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -238,9 +240,9 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
                         )}
                     </div>
 
-                    <Button variant="ghost" size="sm" className="hidden md:flex text-slate-600 hover:text-slate-900">
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Discussion Board
+                    <Button variant="ghost" size="sm" className="hidden md:flex text-slate-600 hover:text-slate-900" onClick={openToSupport}>
+                        <Headphones className="h-4 w-4 mr-2" />
+                        Support
                     </Button>
                     <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 relative">
                         <Bell className="h-5 w-5" />
