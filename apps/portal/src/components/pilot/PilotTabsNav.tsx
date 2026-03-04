@@ -14,20 +14,34 @@ const TABS = [
     { value: "preview", label: "07. Submit", href: "/portal/preview" },
 ];
 
-export function PilotTabsNav() {
+interface PilotTabsNavProps {
+    isChampion?: boolean;
+    permissions?: Record<string, string>;
+}
+
+export function PilotTabsNav({ isChampion, permissions = {} }: PilotTabsNavProps) {
     const pathname = usePathname();
     const router = useRouter();
 
-    // Determine active tab from pathname, default to scope
-    const activeTab = TABS.find((tab) => pathname.startsWith(tab.href))?.value || "scope";
     const [mounted, setMounted] = useState(false);
+
+    // Filter tabs based on permissions
+    // Champions see all. Standard users don't see tabs labeled 'none', except 'team' which is always visible so everyone has a home tab.
+    const visibleTabs = TABS.filter((tab) => {
+        if (isChampion) return true;
+        if (tab.value === 'team') return true;
+        return permissions[tab.value] !== 'none';
+    });
+
+    // Determine active tab from pathname, default to scope or the first visible tab
+    const activeTab = visibleTabs.find((tab) => pathname.startsWith(tab.href))?.value || visibleTabs[0]?.value || "team";
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
     const handleTabChange = (value: string) => {
-        const tab = TABS.find((t) => t.value === value);
+        const tab = visibleTabs.find((t) => t.value === value);
         if (tab) {
             router.push(tab.href);
         }
@@ -45,7 +59,7 @@ export function PilotTabsNav() {
         <div className="border-b border-slate-200 bg-white px-6 pt-4">
             <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="h-10 bg-transparent p-0 justify-start space-x-6">
-                    {TABS.map((tab) => (
+                    {visibleTabs.map((tab) => (
                         <TabsTrigger
                             key={tab.value}
                             value={tab.value}

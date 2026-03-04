@@ -160,9 +160,9 @@ export function PreviewClient({
                         <div className="flex-1">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Tabs Finalized</p>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-slate-700">{completedTabs.length} / 6</span>
-                                <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase tracking-tight ${completedTabs.length === 6 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-slate-500 border border-slate-100'}`}>
-                                    {completedTabs.length === 6 ? 'Ready' : 'Incomplete'}
+                                <span className="text-sm font-bold text-slate-700">{completedTabs.length} / 7</span>
+                                <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase tracking-tight ${completedTabs.length === 7 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-slate-500 border border-slate-100'}`}>
+                                    {completedTabs.length === 7 ? 'Ready' : 'Incomplete'}
                                 </span>
                             </div>
                         </div>
@@ -174,10 +174,10 @@ export function PreviewClient({
                                     stroke="currentColor"
                                     strokeWidth="3"
                                     className="text-indigo-500 transition-all duration-1000"
-                                    strokeDasharray={`${(completedTabs.length / 6) * 106} 106`}
+                                    strokeDasharray={`${(completedTabs.length / 7) * 106} 106`}
                                 />
                             </svg>
-                            <span className="absolute text-[10px] font-bold">{Math.round((completedTabs.length / 6) * 100)}%</span>
+                            <span className="absolute text-[10px] font-bold">{Math.round((completedTabs.length / 7) * 100)}%</span>
                         </div>
                     </div>
                 </div>

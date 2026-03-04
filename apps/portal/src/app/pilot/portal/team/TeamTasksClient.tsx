@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { usePilotForm } from "@/components/pilot/PilotFormContext";
 import {
     CheckCircle2, History, X, Save, UserPlus, User,
@@ -139,6 +139,24 @@ export function TeamTasksClient({
     const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
     const [editingMember, setEditingMember] = useState<any | null>(null);
     const [expandedTabs, setExpandedTabs] = useState<Set<string>>(new Set());
+    const [lastSavedStr, setLastSavedStr] = useState<string>("");
+    const popoverRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (showChangelog && popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+                setShowChangelog(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [showChangelog]);
+
+    // Initialize lastSavedStr once on mount
+    useEffect(() => {
+        setLastSavedStr(JSON.stringify(getValues("tasks_jsonb") || []));
+    }, [getValues]);
 
     const isChampion = membership?.is_champion === true;
     const currentUserId = profile?.id || '';
@@ -148,6 +166,9 @@ export function TeamTasksClient({
     const pilotWeeks = watch("scope_jsonb.pilot_period_weeks") || 4;
     const completedTabs: string[] = watch("completed_tabs_jsonb") || [];
     const isTabCompleted = useCallback((tab: string) => completedTabs.includes(tab), [completedTabs]);
+
+    // Check if there are local unsaved changes in tasks
+    const hasUnsavedChanges = lastSavedStr !== "" && JSON.stringify(tasks) !== lastSavedStr;
 
     // Editor name
     let editorName = 'Unknown Member';
@@ -215,6 +236,7 @@ export function TeamTasksClient({
             const logUpdate = appendChangelogEntry('team', 'Manual save');
             const res = await updatePilotData({ tasks_jsonb: currentTasks, changelog_jsonb: logUpdate });
             if (res?.error) throw new Error(res.error);
+            setLastSavedStr(JSON.stringify(currentTasks));
             setLastSaved(new Date());
         } catch (err: any) {
             setError(err.message || "Save failed.");
@@ -232,6 +254,7 @@ export function TeamTasksClient({
             const logUpdate = appendChangelogEntry(tab, action);
             const res = await updatePilotData({ tasks_jsonb: updatedTasks, changelog_jsonb: logUpdate });
             if (res?.error) throw new Error(res.error);
+            setLastSavedStr(JSON.stringify(updatedTasks));
             setLastSaved(new Date());
         } catch (err: any) {
             setError(err.message || "Auto-save failed.");
@@ -467,7 +490,7 @@ export function TeamTasksClient({
                     <p className="text-slate-500 text-sm">Manage your pilot team and track deployment activities across all tabs.</p>
                 </div>
 
-                <div className="flex flex-col items-end gap-3 relative z-50">
+                <div className="flex flex-col items-end gap-3 relative z-50" ref={popoverRef}>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setShowChangelog(!showChangelog)}
@@ -477,8 +500,9 @@ export function TeamTasksClient({
                         </button>
                         <button
                             onClick={handleSave}
-                            disabled={isSaving}
-                            className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+                            disabled={isSaving || !hasUnsavedChanges}
+                            className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors ${(isSaving || !hasUnsavedChanges) ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                         >
                             {isSaving ? (
                                 <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</>

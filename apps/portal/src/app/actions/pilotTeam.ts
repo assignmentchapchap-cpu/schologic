@@ -5,6 +5,8 @@ import { cookies } from 'next/headers';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 import { createNotification } from './pilotNotifications';
+import { invalidateUserIdentity } from '@/lib/identity-server';
+import { revalidatePath } from 'next/cache';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -364,6 +366,10 @@ export async function updateMember(
             link: '/pilot/portal/team',
         }).catch(() => { });
 
+        // 6. Invalidate their caching so they see real-time UI updates
+        await invalidateUserIdentity(memberRecord.user_id);
+        revalidatePath('/pilot/portal', 'layout');
+
         return { success: true };
     } catch (err: any) {
         console.error('updateMember Error:', err);
@@ -406,6 +412,11 @@ export async function removeTeamMember(memberId: string) {
             .eq('pilot_request_id', membership.pilot_request_id);
 
         if (deleteError) throw deleteError;
+
+        if (member) {
+            await invalidateUserIdentity(member.user_id);
+            revalidatePath('/pilot/portal', 'layout');
+        }
 
         return { success: true };
     } catch (err: any) {

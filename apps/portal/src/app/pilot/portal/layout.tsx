@@ -122,7 +122,10 @@ export default async function PilotPortalLayout({
 
                         {/* Sticky Horizontal Tabs Navigation */}
                         <div className="sticky top-16 z-30">
-                            <PilotTabsNav />
+                            <PilotTabsNav
+                                isChampion={identity.pilot_permissions?.is_champion}
+                                permissions={identity.pilot_permissions?.tab_permissions_jsonb as Record<string, string> || {}}
+                            />
                         </div>
 
                         {/* Main scrollable content area wrapper */}
