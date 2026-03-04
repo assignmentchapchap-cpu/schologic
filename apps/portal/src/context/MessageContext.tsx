@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from "@schologic/database";
 import { useUser } from './UserContext';
 import NewMessageModal from '@/components/messaging/NewMessageModal';
-import { getInboxMessages, invalidateInboxMessages } from '@/app/actions/messaging';
+import { getInboxMessages, invalidateInboxMessages, sendDirectMessageAction } from '@/app/actions/messaging';
 
 type Message = {
     id: string;
@@ -81,25 +81,34 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
         fetchMessages();
 
         const channel = supabase
-            .channel('realtime:messages')
+            .channel(`messages-${user.id}`)
+            .on('broadcast', { event: 'new_dm' }, (payload) => {
+                const newMsg = payload.payload?.message;
+                if (newMsg) {
+                    setMessages(prev => {
+                        if (prev.some(m => m.id === newMsg.id)) return prev;
+                        return [newMsg, ...prev];
+                    });
+                } else {
+                    fetchMessages();
+                }
+            })
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
-                table: 'messages'
-            },
-                () => {
+                table: 'messages',
+                filter: `receiver_id=eq.${user.id}`
+            }, (payload) => {
+                const newMsg = payload.new as Message;
+                if (newMsg) {
+                    setMessages(prev => {
+                        if (prev.some(m => m.id === newMsg.id)) return prev;
+                        return [newMsg, ...prev];
+                    });
+                } else {
                     fetchMessages();
                 }
-            )
-            .on('postgres_changes', {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'messages'
-            },
-                () => {
-                    fetchMessages();
-                }
-            )
+            })
             .subscribe();
 
         return () => {
@@ -110,7 +119,7 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     const fetchMessages = async () => {
         if (!user) return;
         try {
-            const { data, error } = await getInboxMessages();
+            const { data, error } = await getInboxMessages(Date.now());
 
             if (data) {
                 // Ensure the data matches our Message type
@@ -135,19 +144,16 @@ export function MessageProvider({ children }: { children: React.ReactNode }) {
     const sendMessage = async (receiverId: string, content: string, subject: string | null = null, parentId: string | null = null, broadcastId: string | null = null) => {
         if (!user) return { data: null, error: 'User not authenticated' };
 
-        const { data, error } = await supabase.from('messages').insert({
-            sender_id: user.id,
-            receiver_id: receiverId,
-            subject: user.role === 'student' ? null : subject, // Force null subject for students if they somehow bypass UI
+        const { data, error } = await sendDirectMessageAction(
+            receiverId,
             content,
-            parent_id: parentId,
-            broadcast_id: user.role === 'student' ? null : broadcastId,
-            is_read: false
-        }).select().single();
+            user.role === 'student' ? null : subject,
+            parentId,
+            user.role === 'student' ? null : broadcastId
+        );
 
         if (data) {
             setMessages(prev => [data as Message, ...prev]);
-            await invalidateInboxMessages([user.id, receiverId]);
         }
 
         return { data, error };

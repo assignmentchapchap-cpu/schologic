@@ -1,10 +1,17 @@
 'use server';
 
 import { createSessionClient } from '@schologic/database';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { fetchWithCache, invalidateCache } from '@/lib/cache';
 
-export async function getInboxMessages() {
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+);
+
+export async function getInboxMessages(_t?: number) {
     const cookieStore = await cookies();
     const supabase = createSessionClient(cookieStore);
 
@@ -43,4 +50,66 @@ export async function invalidateInboxMessages(userIds: string[]) {
     await Promise.all(
         userIds.map(id => invalidateCache(`messages:inbox:${id}`))
     );
+}
+
+export async function sendDirectMessageAction(
+    receiverId: string,
+    content: string,
+    subject: string | null = null,
+    parentId: string | null = null,
+    broadcastId: string | null = null
+) {
+    try {
+        const cookieStore = await cookies();
+        const supabase = createSessionClient(cookieStore);
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) return { data: null, error: 'Unauthorized' };
+
+        // Insert via regular authenticated client to ensure RLS policies apply appropriately
+        const { data, error } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: user.id,
+                receiver_id: receiverId,
+                subject: user.role === 'student' ? null : subject,
+                content,
+                parent_id: parentId,
+                broadcast_id: user.role === 'student' ? null : broadcastId,
+                is_read: false
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        if (data) {
+            await invalidateInboxMessages([user.id, receiverId]);
+
+            // Fire broadcast event securely via Admin client so we don't have to subscribe on the client side
+            // Guarantee the serverless function stays alive until the websocket broadcast completes
+            const channel = supabaseAdmin.channel(`messages-${receiverId}`);
+            await new Promise((resolve) => {
+                channel.subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        await channel.send({
+                            type: 'broadcast',
+                            event: 'new_dm',
+                            payload: { message: data, messageId: data.id, senderId: user.id }
+                        });
+                        supabaseAdmin.removeChannel(channel);
+                        resolve(true);
+                    } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+                        resolve(false);
+                    }
+                });
+                setTimeout(() => resolve(false), 2000); // Failsafe
+            });
+        }
+
+        return { data, error: null };
+    } catch (err: any) {
+        console.error('sendDirectMessageAction Error:', err);
+        return { data: null, error: err.message };
+    }
 }

@@ -49,8 +49,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         fetchNotifications();
 
         const channel = supabase
-            .channel('realtime:notifications')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' },
+            .channel(`realtime:notifications:${user.id}`)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'notifications',
+                filter: `user_id=eq.${user.id}`
+            },
                 () => {
                     fetchNotifications();
                 }

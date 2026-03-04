@@ -90,7 +90,7 @@ export async function getSuperadminId(): Promise<{ data: { id: string; name: str
  * Fetches all discussion board messages for a pilot.
  * Uses admin client to bypass RLS — discussion messages are visible to all team members.
  */
-export async function getPilotDiscussionMessages(pilotRequestId: string) {
+export async function getPilotDiscussionMessages(pilotRequestId: string, _t?: number) {
     try {
         const cookieStore = await cookies();
         const supabase = createSessionClient(cookieStore);
@@ -187,6 +187,28 @@ export async function sendPilotDiscussionMessage(pilotRequestId: string, content
             await Promise.all(
                 members.map(m => invalidateCache(`pilot:discussion:${pilotRequestId}:${m.user_id}`))
             );
+        }
+
+        // Fire a broadcast event so active clients refetch instantly without polling
+        // Guarantee the serverless function stays alive until the websocket broadcast completes
+        if (data) {
+            const channel = supabaseAdmin.channel(`pilot-messages-${pilotRequestId}`);
+            await new Promise((resolve) => {
+                channel.subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        await channel.send({
+                            type: 'broadcast',
+                            event: 'new_discussion_message',
+                            payload: { message: data, messageId: data.id, senderId: user.id }
+                        });
+                        supabaseAdmin.removeChannel(channel);
+                        resolve(true);
+                    } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+                        resolve(false);
+                    }
+                });
+                setTimeout(() => resolve(false), 2000); // Failsafe
+            });
         }
 
         return { data, error: null };

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from "@schologic/database";
-import { getInboxMessages, invalidateInboxMessages } from '@/app/actions/messaging';
+import { getInboxMessages, invalidateInboxMessages, sendDirectMessageAction } from '@/app/actions/messaging';
 import { getSuperadminId, getPilotDiscussionMessages, invalidatePilotDiscussion, sendPilotDiscussionMessage } from '@/app/actions/pilotMessaging';
 
 // ─── Types ─────────────────────────────────────────────────
@@ -173,7 +173,7 @@ export function PilotMessageProvider({ children, identity, pilotRequestId, initi
     // Cache is only invalidated after writes (in server actions).
 
     const fetchDirectMessages = useCallback(async () => {
-        const { data } = await getInboxMessages();
+        const { data } = await getInboxMessages(Date.now());
         if (data) {
             const dms = (data as Message[]).filter(m => m.broadcast_id !== pilotRequestId);
             setDirectMessages(dms);
@@ -181,7 +181,7 @@ export function PilotMessageProvider({ children, identity, pilotRequestId, initi
     }, [pilotRequestId]);
 
     const fetchDiscussionMessages = useCallback(async () => {
-        const { data } = await getPilotDiscussionMessages(pilotRequestId);
+        const { data } = await getPilotDiscussionMessages(pilotRequestId, Date.now());
         if (data) {
             setDiscussionMessages(data as Message[]);
         }
@@ -202,58 +202,89 @@ export function PilotMessageProvider({ children, identity, pilotRequestId, initi
             .finally(() => setLoading(false));
     }, []);
 
-    // ── Real-time (for DMs — Supabase Realtime works with RLS) ──
+    // ── Real-time ────────────────────────────────────────────
 
     useEffect(() => {
+        // Channel for Pilot-wide Broadcasts (e.g., Discussions)
         const channel = supabase
             .channel(`pilot-messages-${pilotRequestId}`)
+            // Listen for Admin-inserted broadcast events (Discussion Board)
+            .on('broadcast', { event: 'new_discussion_message' }, (payload) => {
+                const { senderId, message } = payload.payload || {};
+                // Only refetch if we weren't the one who sent it
+                if (senderId !== currentUserId) {
+                    if (message) {
+                        setDiscussionMessages(prev => {
+                            if (prev.some(m => m.id === message.id)) return prev;
+                            return [...prev, message];
+                        });
+                    } else {
+                        fetchDiscussionMessages();
+                    }
+                }
+            })
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
                 table: 'messages',
+                filter: `broadcast_id=eq.${pilotRequestId}`
             }, (payload) => {
-                const msg = payload.new as Message;
-                if (msg.sender_id === currentUserId) return;
-
-                if (msg.broadcast_id === pilotRequestId) {
-                    // Discussion — refetch from server (admin client)
-                    fetchDiscussionMessages();
-                } else if (msg.receiver_id === currentUserId) {
-                    // DM — add directly
-                    setDirectMessages(prev => {
-                        if (prev.some(m => m.id === msg.id)) return prev;
-                        return [...prev, msg];
+                const newMsg = payload.new as Message;
+                // Only process if we weren't the one who sent it
+                if (newMsg && newMsg.sender_id !== currentUserId) {
+                    setDiscussionMessages(prev => {
+                        if (prev.some(m => m.id === newMsg.id)) return prev;
+                        return [...prev, newMsg];
                     });
+                } else if (!newMsg) {
+                    fetchDiscussionMessages();
+                }
+            })
+            .subscribe();
+
+        // Channel for Personal Direct Messages
+        const dmChannel = supabase
+            .channel(`messages-${currentUserId}`)
+            .on('broadcast', { event: 'new_dm' }, (payload) => {
+                const newMsg = payload.payload?.message;
+                // Skip discussion board messages — they have a broadcast_id
+                if (newMsg && !newMsg.broadcast_id) {
+                    setDirectMessages(prev => {
+                        if (prev.some(m => m.id === newMsg.id)) return prev;
+                        return [newMsg, ...prev];
+                    });
+                } else if (!newMsg) {
+                    fetchDirectMessages();
                 }
             })
             .on('postgres_changes', {
-                event: 'UPDATE',
+                event: 'INSERT',
                 schema: 'public',
                 table: 'messages',
+                filter: `receiver_id=eq.${currentUserId}`
             }, (payload) => {
-                const msg = payload.new as Message;
-                setDirectMessages(prev => prev.map(m => m.id === msg.id ? { ...m, is_read: msg.is_read } : m));
-                setDiscussionMessages(prev => prev.map(m => m.id === msg.id ? { ...m, is_read: msg.is_read } : m));
+                const newMsg = payload.new as Message;
+                // Skip discussion board messages — they have a broadcast_id
+                if (newMsg && !newMsg.broadcast_id) {
+                    setDirectMessages(prev => {
+                        if (prev.some(m => m.id === newMsg.id)) return prev;
+                        return [newMsg, ...prev];
+                    });
+                } else if (!newMsg) {
+                    fetchDirectMessages();
+                }
             })
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
+            supabase.removeChannel(dmChannel);
         };
-    }, [currentUserId, pilotRequestId]);
+    }, [currentUserId, pilotRequestId, fetchDirectMessages, fetchDiscussionMessages]);
 
-    // ── Always-on polling (15s background, 5s when panel open) ──
-    // Essential for discussion messages (admin-client inserts bypass Supabase Realtime)
-    // Also ensures FAB badge updates even when panel is closed
-
-    useEffect(() => {
-        const interval = isPanelOpen ? 5000 : 15000;
-        const timer = setInterval(() => {
-            fetchDiscussionMessages();
-            fetchDirectMessages();
-        }, interval);
-        return () => clearInterval(timer);
-    }, [isPanelOpen, fetchDiscussionMessages, fetchDirectMessages]);
+    // ── Polling Loop Removed ─────────────────────────────────
+    // We now rely purely on Supabase Realtime and Broadcast events.
+    // This saves thousands of REST requests per hour.
 
     // ── Unread counts ────────────────────────────────────────
 
@@ -273,19 +304,10 @@ export function PilotMessageProvider({ children, identity, pilotRequestId, initi
         subject: string | null = null,
         parentId: string | null = null
     ) => {
-        const { data, error } = await supabase.from('messages').insert({
-            sender_id: currentUserId,
-            receiver_id: receiverId,
-            subject,
-            content,
-            parent_id: parentId,
-            broadcast_id: null,
-            is_read: false,
-        }).select().single();
+        const { data, error } = await sendDirectMessageAction(receiverId, content, subject, parentId);
 
         if (data) {
             setDirectMessages(prev => [...prev, data as Message]);
-            await invalidateInboxMessages([currentUserId, receiverId]);
         }
 
         return { data, error };
