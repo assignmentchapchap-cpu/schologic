@@ -139,7 +139,7 @@ export function PilotGlobalHeader({ identity }: PilotGlobalHeaderProps) {
     };
 
     return (
-        <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
+        <header className="sticky top-0 z-[100] bg-white border-b border-slate-200">
             <div className="flex items-center justify-between px-6 h-16">
                 <div className="flex items-center gap-6">
                     <img src="/logo_updated.png" alt="Schologic" className="h-6 w-auto" />

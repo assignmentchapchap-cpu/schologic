@@ -31,7 +31,7 @@ export function ExecutiveSummaryCard({
     return (
         <div className={`group flex flex-col relative bg-white border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden transition-all hover:shadow-md hover:border-slate-300/80 ${className}`}>
             {/* Status Banner - Absolute top right, above all text */}
-            <div className="absolute top-0 right-0 z-[100] translate-y-[-2px]">
+            <div className="absolute top-0 right-0 z-30 translate-y-[-2px]">
                 {isLocked ? (
                     isChampion ? (
                         <button
