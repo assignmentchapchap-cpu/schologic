@@ -19,67 +19,75 @@ const supabaseAdmin = createClient(
  */
 export async function getSuperadminId(): Promise<{ data: { id: string; name: string } | null; error: string | null }> {
     try {
-        const cookieStore = await cookies();
-        const supabase = createSessionClient(cookieStore);
+        // No authentication required to look up who the admin is
 
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) return { data: null, error: 'Unauthorized' };
+        console.log('[getSuperadminId] Starting lookup in DB...');
 
-        // Check cache first
-        const cached = await fetchWithCache('pilot:superadmin_info', async () => {
-            // Strategy 1: env var (instant)
-            const envAdminId = process.env.SUPERADMIN_USER_ID;
-            if (envAdminId) {
+        // Strategy 1: Search auth users for app_metadata.role = 'superadmin'
+        let page = 1;
+        const perPage = 50;
+        let authAdminId = null;
+        let authAdminName = 'Support';
+
+        while (page <= 20) { // safety cap at 1000 users
+            const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+                page,
+                perPage,
+            });
+            if (listError) {
+                console.error('[getSuperadminId] Auth list error:', listError);
+                break;
+            }
+            if (!users || users.length === 0) break;
+
+            const adminUser = users.find(u =>
+                u.app_metadata?.role === 'superadmin' ||
+                u.user_metadata?.role === 'superadmin'
+            );
+
+            if (adminUser) {
+                authAdminId = adminUser.id;
+                console.log(`[getSuperadminId] Found superadmin in auth users: ${authAdminId}`);
+
                 const { data: profile } = await supabaseAdmin
                     .from('profiles')
                     .select('full_name')
-                    .eq('id', envAdminId)
+                    .eq('id', authAdminId)
                     .single();
-                return { id: envAdminId, name: (profile?.full_name as string) || 'Support' };
+
+                authAdminName = (profile?.full_name as string) || adminUser.email || 'Support';
+                break;
             }
 
-            // Strategy 2: Search auth users for app_metadata.role = 'superadmin'
-            let page = 1;
-            const perPage = 50;
-            while (page <= 20) { // safety cap at 1000 users
-                const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers({
-                    page,
-                    perPage,
-                });
-                if (listError || !users || users.length === 0) break;
+            if (users.length < perPage) break; // last page
+            page++;
+        }
 
-                const adminUser = users.find(u =>
-                    u.app_metadata?.role === 'superadmin' ||
-                    u.user_metadata?.role === 'superadmin'
-                );
+        if (authAdminId) {
+            console.log(`[getSuperadminId] Returning from auth strategy: ${authAdminId}`);
+            return { data: { id: authAdminId, name: authAdminName }, error: null };
+        }
 
-                if (adminUser) {
-                    const { data: profile } = await supabaseAdmin
-                        .from('profiles')
-                        .select('full_name')
-                        .eq('id', adminUser.id)
-                        .single();
-                    return { id: adminUser.id, name: (profile?.full_name as string) || adminUser.email || 'Support' };
-                }
+        console.log('[getSuperadminId] Auth strategy failed, trying profiles strategy...');
 
-                if (users.length < perPage) break; // last page
-                page++;
-            }
+        // Strategy 2: Fallback — profiles.role (in case it was synced)
+        const { data: admins, error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .select('id, full_name')
+            .eq('role', 'superadmin')
+            .limit(1);
 
-            // Strategy 3: Fallback — profiles.role (in case it was synced)
-            const { data: admins } = await supabaseAdmin
-                .from('profiles')
-                .select('id, full_name')
-                .eq('role', 'superadmin')
-                .limit(1);
-            if (admins && admins.length > 0) {
-                return { id: admins[0].id as string, name: (admins[0].full_name as string) || 'Support' };
-            }
+        if (profileError) {
+            console.error('[getSuperadminId] Profile query error:', profileError);
+        }
 
-            return null;
-        }, 600); // 10 min cache
+        if (admins && admins.length > 0) {
+            console.log(`[getSuperadminId] Found superadmin in profiles: ${admins[0].id}`);
+            return { data: { id: admins[0].id as string, name: (admins[0].full_name as string) || 'Support' }, error: null };
+        }
 
-        return { data: cached, error: cached ? null : 'No superadmin found' };
+        console.log('[getSuperadminId] No superadmin found in DB at all.');
+        return { data: null, error: 'No superadmin found' };
     } catch (err: any) {
         console.error('[getSuperadminId] Exception:', err);
         return { data: null, error: err.message };

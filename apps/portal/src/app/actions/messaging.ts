@@ -4,6 +4,8 @@ import { createSessionClient } from '@schologic/database';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { fetchWithCache, invalidateCache } from '@/lib/cache';
+import { sendTelegramNotification } from '@/lib/telegram';
+import { getSuperadminId } from './pilotMessaging';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -85,6 +87,16 @@ export async function sendDirectMessageAction(
 
         if (data) {
             await invalidateInboxMessages([user.id, receiverId]);
+
+            // Notify Superadmin via Telegram if they're the receiver
+            const { data: adminData } = await getSuperadminId();
+            if (adminData && receiverId === adminData.id) {
+                sendTelegramNotification({
+                    message: `New DM from ${user.email || 'a user'}: ${content.substring(0, 200)}`,
+                    type: 'dm_received',
+                    link: '/admin/messages',
+                }).catch((e) => console.error('[Telegram/DM] Error:', e));
+            }
 
             // Fire broadcast event securely via Admin client so we don't have to subscribe on the client side
             // Guarantee the serverless function stays alive until the websocket broadcast completes

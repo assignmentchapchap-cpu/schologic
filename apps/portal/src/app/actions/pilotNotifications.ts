@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { getSuperadminId } from './pilotMessaging';
+import { sendTelegramNotification } from '@/lib/telegram';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -93,4 +94,5 @@ export async function notifySuperadmin({
     }
 
     await createNotification({ userId: data.id, message, type, link });
+    sendTelegramNotification({ message, type, link }).catch((e) => console.error('[Telegram/PilotNotif] Error:', e));
 }
