@@ -95,7 +95,7 @@ export async function sendDirectMessageAction(
                     message: `New DM from ${user.email || 'a user'}: ${content.substring(0, 200)}`,
                     type: 'dm_received',
                     link: '/admin/messages',
-                }).catch((e) => console.error('[Telegram/DM] Error:', e));
+                }).catch(() => { });
             }
 
             // Fire broadcast event securely via Admin client so we don't have to subscribe on the client side

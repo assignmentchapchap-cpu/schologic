@@ -40,8 +40,7 @@ export async function createAdminNotification({
         if (error) console.error('[AdminNotification] Insert failed:', error.message);
 
         // Fire-and-forget Telegram notification
-        console.log('[AdminNotification] About to call sendTelegramNotification for type:', type);
-        sendTelegramNotification({ message, type, link }).catch((e) => console.error('[Telegram/AdminNotif] Error:', e));
+        sendTelegramNotification({ message, type, link }).catch(() => { });
     } catch (err: any) {
         console.error('[AdminNotification] Error:', err.message);
     }

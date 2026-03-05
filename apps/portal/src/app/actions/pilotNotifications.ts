@@ -94,5 +94,5 @@ export async function notifySuperadmin({
     }
 
     await createNotification({ userId: data.id, message, type, link });
-    sendTelegramNotification({ message, type, link }).catch((e) => console.error('[Telegram/PilotNotif] Error:', e));
+    sendTelegramNotification({ message, type, link }).catch(() => { });
 }
