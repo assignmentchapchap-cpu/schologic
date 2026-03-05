@@ -50,7 +50,7 @@ export const ZTCIngestionVisual = () => {
                             This Universal OER Ingestion animation showcases the import process from global repositories like LibreTexts and OpenStax.
                         </p>
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            As indicated here, the process begins with searching for a resource and adding it to the Schologic LMS library, from where you can choose follow-up actions like course assignment or curriculum remixing.
+                            As indicated here, the process begins with searching for a resource and adding it to the School Logic (or Schoologic) white label LMS library. From there, you can choose follow-up actions like course assignment or curriculum remixing.
                         </p>
                     </div>
                     <button

@@ -24,29 +24,29 @@ export function LightHero() {
                         </h1>
 
                         <p className="text-lg md:text-xl text-slate-600 leading-10 md:leading-loose mb-10 font-light max-w-2xl">
-                            Save <span className="text-slate-900">up to 80% of learning management time</span> with the <strong>Schologic LMS institutional portal</strong>. We unify AI content detection, digital practicum management, AI assistants and open educational resources into <span className="text-slate-900">one powerful platform</span>.
+                            Maximize <strong>productivity</strong> and save <span className="text-slate-900">up to 80% of learning management time</span> with a custom, <strong>white label</strong> Schologic LMS institutional portal. We unify AI content detection, digital practicum management, AI assistants and open educational resources into <span className="text-slate-900">one powerful platform</span>.
                         </p>
 
                         {/* CTAs + Assurances Wrapper (Constrained Width on Desktop) */}
                         <div className="flex flex-col w-full sm:w-fit">
                             {/* Dual CTAs */}
-                            <div className="grid grid-cols-2 sm:flex sm:flex-row gap-4 w-full mb-6">
+                            <div className="grid grid-cols-[3fr_2fr] sm:flex sm:flex-row gap-2 sm:gap-4 w-full sm:w-fit mb-6">
                                 <Link
                                     href={getPilotUrl()}
-                                    className="px-8 py-4 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 flex items-center justify-center gap-2"
+                                    className="px-2 py-2.5 sm:px-8 sm:py-4 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 flex items-center justify-center text-[14px] min-[375px]:text-[15px] sm:text-base whitespace-nowrap"
                                 >
                                     Start Institutional Pilot
                                 </Link>
                                 <Link
                                     href="/login?view=signup"
-                                    className="flex items-center justify-center px-4 md:px-8 py-3.5 bg-transparent border border-indigo-900 hover:bg-indigo-50 text-indigo-900 rounded-xl font-bold transition-all text-sm md:text-base whitespace-nowrap md:min-w-[240px] active:scale-95"
+                                    className="flex items-center justify-center px-2 py-2.5 sm:px-8 sm:py-4 bg-transparent border border-indigo-900 hover:bg-indigo-50 text-indigo-900 rounded-xl font-bold transition-all text-[14px] min-[375px]:text-[15px] sm:text-base whitespace-nowrap active:scale-95"
                                 >
                                     Free Sign Up
                                 </Link>
                             </div>
 
-                            {/* Assurances / Affirmations */}
-                            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-slate-500 mt-2">
+                            {/* Assurances / Affirmations (Desktop only now) */}
+                            <div className="hidden md:flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-slate-500 mt-2">
                                 <div className="flex items-center gap-2">
                                     <CheckCircle className="w-5 h-5 text-emerald-600" />
                                     <span>Free Instructor Access</span>
@@ -74,6 +74,23 @@ export function LightHero() {
                         <div className="relative z-10 w-full md:min-w-[130%] md:-ml-[20%] lg:min-w-[125%] lg:-ml-[15%]">
                             <DeanDashboardVisual />
                         </div>
+
+                        {/* Assurances / Affirmations (Mobile only - below Visual) */}
+                        <div className="md:hidden flex flex-row items-center justify-center gap-2 min-[375px]:gap-4 w-full mt-6">
+                            <div className="flex items-center gap-1 whitespace-nowrap">
+                                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <span className="text-[10px] min-[375px]:text-xs font-medium text-slate-500 tracking-tight">Free Instructor Access</span>
+                            </div>
+                            <div className="flex items-center gap-1 whitespace-nowrap">
+                                <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
+                                <span className="text-[10px] min-[375px]:text-xs font-medium text-slate-500 tracking-tight">Live Demo</span>
+                            </div>
+                            <div className="flex items-center gap-1 whitespace-nowrap">
+                                <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                                <span className="text-[10px] min-[375px]:text-xs font-medium text-slate-500 tracking-tight">10-min Setup</span>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>

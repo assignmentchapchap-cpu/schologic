@@ -137,7 +137,7 @@ export const SystemEcosystemVisual = () => {
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            Schologic provides unified oversight without sacrificing local autonomy. Whether managing a single campus or a multi-institution system, our granular RBAC ensures that <strong>data sovereignty</strong> is maintained while enabling centralized policy enforcement.
+                            Schologic (also known as School Logic or Schoologic) provides unified oversight without sacrificing local autonomy. Whether managing a single campus or a multi-institution system through our white label <strong>pilot management portal</strong>, our granular RBAC ensures that data sovereignty is maintained while enabling centralized policy enforcement.
                         </p>
                     </div>
                     <button

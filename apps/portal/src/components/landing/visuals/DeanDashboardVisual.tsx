@@ -6,22 +6,22 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 
 const slides = [
-    { src: '/images/updated screenshots/dashboard.webp', alt: 'Dean\'s Dashboard - Real-time oversight of enrollment, retention, and institutional integrity.' },
-    { src: '/images/updated screenshots/class page.webp', alt: 'Class Management - Centralized hub for materials, syllabi, and student rosters.' },
-    { src: '/images/updated screenshots/submissions.webp', alt: 'Smart Grading Queue - AI-assisted scoring and integrity checks for faster assessment.' },
-    { src: '/images/updated screenshots/ai report.webp', alt: 'AI Integrity Report - Transparent authorship analysis with actionable evidence.' },
-    { src: '/images/updated screenshots/ta insights.webp', alt: 'Teaching Assistant Insights - AI-detected patterns to identify at-risk students early.' },
-    { src: '/images/updated screenshots/rubric.webp', alt: 'Rubric Builder - Standardized, criteria-based grading across departments.' },
+    { src: '/images/updated screenshots/dashboard.webp', alt: 'Dean\'s Dashboard - Real-time oversight of enrollment, retention, and institutional integrity for white label LMS deployments.' },
+    { src: '/images/updated screenshots/class page.webp', alt: 'Class Management - Centralized hub for materials, syllabi, and student rosters to boost faculty productivity.' },
+    { src: '/images/updated screenshots/submissions.webp', alt: 'Smart Grading Queue - AI-assisted scoring and integrity checks managed via the secure pilot management portal.' },
+    { src: '/images/updated screenshots/ai report.webp', alt: 'AI Integrity Report - Transparent authorship analysis providing actionable evidence within School Logic.' },
+    { src: '/images/updated screenshots/ta insights.webp', alt: 'Teaching Assistant Insights - AI-detected patterns to identify at-risk students and improve instructor productivity.' },
+    { src: '/images/updated screenshots/rubric.webp', alt: 'Rubric Builder - Standardized, criteria-based grading across departments in the Schoologic ecosystem.' },
     { src: '/images/updated screenshots/practicum logs.webp', alt: 'Field Experience Logs - Digital verification of student hours and practical skills.' },
     { src: '/images/updated screenshots/universal reader.webp', alt: 'Universal Document Reader - Smart, accessible content viewer with built-in annotation.' },
-    { src: '/images/updated screenshots/ai settings.webp', alt: 'AI Governance - Customizable policies for AI detection and usage thresholds.' },
-    { src: '/images/updated screenshots/grade table.webp', alt: 'Master Gradebook - Holistic view of academic performance and assessment data.' },
-    { src: '/images/updated screenshots/library.webp', alt: 'Digital Library - Seamless integration of Open Educational Resources (OER).' },
+    { src: '/images/updated screenshots/ai settings.webp', alt: 'AI Governance - Customizable policies for AI detection and usage thresholds in your white label portal.' },
+    { src: '/images/updated screenshots/grade table.webp', alt: 'Master Gradebook - Holistic view of academic performance and assessment data in Schologic.' },
+    { src: '/images/updated screenshots/library.webp', alt: 'Digital Library - Seamless integration of Open Educational Resources (OER) to save time and boost productivity.' },
     { src: '/images/updated screenshots/practicum profiles.webp', alt: 'Practicum Profiles - Portfolio view of skills acquired during field placements.' },
     { src: '/images/updated screenshots/practicum rubrics.webp', alt: 'Practicum Rubrics - Competency-based evaluation for off-campus learning.' },
-    { src: '/images/updated screenshots/practicum timeline.webp', alt: 'Practicum Timeline - Visual tracking of field work milestones and requirements.' },
+    { src: '/images/updated screenshots/practicum timeline.webp', alt: 'Practicum Timeline - Visual tracking of field work milestones via the School Logic pilot management portal.' },
     { src: '/images/updated screenshots/read assistant.webp', alt: 'Universal Reader Assistant - AI-powered summarization and context for course materials.' },
-    { src: '/images/updated screenshots/settings.webp', alt: 'System Administration - Enterprise-grade configuration and role management.' },
+    { src: '/images/updated screenshots/settings.webp', alt: 'System Administration - Enterprise-grade configuration and role management for white label administrators.' },
 ];
 
 const AUTOPLAY_INTERVAL = 8500;

@@ -6,13 +6,13 @@ import { ChevronLeft, ChevronRight, Info, X } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const slides = [
-    { src: '/images/mobile screenshots/student dashboard.webp', alt: 'Student Dashboard - Overview of courses, upcoming deadlines, and academic progress at a glance.' },
-    { src: '/images/mobile screenshots/student class.webp', alt: 'Student Class View - Course materials, assignments, and instructor announcements for an enrolled class.' },
-    { src: '/images/mobile screenshots/student ai.webp', alt: 'AI Study Assistant - Intelligent tutoring and content analysis tools available on mobile.' },
-    { src: '/images/mobile screenshots/student log entry.webp', alt: 'Practicum Log Entry - Students documenting field experiences and clinical hours from their phone.' },
-    { src: '/images/mobile screenshots/student practcum.webp', alt: 'Practicum Overview - Summary of practicum placement, hours completed, and supervisor feedback.' },
-    { src: '/images/mobile screenshots/student practicum logs.webp', alt: 'Practicum Logs List - Chronological history of all submitted practicum log entries.' },
-    { src: '/images/mobile screenshots/student practicum timeline.webp', alt: 'Practicum Timeline - Visual timeline of key milestones and deadlines in the practicum journey.' },
+    { src: '/images/mobile screenshots/student dashboard.webp', alt: 'Student Dashboard - Overview of courses, upcoming deadlines, and academic progress within the Schologic LMS.' },
+    { src: '/images/mobile screenshots/student class.webp', alt: 'Student Class View - Course materials, assignments, and announcements accessible via the white label pilot management portal.' },
+    { src: '/images/mobile screenshots/student ai.webp', alt: 'AI Study Assistant - Intelligent tutoring and content analysis tools to boost learning productivity on mobile.' },
+    { src: '/images/mobile screenshots/student log entry.webp', alt: 'Practicum Log Entry - Students efficiently documenting field experiences using School Logic on their phone.' },
+    { src: '/images/mobile screenshots/student practcum.webp', alt: 'Practicum Overview - Summary of placements and supervisor feedback within the Schoologic ecosystem.' },
+    { src: '/images/mobile screenshots/student practicum logs.webp', alt: 'Practicum Logs List - Chronological history of all submitted digital log entries for improved tracking productivity.' },
+    { src: '/images/mobile screenshots/student practicum timeline.webp', alt: 'Practicum Timeline - Visual timeline of milestones managed securely through the pilot management portal.' },
 ];
 
 const AUTOPLAY_INTERVAL = 4000;
@@ -117,7 +117,7 @@ export const StudentMobileCarousel = () => {
                             These screenshots showcase the student mobile experience, including the dashboard and grade tracking views.
                         </p>
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            Schologic has been designed with the needs of students in mind. Through optimized mobile functions and <strong>instant updates on your dashboard</strong>, our app helps ensure that no student misses an announcement, deadline, or critical resource.
+                            School Logic (or Schoologic) has been designed with the needs of students in mind. Through optimized mobile functions and <strong>instant updates on your dashboard</strong>, our app helps maintain high productivity and ensure that no student misses an announcement, deadline, or critical resource.
                         </p>
                     </div>
                     <button

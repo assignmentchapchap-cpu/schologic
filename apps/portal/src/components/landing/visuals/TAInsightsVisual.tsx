@@ -31,10 +31,10 @@ export const TAInsightsVisual = () => {
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            This example AI Grading Report provides a detailed analysis of student strengths and weaknesses.
+                            This example Schoologic AI Grading Report provides a detailed analysis of student strengths and weaknesses.
                         </p>
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            The TA Insights module is designed to help instructors acquire a quick overview of the submission and enables them to grade faster without sacrificing feedback quality.
+                            The TA Insights module focuses on <strong>instructor productivity</strong>—it is designed to help faculty members acquire a quick overview of a submission, enabling them to grade faster without sacrificing feedback quality within the white label pilot management portal.
                         </p>
                     </div>
                     <button

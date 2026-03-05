@@ -71,10 +71,10 @@ export const PracticumProcessVisual = () => {
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            This diagram outlines the digital practicum supervision workflow and its various stages.
+                            This diagram outlines the digital practicum supervision workflow and its various stages within the School Logic LMS.
                         </p>
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            The practicum process is streamlined to ensure that instructors can oversee field work remotely. This visualization shows the six key steps in practicum management, from placement to final grading.
+                            The practicum process is streamlined to ensure that instructors can oversee field work remotely and securely. This visualization shows the six key steps in practicum management, from placement to final grading, available via our white label <strong>pilot management portal</strong>.
                         </p>
                     </div>
                     <button

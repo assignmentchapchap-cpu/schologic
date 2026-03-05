@@ -32,8 +32,8 @@ export const IntegrityCheckVisual = () => {
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                            This AI Detection Report example shows a 55% probability score.
-                            It demonstrates the use of the <strong>sentence granularity</strong> setting, where the AI detector scans each sentence separately to isolate specific AI-generated claims.
+                            This Schologic LMS AI Detection Report example shows a 55% probability score.
+                            It demonstrates the use of the <strong>sentence granularity</strong> setting, where the AI detector scans each sentence separately to isolate specific AI-generated claims and boost grader productivity.
                         </p>
                         <p className="text-sm text-slate-600 leading-relaxed mb-4">
                             You can learn more about this forensic analysis in the <Link href="/features/ai-detection" className="text-indigo-600 font-bold hover:underline inline-flex items-center gap-1">AI detector page <ExternalLink className="w-3 h-3" /></Link>.

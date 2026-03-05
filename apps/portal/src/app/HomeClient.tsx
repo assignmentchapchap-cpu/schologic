@@ -83,7 +83,7 @@ export default function HomeClient() {
             <FeaturesSection
                 eyebrow="Instructor Productivity Engine"
                 title="Scale Personalized Learning with 24/7 AI Assistants."
-                description="Reduce grading time by up to 80% without sacrificing quality. Our AI drafts feedback based on YOUR rubric—the ideal companion for distance learning environments."
+                description="Maximize faculty productivity and reduce grading time by up to 80% without sacrificing quality. Our AI drafts feedback based on YOUR rubric—the ideal companion for distance learning environments."
                 align="right"
                 className="bg-slate-50"
                 visual={<TAInsightsVisual />}
@@ -195,7 +195,7 @@ export default function HomeClient() {
             <FeaturesSection
                 eyebrow="Enterprise-Grade Security"
                 title="Granular Governance for Complex Institutions."
-                description="A unified LMS framework that ensures data privacy and compliance. Give Deans, HODs, and Admins the exact visibility they need without compromising security."
+                description="A unified, white label LMS framework that ensures data privacy and compliance. Give Deans, HODs, and Admins the exact visibility they need without compromising security."
                 align="right"
                 className="bg-slate-50"
                 visual={<SystemEcosystemVisual />}
@@ -234,22 +234,22 @@ export default function HomeClient() {
                         Academic Excellence?
                     </h2>
                     <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-                        Join forward-thinking institutions using the Schologic LMS to offer credible, flexible, & intelligent learning.
+                        Join forward-thinking institutions using our secure <strong>pilot management portal</strong> to deploy a custom LMS and offer credible, flexible, & intelligent learning.
                     </p>
 
-                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center sm:justify-center sm:gap-4 w-full px-1 sm:px-0">
+                    <div className="flex flex-row items-stretch justify-center gap-2 sm:gap-4 w-full px-1 sm:px-0">
                         <Link
                             href={getPilotUrl()}
-                            className="px-2 py-3 sm:px-8 sm:py-4 bg-indigo-600 text-white rounded-lg font-bold text-base sm:text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 font-sans flex items-center justify-center w-full sm:w-auto sm:min-w-[280px] whitespace-nowrap"
+                            className="px-3 py-3 sm:px-8 sm:py-4 bg-indigo-600 text-white rounded-lg font-bold text-[11px] min-[375px]:text-sm sm:text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 font-sans flex items-center justify-center flex-1 sm:flex-none sm:min-w-[280px] whitespace-nowrap"
                         >
                             Start <span className="hidden sm:inline">&nbsp;Your Institutional</span>&nbsp;Pilot
                         </Link>
 
                         <button
                             onClick={() => setShowInviteModal(true)}
-                            className="px-2 py-3 sm:px-8 sm:py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-lg font-bold text-base sm:text-lg hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95 font-sans flex items-center justify-center gap-1 sm:gap-2 w-full sm:w-auto sm:min-w-[280px] whitespace-nowrap shadow-sm"
+                            className="px-3 py-3 sm:px-8 sm:py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-lg font-bold text-[11px] min-[375px]:text-sm sm:text-lg hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95 font-sans flex items-center justify-center gap-1 sm:gap-2 flex-1 sm:flex-none sm:min-w-[280px] whitespace-nowrap shadow-sm"
                         >
-                            <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />
+                            <Share2 className="w-3 h-3 sm:w-5 sm:h-5 text-indigo-500 shrink-0" />
                             Invite <span className="hidden sm:inline">an</span> Instructor
                         </button>
                     </div>
@@ -270,8 +270,9 @@ export default function HomeClient() {
 
             {/* Hidden Semantic Text for AI Crawlers */}
             <div className="hidden">
-                Schologic is an education technology company offering Credible, Flexible, & Intelligent Learning.
-                AI content detection, automated grading, practicum management, and open educational resources for universities, colleges, and TVET institutions.
+                School Logic, Schoologic, and Schologic LMS is an education technology company offering Credible, Flexible, & Intelligent Learning through our white label LMS.
+                Boost instructor productivity with AI content detection, automated grading, practicum management, and open educational resources for universities, colleges, and TVET institutions.
+                Easily deploy and manage your customized solution via our secure pilot management portal.
                 Evidence-Based AI Detection using RoBERTa open-weights models trained on the Human ChatGPT Comparison Corpus (HC3).
                 LTI 1.3 Compliant. IMS Global Common Cartridge 1.3. CUE and CDACC aligned.
             </div>
