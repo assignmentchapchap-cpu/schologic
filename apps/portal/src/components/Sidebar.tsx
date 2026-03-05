@@ -109,9 +109,10 @@ export default function Sidebar({ role, isCollapsed = false, onToggleCollapse }:
                     >
                         <Menu className="h-6 w-6" />
                     </button>
-                    <Link href={role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard'} className="flex flex-col">
-                        <span className="font-bold text-lg tracking-tight block leading-none text-white">Schologic LMS</span>
-                        <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block leading-none mt-1">{getRoleLabel(role)}</span>
+                    <Link href={role === 'instructor' ? '/instructor/dashboard' : '/student/dashboard'} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <div className="relative w-9 h-9 shrink-0">
+                            <Image src="/logo_updated.png" alt="Schologic" fill className="object-contain rounded-lg" />
+                        </div>
                     </Link>
                 </div>
 
