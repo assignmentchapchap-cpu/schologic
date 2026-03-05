@@ -25,9 +25,9 @@ import { cn } from "@/lib/utils";
 import { JsonLdFAQPage } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Schologic for Instructors | AI Grading & Retention Tools",
-    description: "Slash grading time by up to 80% with Schologic's AI Assistant. Detect AI writing, manage digital practicums, and boost retention with real-time analytics. The OS for modern faculty.",
-    keywords: ["AI grading assistant", "academic integrity software", "digital internship logbook", "student retention analytics", "plagiarism checker", "rubric generation", "higher education", "instructor LMS Kenya", "AI Assistant", "faculty workload reduction", "TVET", "CUE compliance"]
+    title: "Schologic for Instructors | Productivity & Retention Tools",
+    description: "Slash grading time by up to 80% and maximize teaching productivity with Schologic's AI Assistant. Detect AI writing, manage digital practicums, and boost retention with real-time analytics.",
+    keywords: ["AI grading assistant", "academic integrity software", "digital internship logbook", "student retention analytics", "plagiarism checker", "rubric generation", "higher education", "instructor LMS Kenya", "AI Assistant", "faculty workload reduction", "TVET", "CUE compliance", "instructor productivity", "teaching productivity"]
 };
 
 const faqItems = [
@@ -80,7 +80,7 @@ export default function InstructorsPage() {
                             Research indicates that university faculty spend between <a href="https://www.insidehighered.com/news/2014/04/09/research-shows-professors-work-long-hours-and-spend-much-day-meetings" target="_blank" rel="noopener noreferrer" className="text-rose-600 hover:text-rose-700 font-medium underline decoration-rose-200 underline-offset-4">10 to 20 hours per week</a> on grading alone—a staggering burden that detracts from high-impact research and mentorship. Schologic’s <strong>AI Teaching Assistant</strong> breaks this cycle by acting as your tireless, standard-calibrated co-pilot. Instead of starting every submission from a blank cursor, you receive an instant, high-quality draft of feedback and a suggested score based entirely on your specific assessment criteria.
                         </p>
                         <p>
-                            Don't have a rubric? Our <strong>Rubric Generator</strong> instantly creates one aligned to Bloom's Taxonomy directly from your assignment prompt. This is not automated grading; it is <strong>augmented intelligence</strong>. You maintain full &quot;Human-in-the-Loop&quot; control to review every comment, edit the nuanced feedback, and approve the final grade. By automating the repetitive mechanics of assessment, you can reduce your grading time by up to <a href="https://asu.edu" target="_blank" rel="noopener noreferrer" className="text-rose-600 hover:text-rose-700 font-medium underline decoration-rose-200 underline-offset-4">80%</a> while actually increasing the depth and consistency of feedback your students receive. Whether it’s a 500-student lecture or a graduate seminar, give every submission the attention it deserves without the burnout.
+                            Don't have a rubric? Our <strong>Rubric Generator</strong> instantly creates one aligned to Bloom's Taxonomy directly from your assignment prompt. This is not automated grading; it is <strong>augmented intelligence</strong> that unlocks unprecedented <strong>productivity</strong>. You maintain full &quot;Human-in-the-Loop&quot; control to review every comment, edit the nuanced feedback, and approve the final grade. By automating the repetitive mechanics of assessment, you can reduce your grading time by up to <a href="https://asu.edu" target="_blank" rel="noopener noreferrer" className="text-rose-600 hover:text-rose-700 font-medium underline decoration-rose-200 underline-offset-4">80%</a> while actually increasing the depth and consistency of feedback your students receive. Whether it’s a 500-student lecture or a graduate seminar, give every submission the attention it deserves without the burnout.
                         </p>
                     </div>
                     <Link href="/features/ai-teaching-assistant" className="inline-flex items-center text-rose-600 font-bold hover:text-rose-700 transition-colors">
@@ -216,7 +216,7 @@ export default function InstructorsPage() {
                 accentColor="rose"
                 icon={<Zap className="w-8 h-8 text-rose-600" />}
                 heading="Join the Faculty of the Future."
-                subtitle="Create your account, upload your first rubric, and start grading in under 10 minutes. No IT support needed, no institutional approval required. See the results, then share with your department."
+                subtitle="Create your account, upload your first rubric, and start grading in under 10 minutes. See the results, then share with your department. When you're ready to scale, our collaborative pilot management portal provides a straight path to rapid institutional integration."
                 primaryCta={{
                     text: "Start Free Pilot",
                     href: "/login?view=signup&role=instructor",

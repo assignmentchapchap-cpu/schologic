@@ -6,7 +6,7 @@ import { Metadata } from "next";
 import { JsonLdSoftwareApplication } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Use Cases | LMS for Students, Faculty & Institutions | Schologic",
+    title: "Use Cases | White Label LMS for Kenyan Higher Education Institutions | Schologic",
     description: "Discover how Schologic serves every stakeholder in education. AI grading for instructors, free textbooks for students, and multi-campus management for universities, colleges, and TVET institutions in Kenya.",
     keywords: [
         "LMS use cases",
@@ -16,7 +16,10 @@ export const metadata: Metadata = {
         "TVET digital learning",
         "college hybrid learning",
         "student learning platform",
-        "Schologic"
+        "Schologic",
+        "white label LMS",
+        "institutional productivity",
+        "pilot management portal"
     ],
 };
 
@@ -46,7 +49,7 @@ export default function UseCasesOverview() {
                                 <Users className="w-6 h-6 text-rose-600" />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-rose-600 transition-colors">For Instructors</h2>
-                            <p className="text-slate-500 mb-6">Automate grading, generate rubrics, and reclaim your time for teaching.</p>
+                            <p className="text-slate-500 mb-6">Automate grading, generate rubrics, maximize productivity, and reclaim your time for teaching.</p>
                             <span className="text-rose-600 font-bold text-sm flex items-center gap-2">
                                 Explore Workflow <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </span>
@@ -63,7 +66,7 @@ export default function UseCasesOverview() {
                                 <School className="w-6 h-6 text-amber-600" />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors">For Colleges</h2>
-                            <p className="text-slate-500 mb-6">Transition to digital with zero textbook costs and unified management.</p>
+                            <p className="text-slate-500 mb-6">Transition to digital with zero textbook costs and unified, white labeled LMS.</p>
                             <span className="text-amber-600 font-bold text-sm flex items-center gap-2">
                                 Explore Workflow <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </span>
@@ -97,7 +100,7 @@ export default function UseCasesOverview() {
                                 <GraduationCap className="w-6 h-6 text-indigo-600" />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">For Universities</h2>
-                            <p className="text-slate-500 mb-6">Protect academic integrity with AI-resistant assessment and large-scale data sovereignty.</p>
+                            <p className="text-slate-500 mb-6">Protect academic integrity with AI-resistant assessment, large-scale data sovereignty, and custom white label branding.</p>
                             <span className="text-indigo-600 font-bold text-sm flex items-center gap-2">
                                 Explore Workflow <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </span>

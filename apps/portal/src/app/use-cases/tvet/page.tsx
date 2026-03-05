@@ -12,13 +12,16 @@ import { getPilotUrl } from '@/lib/urls';
 
 export const metadata: Metadata = {
     title: 'Schologic LMS for TVET | CBET Assessment & CDACC Compliance',
-    description: 'The operating system for Competency-Based Education. Automate CDACC compliance and track industrial attachments with Schologic LMS.',
+    description: 'The operating system for Competency-Based Education. Maximize productivity, automate CDACC compliance, and track industrial attachments. Start your trial in our pilot management portal.',
     keywords: [
         'TVET LMS Kenya',
         'CBET assessment',
         'CDACC compliance',
         'industrial attachment tracking',
-        'Schologic LMS TVET'
+        'Schologic LMS TVET',
+        'TVET productivity',
+        'CBET pilot management',
+        'pilot management portal'
     ],
 };
 
@@ -112,7 +115,7 @@ export default function TvetPage() {
                             <h2 className="text-3xl font-serif font-bold text-slate-900 mb-4">The Faculty Force Multiplier.</h2>
                             <div className="text-slate-600 space-y-4">
                                 <p>
-                                    Break the cycle of faculty exhaustion and administrative fatigue. Schologic acts as a strategic <strong>force multiplier</strong>, utilizing admin automation and bulk enrollment tools to help a single instructor manage massive student-to-staff ratios without losing the personal touch. In many <strong>TVET institutions</strong>, one instructor is responsible for 200+ students across theory and practical units — a ratio that makes personalized assessment nearly impossible without intelligent <strong>automation</strong> and <strong>AI-assisted grading</strong>.
+                                    Break the cycle of faculty exhaustion and administrative fatigue. Schologic acts as a strategic <strong>force multiplier</strong>, driving administrative <strong>productivity</strong> with bulk enrollment tools and automated workflows to help a single instructor manage massive student-to-staff ratios without losing the personal touch. In many <strong>TVET institutions</strong>, one instructor is responsible for 200+ students across theory and practical units — a ratio that makes personalized assessment nearly impossible without intelligent <strong>automation</strong> and <strong>AI-assisted grading</strong>.
                                 </p>
                                 <p>
                                     By offloading routine "busy work" to our smart engine, your institution achieves <strong>instructional scaling</strong> that maintains high standards while directly reducing instructor burnout and operational friction.
@@ -287,7 +290,7 @@ export default function TvetPage() {
                 accentColor="emerald"
                 icon={<Shield className="w-8 h-8 text-emerald-600" />}
                 heading="The Future of TVET is Digital."
-                subtitle="Join forward-thinking institutions building capacity, relief, and reputation. Schologic integrates secure assessment tools, AI content detection, and digital proctoring into every course."
+                subtitle="Join forward-thinking institutions building capacity, relief, and reputation. Set up your custom trial via our pilot management portal to integrate secure assessment tools, AI content detection, and digital proctoring into every course."
                 primaryCta={{
                     href: getPilotUrl(),
                     text: "Assess Full Capabilities"

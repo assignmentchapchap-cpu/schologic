@@ -15,8 +15,8 @@ import { JsonLdFAQPage } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
     title: "Schologic for Students | AI Grading, Free Textbooks & Practicum Tools in Kenya",
-    description: "Instant AI-powered feedback on every assignment, zero-cost OER textbooks, and digital practicum logbooks — all from your phone. Schologic is the student learning platform built for Kenya's hybrid education system.",
-    keywords: ["student app Kenya", "instant grading feedback", "free textbooks", "OER", "practicum logbook", "hybrid learning", "education technology", "zero textbook cost", "AI grading for students", "student LMS Kenya", "Schologic"]
+    description: "Instant AI-powered feedback, zero-cost OER textbooks, and a white label digital practicum logbook on your phone. Schologic drives student productivity for Kenya's hybrid education system.",
+    keywords: ["student app Kenya", "instant grading feedback", "free textbooks", "OER", "practicum logbook", "hybrid learning", "education technology", "zero textbook cost", "AI grading for students", "student LMS Kenya", "Schologic", "student productivity", "white label student app"]
 };
 
 const faqItems = [
@@ -106,7 +106,7 @@ export default function StudentsPage() {
                             Industrial attachments and practicums are critical stepping stones for your career employability, but managing the associated paperwork is a notorious headache. Traditional paper logbooks get lost, damaged, or forgotten, forcing you to chase busy supervisors for physical signatures weeks after the fact. This administrative burden distracts from the actual learning experience.
                         </p>
                         <p>
-                            The <Link href="/features/practicum-manager" className="text-purple-600 hover:text-purple-700 font-medium">Schologic Mobile App</Link> streamlines this entire workflow. You can log your hours, record daily activities, and upload photo evidence directly from your worksite using your smartphone. Best of all, your industrial supervisor can verify your entries electronically with a single tap, ensuring your hard work is validated in real-time regardless of where you are located.
+                            The <Link href="/features/practicum-manager" className="text-purple-600 hover:text-purple-700 font-medium">Schologic Mobile App</Link> streamlines this entire workflow. You can log your hours, record daily activities, and upload photo evidence directly from your worksite using your smartphone. Delivered as a <strong>white label</strong> solution for your institution, it provides a premium, branded experience. Best of all, your industrial supervisor can verify your entries electronically with a single tap, ensuring your hard work is validated in real-time regardless of where you are located.
                         </p>
                     </div>
                 </GridColumn>

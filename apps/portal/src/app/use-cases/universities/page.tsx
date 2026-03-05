@@ -18,16 +18,16 @@ import { JsonLdFAQPage, JsonLdBreadcrumbList } from "@/components/seo/JsonLd";
 import { getPilotUrl } from '@/lib/urls';
 
 export const metadata: Metadata = {
-    title: 'Schologic LMS for Universities | Academic Integrity & Multi-Campus Management',
-    description: 'Protect degree value with AI detection and automate multi-campus operations. Schologic LMS provides sovereign, CUE-compliant digital learning for leading African universities.',
-    keywords: ['Schologic LMS', 'university lms kenya', 'academic integrity', 'multi-campus management', 'CUE compliance', 'data sovereignty'],
+    title: 'White Label LMS for Universities | Academic Integrity & Multi-Campus Management',
+    description: 'Unify campuses with a white label LMS. Maximize productivity, protect degree value with AI detection, and automate multi-campus operations. Launch via our pilot management portal.',
+    keywords: ['Schologic LMS', 'university lms kenya', 'academic integrity', 'multi-campus management', 'CUE compliance', 'data sovereignty', 'white label university LMS', 'university productivity', 'pilot management LMS'],
 };
 
 const faqItems = [
     { question: "How does Schologic handle multi-campus deployments?", answer: "Our architecture supports granular Role-Based Access Control. A Head of Department sees their courses across campuses, while Deans get an institution-wide view. Curriculum updates propagate instantly to all campuses." },
     { question: "Is data hosted locally in compliance with the Data Protection Act?", answer: "Yes. All student and institutional data is processed and stored on sovereign infrastructure within Kenya, fully aligned with the Data Protection Act 2019." },
     { question: "Can we integrate with our existing Student Information System?", answer: "Schologic is designed to complement your SIS, not replace it. We provide APIs and export formats that allow seamless data exchange with existing systems like KUCCPS portals." },
-    { question: "What does the institutional pilot include?", answer: "A full-featured deployment for your chosen departments, onboarding support, faculty training sessions, and a dedicated success manager. No cost during the pilot period." },
+    { question: "What does the institutional pilot include?", answer: "A full-featured deployment for your chosen departments, orchestrated through our collaborative pilot management portal. This ensures a customized and rapid deployment path with onboarding support and faculty training sessions." },
     { question: "How does the AI detection work at scale?", answer: "Our integrity engine processes submissions in bulk, flagging AI-generated content, paraphrased text, and potential plagiarism. Results are aggregated on the Dean's Dashboard for institutional oversight." },
 ];
 
@@ -43,7 +43,7 @@ export default function UniversitiesPage() {
             {/* 1. Hero Section */}
             <UseCasesHero
                 title="The Operating System for the Modern University."
-                subtitle="Unify campuses. Automate practicums. Secure degrees. One sovereign platform for leading institutions in Kenya and beyond."
+                subtitle="Unify campuses with a white label experience. Automate practicums. Secure degrees. One sovereign platform for leading institutions in Kenya and beyond."
                 label="For Universities"
                 accentColor="indigo"
                 ctaText="Request Priority Access"
@@ -222,7 +222,7 @@ export default function UniversitiesPage() {
                                     Schologic solves this with a unified architecture designed for multi-campus realities. Our robust [Class Manager](/features/class-manager) utilizes granular <strong>Role-Based Access Control (RBAC)</strong> to ensure data visibility. A Head of Department can oversee curriculum compliance across all campuses, while a Dean retains a holistic view.
                                 </p>
                                 <p>
-                                    When the Main Campus updates a curriculum, satellite campuses instantly see the changes. This unified approach ensures that a student in a remote campus receives the exact same standard of instruction as a student at the headquarters.
+                                    When the Main Campus updates a curriculum, satellite campuses instantly see the changes. This unified approach ensures that a student in a remote campus receives the exact same standard of instruction as a student at the headquarters, all within a cohesive, <strong>white label</strong> environment that reflects your university's brand identity.
                                 </p>
                             </div>
                         </div>

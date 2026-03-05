@@ -11,7 +11,7 @@ import { getPilotUrl } from '@/lib/urls';
 
 export const metadata: Metadata = {
     title: "LMS for Colleges in Kenya | Hybrid Learning Platform | Schologic",
-    description: "Schologic is the lean academic engine for modern Kenyan colleges. Unify full-time, evening, and distance programs on one platform with AI grading and academic integrity.",
+    description: "Schologic is a white label hybrid learning platform for modern colleges. Unify programs on one platform to maximize productivity with AI grading. Evaluate through our pilot management portal.",
     keywords: [
         "LMS for colleges Kenya",
         "hybrid learning platform",
@@ -23,7 +23,10 @@ export const metadata: Metadata = {
         "Schologic for colleges",
         "student retention",
         "blended learning",
-        "credential verification"
+        "credential verification",
+        "white label college LMS",
+        "college productivity tools",
+        "pilot management portal"
     ],
 };
 
@@ -32,7 +35,7 @@ const faqItems = [
     { question: "How does it reduce instructor workload?", answer: "By automating grading, attendance tracking, and content distribution across cohorts. An instructor teaching 3 sections uploads once and the AI applies rubrics consistently to all submissions." },
     { question: "What assessment integrity tools are included?", answer: "AI content detection, paraphrase detection, plagiarism checking, and submission analytics \u2014 all built-in. No separate subscriptions or third-party tools needed." },
     { question: "Are credentials equivalent across day, evening, and distance?", answer: "Yes. Because all cohorts share the same rubrics, integrity checks, and assessment standards, graduates from every delivery mode hold verifiably equivalent credentials." },
-    { question: "How do we get started with a pilot?", answer: "Click 'Launch Your Hybrid Campus' above to request an institutional pilot. Our team will set up your deployment, train your faculty, and support you throughout the pilot period." },
+    { question: "How do we get started with a pilot?", answer: "Click 'Request Priority Access' above to begin. The process starts in our interactive pilot management portal, where your team can collaborate to customize the pilot scope for rapid deployment." },
 ];
 
 export default function CollegesPage() {
@@ -41,7 +44,7 @@ export default function CollegesPage() {
             <JsonLdFAQPage items={faqItems} />
             <UseCasesHero
                 title="The Lean Academic Engine for Modern Colleges."
-                subtitle="Deliver full-time, evening, and distance programs through one unified platform. Maximize capacity, empower instructors, and protect credentials."
+                subtitle="Deliver full-time, evening, and distance programs through one unified platform. Maximize institutional productivity, empower instructors, and protect credentials under a seamless white label interface."
                 label="For Colleges"
                 accentColor="amber"
                 ctaText="Request Priority Access"
@@ -193,7 +196,7 @@ export default function CollegesPage() {
                                     In many Kenyan colleges, the same instructor teaches day, evening, and distance sections. Without proper tools, this means triple the administrative work: separate rosters, multiple gradebooks, and manual tracking.
                                 </p>
                                 <p>
-                                    Schologic's <strong>instructor efficiency tools</strong> eliminate this redundancy. Content uploaded once is available to all. Rubrics apply consistently across modes. Attendance and grading are automated. Our <strong>AI Teaching Assistant</strong> handles first-pass grading against your rubrics, providing instant feedback to all cohorts simultaneously. An instructor teaching 300 students across three delivery modes can now accomplish what previously required an entire departmental team.
+                                    Schologic's <strong>instructor efficiency tools</strong> eliminate this redundancy. Content uploaded once is available to all. Rubrics apply consistently across modes. Attendance and grading are automated. Our <strong>AI Teaching Assistant</strong> handles first-pass grading against your rubrics, providing instant feedback to all cohorts simultaneously. This represents a massive leap in instructional <strong>productivity</strong>: an instructor teaching 300 students across three delivery modes can now accomplish what previously required an entire departmental team.
                                 </p>
                                 <p>
                                     The impact goes beyond efficiency. When instructors spend less time on administrative tasks, they invest more in mentoring, curriculum development, and the hands-on guidance that defines a quality college education. This directly addresses <strong>faculty retention</strong> — a growing concern across Kenya's higher education landscape.
