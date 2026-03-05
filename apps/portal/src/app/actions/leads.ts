@@ -75,8 +75,8 @@ export async function submitPilotRequest(data: PilotRequestData) {
     // Clear the active cache for pilots
     await invalidateCache('admin:leads:pilots');
 
-    // In-app admin notification (fire-and-forget)
-    createAdminNotification({
+    // In-app admin notification (fire-and-forget but awaited for Vercel)
+    await createAdminNotification({
       message: `New pilot request from ${data.firstName} ${data.lastName} at ${data.institution}`,
       type: 'admin_new_pilot',
       link: '/admin/leads',
@@ -264,8 +264,8 @@ export async function submitDemoInvite(data: ShareDemoData) {
     // Clear the active cache for invites
     await invalidateCache('admin:leads:invites');
 
-    // In-app admin notification (fire-and-forget)
-    createAdminNotification({
+    // In-app admin notification (fire-and-forget but awaited for Vercel)
+    await createAdminNotification({
       message: `New instructor invite: ${data.recipientName} referred by ${data.senderName}`,
       type: 'admin_invite',
       link: '/admin/leads',
@@ -465,8 +465,8 @@ export async function submitContactForm(data: ContactFormData) {
     // Clear the active cache for contacts
     await invalidateCache('admin:leads:contacts');
 
-    // In-app admin notification (fire-and-forget)
-    createAdminNotification({
+    // In-app admin notification (fire-and-forget but awaited for Vercel)
+    await createAdminNotification({
       message: `New contact message: "${data.subject}" from ${data.name}`,
       type: 'admin_feedback',
       link: '/admin/leads',
