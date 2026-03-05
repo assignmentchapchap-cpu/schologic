@@ -15,6 +15,10 @@ export const metadata: Metadata = {
         'Institutional LMS Pilot',
         'Pilot Management Portal',
         'Academic Integrity Pilot',
+        'School Logic LMS',
+        'Schoologic',
+        'White Label LMS',
+        'instructor productivity tools',
         'Schologic Pilot Program',
         'LMS Deployment Strategy',
         'AI Grading Pilot',
@@ -35,7 +39,8 @@ export default function PilotLandingPage() {
 
             <JsonLdWebPage
                 name="Schologic LMS Pilot Management Portal"
-                description="Get a custom LMS in four steps. We have simplified the ability of institutions to create a flexible LMS through the pilot management portal where stakeholders can collaborate in design, track progress, and evaluate the pilot KPIs."
+                alternateName={["School Logic LMS", "Schoologic", "School Logic"]}
+                description="Get a custom, white label LMS in four steps. We simplify creating a flexible digital campus through the pilot management portal where stakeholders boost productivity, collaborate on design, and evaluate the pilot KPIs."
                 url="https://pilot.schologic.com"
             />
             <JsonLdBreadcrumbList
@@ -61,7 +66,7 @@ export default function PilotLandingPage() {
                             </h1>
 
                             <p className="text-lg md:text-xl text-slate-600 leading-10 md:leading-loose mb-10 font-light max-w-2xl">
-                                Get a custom LMS in four steps. We have simplified the ability of institutions to create a flexible LMS through the pilot management portal where stakeholders can collaborate in design, track progress, and evaluate the pilot KPIs.
+                                Get a custom, <strong>white label LMS</strong> in four steps. We simplify creating a flexible digital campus through the pilot management portal where stakeholders boost <strong>productivity</strong>, collaborate on design, and evaluate the pilot KPIs.
                             </p>
 
                             <div className="mt-auto pt-8 border-t border-slate-200/60 max-w-2xl">
@@ -215,7 +220,7 @@ export default function PilotLandingPage() {
                                 <div className="p-8 rounded-3xl border-2 border-slate-900 bg-slate-50 relative overflow-hidden group">
                                     <h4 className="text-xl font-bold text-slate-900 mb-3">Class Manager</h4>
                                     <p className="text-sm text-slate-600 leading-relaxed font-light">
-                                        The foundational command center for your entire teaching workflow. It provides instructors with effortless class creation, automated assignment tracking, and a unified grades table. Built for scalability, it allows universities to manage thousands of concurrent users while maintaining simple, intuitive navigation.
+                                        The foundational command center for your entire teaching workflow. It provides instructors with effortless class creation, automated assignment tracking, and a unified grades table. Built for scalability, it allows universities to manage thousands of concurrent users while maintaining simple, intuitive navigation that enhances instructor <strong>productivity</strong>.
                                     </p>
                                 </div>
 
@@ -251,7 +256,7 @@ export default function PilotLandingPage() {
                                     </div>
                                     <h4 className="text-xl font-bold text-slate-900 mb-3">AI Teaching Assistant</h4>
                                     <p className="text-sm text-slate-600 leading-relaxed font-light">
-                                        Reclaim instructors' time with automated rubrics and deterministic grading feedback. This module reduces manual grading workloads by up to 80% through automated routine evaluations, allowing faculty to focus on high-impact teaching.
+                                        Reclaim instructors' time and maximize teaching <strong>productivity</strong> with automated rubrics and deterministic grading feedback. This module reduces manual grading workloads by up to 80% through automated routine evaluations, allowing faculty to focus on high-impact teaching.
                                     </p>
                                 </div>
 
@@ -294,7 +299,7 @@ export default function PilotLandingPage() {
                     <div className="max-w-3xl mx-auto space-y-4">
                         <div className="p-6 bg-white rounded-2xl border border-slate-200">
                             <h5 className="font-bold text-slate-900 mb-2">Is the Schologic Pilot completely free?</h5>
-                            <p className="text-sm text-slate-700 leading-relaxed">The standard 2-4 week pilot requires a nominal setup investment based on the size of the institution and the specific modules requested (e.g., custom domain provisioning, dedicated cloud infrastructure). However, this is a zero-risk investment: if your institution converts to a full enterprise contract after the pilot, 100% of the pilot setup costs are credited back to your account.</p>
+                            <p className="text-sm text-slate-700 leading-relaxed">The standard 2-4 week pilot requires a nominal setup investment based on the size of the institution and the specific modules requested (e.g., custom domain provisioning, dedicated cloud infrastructure for your <strong>white label LMS</strong>). However, this is a zero-risk investment: if your institution converts to a full enterprise contract after the pilot, 100% of the pilot setup costs are credited back to your account.</p>
                         </div>
                         <div className="p-6 bg-white rounded-2xl border border-slate-200">
                             <h5 className="font-bold text-slate-900 mb-2">How long does it take to start the pilot?</h5>
@@ -323,7 +328,7 @@ export default function PilotLandingPage() {
                     </div>
 
                     <div className="mt-16 text-center">
-                        <p className="text-sm text-slate-600 mb-6 font-mono tracking-widest uppercase">Institutional Gateway</p>
+                        <p className="text-sm text-slate-600 mb-6 font-mono tracking-widest">INSTITUTIONAL GATEWAY <span className="text-slate-400 font-sans mx-2">|</span> <span className="text-xs text-slate-400">(Often searched as <strong>School Logic</strong> or <strong>Schoologic</strong>)</span></p>
                         <a href="https://schologic.com" className="inline-flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-xl active:scale-95">
                             Return to Main Site
                             <ArrowRight className="w-4 h-4" />

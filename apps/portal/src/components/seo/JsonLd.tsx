@@ -50,6 +50,7 @@ export function JsonLdOrganization() {
         "@type": "Organization",
         "@id": "https://schologic.com/#organization",
         name: "Schologic LMS",
+        alternateName: ["School Logic", "Schoologic", "School Logic LMS"],
         url: "https://schologic.com",
         logo: "https://schologic.com/logo_updated.png",
         description:
@@ -80,6 +81,7 @@ export function JsonLdSoftwareApplication() {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         name: "Schologic LMS",
+        alternateName: ["School Logic", "Schoologic", "School Logic LMS"],
         applicationCategory: "EducationalApplication",
         operatingSystem: "Web",
         url: "https://schologic.com",
@@ -161,11 +163,12 @@ export function JsonLdPricing() {
 /**
  * Renders WebPage schema for generic pages.
  */
-export function JsonLdWebPage({ name, description, url }: { name: string; description: string; url?: string }) {
+export function JsonLdWebPage({ name, alternateName, description, url }: { name: string; alternateName?: string | string[]; description: string; url?: string }) {
     const schema = {
         "@context": "https://schema.org",
         "@type": "WebPage",
         name: name,
+        ...(alternateName && { alternateName }),
         description: description,
         url: url,
         publisher: {
@@ -192,6 +195,7 @@ export function JsonLdWebSite() {
         "@type": "WebSite",
         "url": "https://schologic.com",
         "name": "Schologic LMS",
+        "alternateName": ["School Logic", "Schoologic", "School Logic LMS"],
         "potentialAction": {
             "@type": "SearchAction",
             "target": "https://schologic.com/search?q={search_term_string}",

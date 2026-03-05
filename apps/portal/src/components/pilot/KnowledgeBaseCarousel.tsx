@@ -8,9 +8,9 @@ const SECTIONS = [
     { chapter: "01", title: "Platform Overview", desc: "Understand the Schologic Pilot: a zero-risk deployment tailored specifically to your institution's unique environment." },
     { chapter: "02", title: "Application Process", desc: "Initiate your journey via the Review Gate using an official institutional email address for automated server provisioning." },
     { chapter: "03", title: "Team Collaboration", desc: "Invite up to 5 stakeholders to your private workspace and use automated task assignments for seamless deployment." },
-    { chapter: "04", title: "Pilot Architect", desc: "Select core modules and value add-ons to design your ideal digital campus at your own pace without planning friction." },
+    { chapter: "04", title: "Pilot Architect", desc: "Select core modules and value add-ons to design your ideal white label LMS at your own pace." },
     { chapter: "05", title: "Branding & Config", desc: "White-label your dedicated tenant with institutional logos, brand colors, and custom governance settings." },
-    { chapter: "06", title: "Evaluation Phase", desc: "Track real-time success KPIs and generate evidence-based ROI reports for transition to an enterprise license." },
+    { chapter: "06", title: "Evaluation Phase", desc: "Track real-time productivity KPIs and generate evidence-based ROI reports for transition to an enterprise license." },
 ];
 
 // To handle infinite loop with 3 cards in view:

@@ -11,6 +11,10 @@ export const metadata: Metadata = {
     keywords: [
         'LMS Pilot Management',
         'Schologic Knowledge Base',
+        'School Logic',
+        'Schoologic',
+        'White Label LMS Platform',
+        'Academic Productivity Tools',
         'Institutional LMS Deployment',
         'AI Grading Documentation',
         'Academic Integrity Software Kenya',
@@ -32,7 +36,8 @@ export default function PilotKnowledgeBase() {
 
             <JsonLdWebPage
                 name="Schologic LMS Pilot Knowledge Base"
-                description="Comprehensive documentation for the Schologic LMS Pilot Management Portal, covering deployment, configuration, and evaluation."
+                alternateName={["School Logic Knowledge Base", "Schoologic", "School Logic"]}
+                description="Comprehensive documentation for the Schologic white label LMS Pilot Management Portal, covering deployment, configuration, productivity, and evaluation."
                 url="https://pilot.schologic.com/pilot-knowledge-base"
             />
             <JsonLdBreadcrumbList
@@ -85,7 +90,7 @@ export default function PilotKnowledgeBase() {
                             <div className="space-y-6">
                                 <h3 className="text-xl font-bold text-slate-900">What is a Schologic Pilot?</h3>
                                 <p>
-                                    A Schologic Pilot is a fully functional, zero-risk deployment of the Schologic LMS tailored specifically to your institution's unique environment, establishing Schologic as the premier <strong>LMS in Kenya</strong> for academic transformation. Rather than relying on generic software demonstrations, a pilot allows your faculty, IT staff, and students to experience Schologic's AI-powered academic integrity tools, automated grading, and Open Educational Resources (OER) in a live, secure sandbox.
+                                    A Schologic Pilot is a fully functional, zero-risk deployment of the Schologic LMS tailored specifically to your institution's unique environment, establishing Schologic as the premier <strong>white label LMS in Kenya</strong> for academic transformation. Rather than relying on generic software demonstrations, a pilot allows your faculty, IT staff, and students to experience Schologic's AI-powered academic integrity tools, automated grading, and Open Educational Resources (OER) in a live, secure sandbox.
                                 </p>
                                 <p>
                                     Our goal during the pilot is to definitively prove our core promises: reducing grading time by up to 80%, eliminating textbook costs through integrated OER (LibreTexts/OpenStax), and ensuring absolute academic integrity through granular <Link href="/features/ai-detection" className="text-indigo-600 hover:underline">AI forensics</Link> and <Link href="/features/ai-detection" className="text-indigo-600 hover:underline">academic integrity software</Link>.
@@ -96,7 +101,7 @@ export default function PilotKnowledgeBase() {
                                     Traditionally, adopting an enterprise Learning Management System requires months of fragmented email threads, repetitive physical meetings, and misaligned expectations between IT, Academics, and Instructors.
                                 </p>
                                 <p>
-                                    We built the <strong>Schologic Pilot Management Portal (<code>pilot.schologic.com</code>)</strong> to revolutionize this process, specifically optimized as the <strong>best LMS for universities</strong> and colleges in the East African region.
+                                    We built the <strong>Schologic Pilot Management Portal</strong> (often searched as <strong>School Logic</strong> or <strong>Schoologic</strong>) to revolutionize this process, specifically optimized as the <strong>best LMS for universities</strong> and colleges in the East African region.
                                 </p>
 
                                 <p className="font-bold">Benefits of the Digitized Portal for Your Institution:</p>
@@ -317,7 +322,7 @@ export default function PilotKnowledgeBase() {
                         <section id="branding-config">
                             <h2 className="text-3xl font-serif font-bold text-slate-900 mb-8 pt-8 border-t border-slate-100">5. Dashboard Setup & Branding Configuration</h2>
                             <div className="space-y-6">
-                                <p>A key advantage of Schologic is that it does not feel like third-party software; it becomes an integrated part of your institution’s digital identity. In this step, your committee will define the look, feel, and governance of your pilot tenant.</p>
+                                <p>A key advantage of Schologic is that it does not feel like third-party software; it becomes an integrated part of your institution’s digital identity. In this step, your committee will define the look, feel, and governance of your <strong>white label portal</strong> and pilot tenant.</p>
 
                                 <h3 className="text-xl font-bold text-slate-900 mt-8">Domain & URL Setup</h3>
                                 <p>You have two options for how your faculty and students will access the platform during the pilot:</p>
