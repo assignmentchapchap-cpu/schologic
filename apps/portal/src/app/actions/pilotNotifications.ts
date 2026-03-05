@@ -94,5 +94,5 @@ export async function notifySuperadmin({
     }
 
     await createNotification({ userId: data.id, message, type, link });
-    sendTelegramNotification({ message, type, link }).catch(() => { });
+    await sendTelegramNotification({ message, type, link }).catch(() => { });
 }

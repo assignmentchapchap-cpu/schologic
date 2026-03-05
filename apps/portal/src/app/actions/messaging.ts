@@ -91,7 +91,7 @@ export async function sendDirectMessageAction(
             // Notify Superadmin via Telegram if they're the receiver
             const { data: adminData } = await getSuperadminId();
             if (adminData && receiverId === adminData.id) {
-                sendTelegramNotification({
+                await sendTelegramNotification({
                     message: `New DM from ${user.email || 'a user'}: ${content.substring(0, 200)}`,
                     type: 'dm_received',
                     link: '/admin/messages',

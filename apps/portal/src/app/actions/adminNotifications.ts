@@ -39,8 +39,8 @@ export async function createAdminNotification({
 
         if (error) console.error('[AdminNotification] Insert failed:', error.message);
 
-        // Fire-and-forget Telegram notification
-        sendTelegramNotification({ message, type, link }).catch(() => { });
+        // Fire-and-forget Telegram notification (Awaited to prevent Vercel from killing the request prematurely)
+        await sendTelegramNotification({ message, type, link }).catch(() => { });
     } catch (err: any) {
         console.error('[AdminNotification] Error:', err.message);
     }
