@@ -33,13 +33,13 @@ export function LightHero() {
                             <div className="grid grid-cols-[3fr_2fr] sm:flex sm:flex-row gap-2 sm:gap-4 w-full sm:w-fit mb-6">
                                 <Link
                                     href={getPilotUrl()}
-                                    className="px-2 py-2.5 sm:px-8 sm:py-4 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 flex items-center justify-center text-[14px] min-[375px]:text-[15px] sm:text-base whitespace-nowrap"
+                                    className="px-2 py-3.5 sm:px-8 sm:py-4 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95 flex items-center justify-center text-[16px] min-[375px]:text-[17px] sm:text-lg tracking-tight whitespace-nowrap"
                                 >
                                     Start Institutional Pilot
                                 </Link>
                                 <Link
                                     href="/login?view=signup"
-                                    className="flex items-center justify-center px-2 py-2.5 sm:px-8 sm:py-4 bg-transparent border border-indigo-900 hover:bg-indigo-50 text-indigo-900 rounded-xl font-bold transition-all text-[14px] min-[375px]:text-[15px] sm:text-base whitespace-nowrap active:scale-95"
+                                    className="flex items-center justify-center px-2 py-3.5 sm:px-8 sm:py-4 bg-transparent border border-indigo-900 hover:bg-indigo-50 text-indigo-900 rounded-xl font-bold transition-all text-[16px] min-[375px]:text-[17px] sm:text-lg tracking-tight whitespace-nowrap active:scale-95"
                                 >
                                     Free Sign Up
                                 </Link>
