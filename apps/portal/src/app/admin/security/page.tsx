@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { createClient } from '@schologic/database';
 import {
     Shield, Search, Filter, Calendar, Terminal, User, Globe, Info,
     Lock, Zap, RefreshCw, ChevronLeft, ChevronRight,
@@ -11,6 +10,8 @@ import { getRoleLabel } from '@/lib/identity';
 import { useUser } from '@/context/UserContext';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { getSecurityAuditEvents } from '@/app/actions/securityAudit';
+import { useDebounce } from 'use-debounce';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -35,12 +36,12 @@ interface SecurityEvent {
 
 // ─── Component ────────────────────────────────────────────────────────
 export default function SecurityAuditPage() {
-    const supabase = createClient();
     const { user: currentUser } = useUser();
 
     const [events, setEvents] = useState<SecurityEvent[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
     const [filterType, setFilterType] = useState<string>('all');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -49,32 +50,9 @@ export default function SecurityAuditPage() {
     const fetchEvents = async () => {
         setLoading(true);
         try {
-            let query = supabase
-                .from('security_events')
-                .select(`
-                    *,
-                    profiles:user_id (
-                        full_name,
-                        email
-                    )
-                `, { count: 'exact' })
-                .order('created_at', { ascending: false });
-
-            if (filterType !== 'all') {
-                query = query.eq('event_type', filterType);
-            }
-
-            const from = (page - 1) * itemsPerPage;
-            const to = from + itemsPerPage - 1;
-
-            const { data, count, error } = await query.range(from, to);
-
-            if (error) throw error;
-
-            setEvents(data || []);
-            if (count) {
-                setTotalPages(Math.ceil(count / itemsPerPage));
-            }
+            const result = await getSecurityAuditEvents(page, itemsPerPage, filterType, debouncedSearchQuery);
+            setEvents(result.events as SecurityEvent[]);
+            setTotalPages(result.totalPages);
         } catch (err) {
             console.error('[SecurityAudit] Fetch error:', err);
         } finally {
@@ -84,19 +62,10 @@ export default function SecurityAuditPage() {
 
     useEffect(() => {
         fetchEvents();
-    }, [page, filterType]);
+    }, [page, filterType, debouncedSearchQuery]);
 
-    const filteredEvents = useMemo(() => {
-        if (!searchQuery) return events;
-        const q = searchQuery.toLowerCase();
-        return events.filter(e =>
-            e.path.toLowerCase().includes(q) ||
-            e.event_type.toLowerCase().includes(q) ||
-            e.user_id?.toLowerCase().includes(q) ||
-            e.profiles?.full_name?.toLowerCase().includes(q) ||
-            e.profiles?.email?.toLowerCase().includes(q)
-        );
-    }, [events, searchQuery]);
+    // We no longer need client-side filtering because it's handled on the server
+    const filteredEvents = events;
 
     const getEventBadge = (type: string) => {
         switch (type) {
