@@ -98,6 +98,9 @@ importers:
       styled-jsx:
         specifier: ^5.1.6
         version: 5.1.7(@babel/core@7.28.6)(react@19.2.3)
+      svix:
+        specifier: ^1.87.0
+        version: 1.87.0
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
@@ -3476,6 +3479,9 @@ packages:
 
   svix@1.84.1:
     resolution: {integrity: sha512-K8DPPSZaW/XqXiz1kEyzSHYgmGLnhB43nQCMeKjWGCUpLIpAMMM8kx3rVVOSm6Bo6EHyK1RQLPT4R06skM/MlQ==}
+
+  svix@1.87.0:
+    resolution: {integrity: sha512-tkmvGiAYGiUtHFpeS5Uc1XUa8LKHvFPzKDfmDR1ceKplU9VkEIFPyZOT3Hxii8pRfCChSriyAeSK5Nvh9OGvKQ==}
 
   tailwind-merge@3.4.0:
     resolution: {integrity: sha512-uSaO4gnW+b3Y2aWoWfFpX62vn2sR3skfhbjsEnaBI81WD1wBLlHZe5sWf0AqjksNdYTbGBEd0UasQMT3SNV15g==}
@@ -7357,6 +7363,11 @@ snapshots:
     optional: true
 
   svix@1.84.1:
+    dependencies:
+      standardwebhooks: 1.0.0
+      uuid: 10.0.0
+
+  svix@1.87.0:
     dependencies:
       standardwebhooks: 1.0.0
       uuid: 10.0.0

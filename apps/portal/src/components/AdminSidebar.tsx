@@ -29,6 +29,7 @@ const NAV_LINKS = [
     { label: 'Users', icon: Users, href: '/admin/users', color: 'text-amber-400' },
     { label: 'AI Usage', icon: Zap, href: '/admin/ai-usage', color: 'text-violet-400' },
     { label: 'Messaging', icon: MessageSquare, href: '/admin/messages', color: 'text-emerald-400' },
+    { label: 'Email', icon: Mail, href: '/admin/email/inbox', color: 'text-cyan-400' },
     { label: 'Feedback', icon: Mail, href: '/admin/feedback', color: 'text-blue-400' },
     { label: 'System Errors', icon: Terminal, href: '/admin/errors', color: 'text-fuchsia-400' },
     { label: 'Security Audit', icon: AlertTriangle, href: '/admin/security', color: 'text-rose-400' },
