@@ -273,13 +273,15 @@ export async function renderTemplate(templateId: string, variables: Record<strin
     try {
         await ensureSuperadmin();
 
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(templateId);
+
         const { data: template, error } = await supabaseAdmin
             .from('platform_templates')
             .select('subject, content_html')
-            .eq('id', templateId)
+            .eq(isUuid ? 'id' : 'name', templateId)
             .single();
 
-        if (error || !template) throw new Error('Template not found');
+        if (error || !template) throw new Error(`Template not found: ${templateId}`);
 
         // Simple {{variable}} interpolation
         let renderedSubject = template.subject;

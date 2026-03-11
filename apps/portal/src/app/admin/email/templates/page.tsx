@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BookOpen, Plus, Pencil, Trash2, RefreshCw, X, Save, Eye } from 'lucide-react';
+import { BookOpen, Plus, Pencil, Trash2, RefreshCw, X, Save, Eye, Search, Filter } from 'lucide-react';
 import { getTemplates, createTemplate, updateTemplate, deleteTemplate, type TemplateData } from '@/app/actions/adminEmails';
 
 interface Template {
@@ -21,6 +21,10 @@ export default function TemplatesPage() {
     const [editing, setEditing] = useState<Template | null>(null);
     const [creating, setCreating] = useState(false);
     const [previewing, setPreviewing] = useState<Template | null>(null);
+
+    // Search & Filter state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('');
 
     // Form state
     const [form, setForm] = useState<TemplateData>({
@@ -112,104 +116,181 @@ export default function TemplatesPage() {
             </div>
 
             {/* Editor Panel */}
-            {showForm && (
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold text-slate-900">
-                            {editing ? 'Edit Template' : 'Create Template'}
-                        </h2>
-                        <button
-                            onClick={() => { setEditing(null); setCreating(false); }}
-                            className="p-1.5 text-slate-400 hover:text-slate-600"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
+            {showForm && (() => {
+                const variables = varInput.split(',').map(v => v.trim()).filter(Boolean);
+                let previewHtml = form.content_html;
+                let previewSubject = form.subject;
+                variables.forEach(v => {
+                    const pattern = new RegExp(`\\{\\{${v}\\}\\}`, 'g');
+                    previewHtml = previewHtml.replace(pattern, `[${v}]`);
+                    previewSubject = previewSubject.replace(pattern, `[${v}]`);
+                });
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Name</label>
-                            <input
-                                type="text"
-                                value={form.name}
-                                onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                                placeholder="e.g., Pilot Approval"
-                                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                            />
+                return (
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden mb-8 grid grid-cols-1 lg:grid-cols-2">
+                        {/* LEFT: Code & Config */}
+                        <div className="p-6 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/50 flex flex-col min-h-[85vh] h-auto">
+                            <div className="flex items-center justify-between mb-5">
+                                <h2 className="text-lg font-bold text-slate-900">
+                                    {editing ? 'Edit Template' : 'Create Template'}
+                                </h2>
+                                <button
+                                    onClick={() => { setEditing(null); setCreating(false); }}
+                                    className="p-1.5 text-slate-400 hover:text-slate-600 bg-white rounded-lg shadow-sm border border-slate-200"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 mb-4 shrink-0">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Name</label>
+                                    <input
+                                        type="text"
+                                        value={form.name}
+                                        onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                                        placeholder="e.g., Pilot Approval"
+                                        className="w-full px-3 py-2 border border-slate-200 bg-white rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Category</label>
+                                    <select
+                                        value={form.category}
+                                        onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-slate-200 bg-white rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all"
+                                    >
+                                        <option value="">None</option>
+                                        <option value="transactional">Transactional</option>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="onboarding">Onboarding</option>
+                                        <option value="academic">Academic</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="mb-4 shrink-0">
+                                <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">Subject</label>
+                                <input
+                                    type="text"
+                                    value={form.subject}
+                                    onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
+                                    placeholder='e.g., Welcome to Schologic, {{firstName}}!'
+                                    className="w-full px-3 py-2 border border-slate-200 bg-white rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all"
+                                />
+                            </div>
+
+                            <div className="mb-4 shrink-0">
+                                <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">
+                                    Variables <span className="text-[10px] font-normal lowercase tracking-wide text-slate-400">(comma-separated)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={varInput}
+                                    onChange={e => setVarInput(e.target.value)}
+                                    placeholder="firstName, pilotUrl"
+                                    className="w-full px-3 py-2 border border-slate-200 bg-white rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all"
+                                />
+                            </div>
+
+                            <div className="flex-1 flex flex-col min-h-[300px] mb-4">
+                                <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 flex items-center justify-between">
+                                    <span>HTML Body</span>
+                                    <span className="text-[10px] lowercase font-normal text-slate-400 font-mono">live synced</span>
+                                </label>
+                                <textarea
+                                    value={form.content_html}
+                                    onChange={e => setForm(p => ({ ...p, content_html: e.target.value }))}
+                                    placeholder="<div>Your email template HTML...</div>"
+                                    className="flex-1 w-full p-4 border border-slate-200 bg-[#0f172a] text-[#818cf8] rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 resize-y min-h-[300px] shadow-inner"
+                                    spellCheck={false}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 shrink-0 pt-2">
+                                <button
+                                    onClick={() => { setEditing(null); setCreating(false); }}
+                                    className="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={saving || !form.name.trim()}
+                                    className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                                >
+                                    <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save Template'}
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Category</label>
-                            <select
-                                value={form.category}
-                                onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-                                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                            >
-                                <option value="">None</option>
-                                <option value="transactional">Transactional</option>
-                                <option value="marketing">Marketing</option>
-                                <option value="onboarding">Onboarding</option>
-                            </select>
+
+                        {/* RIGHT: Live Preview */}
+                        <div className="bg-slate-100 flex flex-col min-h-[85vh] h-auto">
+                            <div className="bg-white px-5 py-3 border-b border-slate-200 flex items-center justify-between shrink-0">
+                                <span className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    <Eye className="w-4 h-4 text-slate-400" /> Live Preview
+                                </span>
+                                <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">
+                                    Rendering mode
+                                </span>
+                            </div>
+                            <div className="p-4 shrink-0 bg-white border-b border-slate-200/60 shadow-sm">
+                                <p className="text-sm text-slate-600">
+                                    <span className="font-semibold text-slate-400 mr-2">Subject:</span>
+                                    <span className="font-medium text-slate-900">{previewSubject || 'No subject set'}</span>
+                                </p>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-6 flex justify-center bg-[#f8fafc]">
+                                <div className="bg-white w-full max-w-xl rounded-xl shadow border border-slate-200 overflow-hidden h-fit min-h-full">
+                                    <div className="bg-slate-50 border-b border-slate-100 py-2.5 px-4 flex items-center gap-1.5">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                                        <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                                        <span className="ml-3 text-xs font-semibold text-slate-400">Email Client Rendering</span>
+                                    </div>
+                                    <div
+                                        className="p-6 text-slate-900 min-h-[400px]"
+                                        dangerouslySetInnerHTML={{ __html: previewHtml || '<div style="color:#94a3b8;font-style:italic;text-align:center;padding:40px;">Template is empty</div>' }}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
+                );
+            })()}
 
-                    <div className="mb-4">
-                        <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">Subject</label>
+            {/* Template List Controls */}
+            {!showForm && (
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             type="text"
-                            value={form.subject}
-                            onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
-                            placeholder='e.g., Welcome to Schologic, {{firstName}}!'
-                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                            placeholder="Search templates by name or subject..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                         />
                     </div>
-
-                    <div className="mb-4">
-                        <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">
-                            Variables (comma-separated)
-                        </label>
-                        <input
-                            type="text"
-                            value={varInput}
-                            onChange={e => setVarInput(e.target.value)}
-                            placeholder="firstName, institution, email"
-                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                        />
-                        <p className="text-xs text-slate-400 mt-1">
-                            Use <code className="bg-slate-100 px-1 rounded">{'{{variableName}}'}</code> in the subject and body.
-                        </p>
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">HTML Body</label>
-                        <textarea
-                            value={form.content_html}
-                            onChange={e => setForm(p => ({ ...p, content_html: e.target.value }))}
-                            placeholder="<div>Your email template HTML...</div>"
-                            rows={12}
-                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-end gap-3">
-                        <button
-                            onClick={() => { setEditing(null); setCreating(false); }}
-                            className="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"
+                    <div className="relative w-full sm:w-48">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <select
+                            value={categoryFilter}
+                            onChange={e => setCategoryFilter(e.target.value)}
+                            className="w-full pl-10 pr-8 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none bg-white"
                         >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            disabled={saving || !form.name.trim()}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50"
-                        >
-                            <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save Template'}
-                        </button>
+                            <option value="">All Categories</option>
+                            <option value="transactional">Transactional</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="onboarding">Onboarding</option>
+                            <option value="academic">Academic</option>
+                        </select>
                     </div>
                 </div>
             )}
 
             {/* Template List */}
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div className={`bg-white rounded-2xl border border-slate-200 overflow-hidden ${showForm ? 'opacity-50 pointer-events-none' : ''}`}>
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <RefreshCw className="w-5 h-5 text-slate-400 animate-spin" />
@@ -220,58 +301,76 @@ export default function TemplatesPage() {
                         <p className="font-semibold">No templates</p>
                         <p className="text-xs mt-1">Create your first email template</p>
                     </div>
-                ) : (
-                    <div className="divide-y divide-slate-100">
-                        {templates.map(template => (
-                            <div
-                                key={template.id}
-                                className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
-                            >
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-sm font-bold text-slate-800">{template.name}</p>
-                                        {template.category && (
-                                            <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                                                {template.category}
-                                            </span>
+                ) : (() => {
+                    const filtered = templates.filter(t => {
+                        const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            t.subject?.toLowerCase().includes(searchQuery.toLowerCase());
+                        const matchesCat = categoryFilter ? t.category === categoryFilter : true;
+                        return matchesSearch && matchesCat;
+                    });
+
+                    if (filtered.length === 0) {
+                        return (
+                            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                                <Search className="w-8 h-8 mb-3 opacity-50" />
+                                <p className="font-semibold">No templates found</p>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div className="divide-y divide-slate-100">
+                            {filtered.map(template => (
+                                <div
+                                    key={template.id}
+                                    className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
+                                >
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-sm font-bold text-slate-800">{template.name}</p>
+                                            {template.category && (
+                                                <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                                                    {template.category}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-slate-500 mt-0.5 truncate">
+                                            Subject: {template.subject}
+                                        </p>
+                                        {template.variables?.length > 0 && (
+                                            <p className="text-xs text-slate-400 mt-0.5">
+                                                Variables: {template.variables.map(v => `{{${v}}}`).join(', ')}
+                                            </p>
                                         )}
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-0.5 truncate">
-                                        Subject: {template.subject}
-                                    </p>
-                                    {template.variables?.length > 0 && (
-                                        <p className="text-xs text-slate-400 mt-0.5">
-                                            Variables: {template.variables.map(v => `{{${v}}}`).join(', ')}
-                                        </p>
-                                    )}
+                                    <div className="flex items-center gap-1 ml-4">
+                                        <button
+                                            onClick={() => setPreviewing(template)}
+                                            className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
+                                            title="Preview"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => startEdit(template)}
+                                            className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(template.id)}
+                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-1 ml-4">
-                                    <button
-                                        onClick={() => setPreviewing(template)}
-                                        className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
-                                        title="Preview"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => startEdit(template)}
-                                        className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-                                        title="Edit"
-                                    >
-                                        <Pencil className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(template.id)}
-                                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                            ))}
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* Preview Modal */}

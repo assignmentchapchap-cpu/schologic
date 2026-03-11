@@ -3,6 +3,7 @@
 import { createSessionClient } from '@schologic/database';
 import { cookies } from 'next/headers';
 import { Resend } from 'resend';
+import { renderTemplate, sendEmail } from '@/app/actions/adminEmails';
 import { createClient } from '@supabase/supabase-js';
 import { createNotification } from './pilotNotifications';
 import { invalidateUserIdentity } from '@/lib/identity-server';
@@ -286,22 +287,17 @@ export async function inviteTeamMember({
 
         // Send invite email
         try {
-            await resend.emails.send({
+            const pilotUrl = process.env.NEXT_PUBLIC_PILOT_URL || 'https://pilot.schologic.com';
+            const { subject: inviteSubject, html: inviteHtml } = await renderTemplate('Pilot Team Invite', {
+                firstName: firstName || 'there',
+                pilotUrl
+            });
+
+            await sendEmail({
                 from: 'Schologic Pilots <pilots@schologic.com>',
-                to: email,
-                subject: 'You\'ve been invited to a Schologic Pilot',
-                html: `
-                    <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto;">
-                        <h2 style="color: #1e293b;">Welcome to the Pilot Team!</h2>
-                        <p style="color: #475569;">Hi ${firstName},</p>
-                        <p style="color: #475569;">You've been invited to join a Schologic pilot program. Visit the link below to set up your account:</p>
-                        <a href="${process.env.NEXT_PUBLIC_PILOT_URL || 'https://pilot.schologic.com'}/setup"
-                           style="display: inline-block; padding: 12px 24px; background: #4f46e5; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
-                            Set Up Your Account
-                        </a>
-                        <p style="color: #94a3b8; font-size: 14px; margin-top: 24px;">— The Schologic Team</p>
-                    </div>
-                `,
+                to: [email],
+                subject: inviteSubject || "You've been invited to a Schologic Pilot",
+                html: inviteHtml!
             });
         } catch (emailErr) {
             console.error('Invite email failed (non-blocking):', emailErr);

@@ -8,6 +8,7 @@ import { Database } from "@schologic/database";
 import crypto from 'crypto';
 import { SupervisorReport } from '@/types/practicum';
 import { logSystemError } from '@/lib/logSystemError';
+import { renderTemplate, sendEmail } from '@/app/actions/adminEmails';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -103,22 +104,18 @@ export async function sendSupervisorVerificationEmail(logId: string) {
         const verificationLink = `${origin}/verify/${token}`;
 
         // 4. Send Email
-        const { error: resendError } = await resend.emails.send({
+        const { subject: verificationSubject, html: verificationHtml } = await renderTemplate('Verify Practicum Log', {
+            supervisorName,
+            studentName,
+            practicumTitle,
+            verificationLink
+        });
+
+        const { error: resendError } = await sendEmail({
             from: 'Schologic Practicum <onboarding@schologic.com>',
-            to: supervisorEmail,
-            subject: `Action Required: Verify Practicum Log for ${studentName}`,
-            html: `
-<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-  <p style="font-size: 11px; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">SCHOLOGIC PRACTICUM // VERIFICATION</p>
-  <p>Dear ${supervisorName},</p>
-  <p><strong>${studentName}</strong> has submitted a log entry for <strong>${practicumTitle}</strong>.</p>
-  <p>Your verification is required to confirm these activities.</p>
-  <div style="margin: 30px 0;">
-    <a href="${verificationLink}" style="background: #0f172a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Review & Verify Log</a>
-  </div>
-  <p style="font-size: 12px; color: #64748b;">Link: <a href="${verificationLink}">${verificationLink}</a></p>
-</div>
-            `
+            to: [supervisorEmail],
+            subject: verificationSubject || `Action Required: Verify Practicum Log for ${studentName}`,
+            html: verificationHtml!
         });
 
         if (resendError) throw new Error("Email dispatch failed: " + resendError.message);
@@ -310,28 +307,18 @@ export async function requestSupervisorReports(practicumId: string, studentIds: 
             const practicumData = Array.isArray(enrollment.practicums) ? enrollment.practicums[0] : enrollment.practicums;
             const practicumTitle = (practicumData as any)?.title || 'Practicum';
 
-            const { error: sendError } = await resend.emails.send({
+            const { subject: reportSubject, html: reportHtml } = await renderTemplate('Final Report Request', {
+                supervisorName: supervisor.name || 'Supervisor',
+                studentName,
+                practicumTitle,
+                reportLink
+            });
+
+            const { error: sendError } = await sendEmail({
                 from: 'Schologic Practicum <onboarding@schologic.com>',
-                to: supervisor.email,
-                subject: `Final Report Request: ${studentName}`,
-                html: `
-<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-  <p style="font-size: 11px; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">SCHOLOGIC PRACTICUM // FINAL REPORT</p>
-  <p>Dear ${supervisor.name || 'Supervisor'},</p>
-  <p>You are supervising <strong>${studentName}</strong> for <strong>${practicumTitle}</strong>.</p>
-  <p>As the practicum period concludes, we kindly request you to complete the <strong>Final Evaluation Report</strong>.</p>
-  <p>Your assessment accounts for <strong>50%</strong> of the student's final grade.</p>
-  
-  <div style="margin: 30px 0;">
-    <a href="${reportLink}" style="background: #0f172a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Complete Final Report</a>
-  </div>
-  
-  <p style="font-size: 12px; color: #64748b;">
-    This link is valid for 14 days.<br>
-    Link: <a href="${reportLink}">${reportLink}</a>
-  </p>
-</div>
-                `
+                to: [supervisor.email],
+                subject: reportSubject || `Final Report Request: ${studentName}`,
+                html: reportHtml!
             });
 
             if (sendError) {
