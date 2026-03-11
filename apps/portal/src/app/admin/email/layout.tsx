@@ -1,8 +1,7 @@
 'use client';
 
-// @ts-expect-error - False positive in local LSP environment
+
 import { usePathname, useRouter } from 'next/navigation';
-// @ts-expect-error - False positive in local LSP environment
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { Inbox, Send, Pencil, Users, BookOpen, Search, X, TrendingUp } from 'lucide-react';

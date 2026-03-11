@@ -2,7 +2,6 @@
 
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
-// @ts-expect-error - False positive in local LSP environment
 import { cookies } from 'next/headers';
 import { createSessionClient } from '@schologic/database';
 import { redis } from '@/lib/redis';

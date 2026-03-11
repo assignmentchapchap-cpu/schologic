@@ -94,6 +94,10 @@ export const generateAiDrafts = inngest.createFunction(
             return result;
         });
 
+        if ('error' in savedDraft) {
+            throw new Error(savedDraft.error as string);
+        }
+
         return { success: true, draftId: savedDraft.id };
     }
 );
