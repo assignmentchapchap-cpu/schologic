@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
 
 async function handleInboundEmail(data: ResendEmailPayload['data']) {
     // Determine thread_id by looking for an existing conversation
-    const threadId = await findOrCreateThread(data.subject, data.from, data.to);
+    const thread = await findOrCreateThread(data.subject, data.from, data.to);
 
     // Process attachments if they exist
     const attachmentsMeta: any[] = [];
@@ -148,7 +148,8 @@ async function handleInboundEmail(data: ResendEmailPayload['data']) {
         body_text: data.text || null,
         body_html: data.html || null,
         status: 'delivered',
-        thread_id: threadId,
+        thread_id: thread.threadId,
+        in_reply_to: thread.originalMessageId || null,
         is_read: false,
         attachments_jsonb: attachmentsMeta,
     });
@@ -156,6 +157,14 @@ async function handleInboundEmail(data: ResendEmailPayload['data']) {
     if (error) {
         console.error('[Webhook] Failed to insert inbound email:', error);
         throw error;
+    }
+
+    // If this inbound email is definitively a reply to an outbound prospect campaign
+    if (thread.prospectId) {
+        const { error: prospectErr } = await supabaseAdmin.rpc('increment_prospect_reply', { p_id: thread.prospectId });
+        if (prospectErr) {
+            console.error('[Webhook] Failed to increment prospect reply count:', prospectErr);
+        }
     }
 }
 
@@ -167,13 +176,21 @@ async function handleStatusUpdate(emailId: string, eventType: string) {
     let newStatus = eventType.replace('email.', '');
     if (newStatus === 'delivery_delayed') newStatus = 'delayed';
 
-    const { error } = await supabaseAdmin
+    const { data: emailData, error } = await supabaseAdmin
         .from('platform_emails')
         .update({ status: newStatus })
-        .eq('resend_id', emailId);
+        .eq('resend_id', emailId)
+        .select('prospect_id')
+        .single();
 
     if (error) {
         console.error(`[Webhook] Status update failed for ${emailId}:`, error);
+    } else if (emailData?.prospect_id && (newStatus === 'bounced' || newStatus === 'complained')) {
+        // Mark prospect as bounced if the email bounced
+        await supabaseAdmin
+            .from('prospects')
+            .update({ status: 'bounced' })
+            .eq('id', emailData.prospect_id);
     }
 }
 
@@ -218,16 +235,16 @@ async function findOrCreateThread(
     subject: string,
     from: string,
     to: string[]
-): Promise<string | null> {
+): Promise<{ threadId: string | null, prospectId: string | null, originalMessageId: string | null }> {
     // Normalize subject by stripping Re:/Fwd: prefixes
     const normalized = subject.replace(/^(re:\s*|fwd?:\s*)+/i, '').trim();
 
-    if (!normalized) return null;
+    if (!normalized) return { threadId: null, prospectId: null, originalMessageId: null };
 
     // Look for an existing email with a matching normalized subject involving the same parties
     const { data: existing } = await supabaseAdmin
         .from('platform_emails')
-        .select('id, thread_id')
+        .select('id, thread_id, prospect_id, message_id')
         .or(`from_email.eq.${from},to_emails.cs.{${from}}`)
         .ilike('subject', `%${normalized}%`)
         .order('created_at', { ascending: false })
@@ -235,11 +252,15 @@ async function findOrCreateThread(
 
     if (existing && existing.length > 0) {
         // Return the existing thread_id, or the email's own id if it was a root message
-        return existing[0].thread_id || existing[0].id;
+        return {
+            threadId: existing[0].thread_id || existing[0].id,
+            prospectId: existing[0].prospect_id,
+            originalMessageId: existing[0].message_id
+        };
     }
 
     // No existing thread found — this is a new conversation
-    return null;
+    return { threadId: null, prospectId: null, originalMessageId: null };
 }
 
 // ─── Contact Sync ──────────────────────────────────────────────────

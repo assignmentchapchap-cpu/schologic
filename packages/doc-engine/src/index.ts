@@ -2,6 +2,7 @@
 import mammoth from 'mammoth';
 import JSZip from 'jszip';
 import xml2js from 'xml2js';
+import { parse } from 'csv-parse/sync';
 
 // pdf-parse v2 is imported inside extractTextFromPdf function
 
@@ -66,6 +67,11 @@ export async function extractTextFromFile(buffer: Buffer, mimeType: string, file
 
         if (name.endsWith('.imscc') || mimeType === 'application/zip' || mimeType === 'application/x-zip-compressed') {
             return await extractImsccSafe(buffer);
+        }
+
+        if (name.endsWith('.csv') || mimeType === 'text/csv' || mimeType === 'application/csv') {
+            const content = await extractCsv(buffer);
+            return content ? { content } : null;
         }
 
         return null;
@@ -246,6 +252,25 @@ async function extractImsccSafe(buffer: Buffer): Promise<ParseResult | null> {
         return { content: imsccContent, title };
     } catch (e) {
         console.error("IMSCC Parsing Failed:", e);
+        return null;
+    }
+}
+
+export async function extractCsv(buffer: Buffer): Promise<any[] | null> {
+    try {
+        const text = buffer.toString('utf-8');
+        const records = parse(text, {
+            columns: true, // Output objects instead of arrays
+            skip_empty_lines: true,
+            trim: true,
+            relax_quotes: true,
+            relax_column_count: true
+        });
+
+        console.log(`DocEngine: CSV Parsed. Found ${records.length} records.`);
+        return records.length > 0 ? records : null;
+    } catch (e) {
+        console.error("CSV Parsing Failed:", e);
         return null;
     }
 }

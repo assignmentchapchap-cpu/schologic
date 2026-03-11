@@ -6,7 +6,9 @@
     "scripts": {
         "build": "tsc"
     },
-    "dependencies": {},
+    "dependencies": {
+        "@google/genai": "^1.44.0"
+    },
     "devDependencies": {
         "@schologic/config": "workspace:*",
         "@types/node": "^25.0.8",

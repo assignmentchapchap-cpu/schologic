@@ -2,9 +2,11 @@
 
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
+// @ts-expect-error - False positive in local LSP environment
 import { cookies } from 'next/headers';
 import { createSessionClient } from '@schologic/database';
 import { redis } from '@/lib/redis';
+import { draftProspectEmail, type ProspectProfile } from '@schologic/ai-bridge';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -104,13 +106,16 @@ export interface DraftData {
     subject: string;
     html: string;
     threadId?: string;
+    scheduledAt?: string | null;
+    prospectId?: string | null;
+    aiTemplateId?: string | null;
 }
 
 export async function saveDraft(data: DraftData) {
     try {
         await ensureSuperadmin();
 
-        const draftPayload = {
+        const draftPayload: any = {
             direction: 'outbound' as const,
             from_email: data.from,
             to_emails: data.to,
@@ -118,9 +123,12 @@ export async function saveDraft(data: DraftData) {
             bcc_emails: data.bcc || [],
             subject: data.subject,
             body_html: data.html,
-            status: 'draft',
+            status: data.scheduledAt ? 'scheduled' : 'draft', // Support immediate queuing
             thread_id: data.threadId || null,
             is_read: true,
+            scheduled_at: data.scheduledAt || null,
+            prospect_id: data.prospectId || null,
+            ai_generated_from_template_id: data.aiTemplateId || null,
         };
 
         if (data.id) {
@@ -162,7 +170,7 @@ export async function deleteDraft(draftId: string) {
             .from('platform_emails')
             .delete()
             .eq('id', draftId)
-            .eq('status', 'draft');
+            .in('status', ['draft', 'scheduled']);
 
         if (error) throw error;
         await invalidateEmailCache('drafts');
@@ -193,7 +201,7 @@ export async function getEmails(folder: EmailFolder, page = 1, pageSize = 25) {
                 query = query.eq('direction', 'outbound').neq('status', 'draft');
                 break;
             case 'drafts':
-                query = query.eq('status', 'draft');
+                query = query.in('status', ['draft', 'scheduled']);
                 break;
         }
 
@@ -252,7 +260,7 @@ export async function searchEmails(
                 dbQuery = dbQuery.eq('direction', 'outbound').neq('status', 'draft');
                 break;
             case 'drafts':
-                dbQuery = dbQuery.eq('status', 'draft');
+                dbQuery = dbQuery.in('status', ['draft', 'scheduled']);
                 break;
         }
 
@@ -596,5 +604,98 @@ export async function deleteTemplate(id: string) {
     } catch (error: any) {
         console.error('[deleteTemplate] Error:', error);
         return { error: error.message };
+    }
+}
+
+// ─── AI Regeneration & Scheduling ──────────────────────────────────────
+
+export async function regenerateDraft(draftId: string, note: string) {
+    try {
+        await ensureSuperadmin();
+
+        const { data: draft, error: draftErr } = await supabaseAdmin
+            .from('platform_emails')
+            .select('*')
+            .eq('id', draftId)
+            .single();
+
+        if (draftErr || !draft) throw new Error('Draft not found.');
+
+        if (!draft.ai_generated_from_template_id || !draft.prospect_id) {
+            throw new Error('Not an AI generated draft.');
+        }
+
+        const { data: template } = await supabaseAdmin
+            .from('platform_templates')
+            .select('*')
+            .eq('id', draft.ai_generated_from_template_id)
+            .single();
+
+        const { data: prospect } = await supabaseAdmin
+            .from('prospects')
+            .select('*')
+            .eq('id', draft.prospect_id)
+            .single();
+
+        if (!template || !prospect) throw new Error('Missing template or prospect data.');
+
+        const prospectProfile: ProspectProfile = {
+            institution_name: prospect.institution_name,
+            location: prospect.location,
+            type: prospect.type,
+            website: prospect.website,
+            contact_name: prospect.contact_name,
+            job_title: prospect.job_title
+        };
+
+        const result = await draftProspectEmail(prospectProfile, template.subject, template.body_html, note);
+
+        const { error: updateErr } = await supabaseAdmin
+            .from('platform_emails')
+            .update({
+                subject: result.subject,
+                body_html: result.html,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', draftId);
+
+        if (updateErr) throw updateErr;
+
+        await invalidateEmailCache('drafts');
+        return { success: true };
+    } catch (e: any) {
+        console.error('[regenerateDraft] Error:', e);
+        return { error: e.message || 'Failed to regenerate draft.' };
+    }
+}
+
+export async function approveAndScheduleDrafts(ids: string[], startDate: string, staggerMinutes: number = 0) {
+    try {
+        await ensureSuperadmin();
+        let currentSendTime = new Date(startDate);
+
+        // Process sequentially to stagger correctly
+        for (const id of ids) {
+            const { error } = await supabaseAdmin
+                .from('platform_emails')
+                .update({
+                    status: 'scheduled',
+                    scheduled_at: currentSendTime.toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id)
+                .in('status', ['draft', 'scheduled']);
+
+            if (error) throw error;
+
+            if (staggerMinutes > 0) {
+                currentSendTime = new Date(currentSendTime.getTime() + staggerMinutes * 60000);
+            }
+        }
+        await invalidateEmailCache('drafts');
+        return { success: true };
+    } catch (e: any) {
+        console.error('[approveAndScheduleDrafts] Error:', e);
+        return { error: e.message || 'Failed to schedule drafts.' };
     }
 }

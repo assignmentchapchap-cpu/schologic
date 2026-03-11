@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Pencil, RefreshCw, Trash2, Search, Mail, ArrowLeft, CheckSquare } from 'lucide-react';
-import { searchEmails, deleteDraft, bulkEmailAction } from '@/app/actions/adminEmails';
+import { useEffect, useState, useCallback, Suspense } from 'react';
+import { Pencil, RefreshCw, Trash2, Search, Mail, ArrowLeft, CheckSquare, Sparkles, Send } from 'lucide-react';
+import { searchEmails, deleteDraft, bulkEmailAction, regenerateDraft, approveAndScheduleDrafts } from '@/app/actions/adminEmails';
 import { useDebounce } from 'use-debounce';
 import { useEmailRealtime } from '../hooks/useEmailRealtime';
 import ComposeModal from '../components/ComposeModal';
@@ -18,6 +17,9 @@ interface DraftRow {
     body_html: string;
     body_text: string | null;
     thread_id: string | null;
+    status: string;
+    scheduled_at: string | null;
+    ai_generated_from_template_id: string | null;
     created_at: string;
 }
 
@@ -34,6 +36,10 @@ export default function DraftsPage() {
     const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
     const [bulkLoading, setBulkLoading] = useState(false);
     const [isSelecting, setIsSelecting] = useState(false);
+
+    // AI & Scheduling state
+    const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+    const [regenerationNote, setRegenerationNote] = useState('');
 
     const fetchDrafts = useCallback(async () => {
         setLoading(true);
@@ -62,15 +68,17 @@ export default function DraftsPage() {
     }, [selected?.id]);
     useEmailRealtime('drafts', handleRealtimeInsert, handleRealtimeUpdate, handleRealtimeDelete);
 
-    // Auto-select draft from universal search
-    const searchParams = useSearchParams();
+    // Auto-select draft from universal search via URL
     useEffect(() => {
-        const selectId = searchParams.get('select');
-        if (selectId && drafts.length > 0 && !selected) {
-            const match = drafts.find(d => d.id === selectId);
-            if (match) handleSelect(match);
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const selectId = params.get('select');
+            if (selectId && drafts.length > 0 && !selected) {
+                const match = drafts.find(d => d.id === selectId);
+                if (match) handleSelect(match);
+            }
         }
-    }, [drafts, searchParams]);
+    }, [drafts, selected]);
 
     async function handleDelete(id: string) {
         if (!confirm('Delete this draft?')) return;
@@ -114,6 +122,44 @@ export default function DraftsPage() {
         fetchDrafts();
     }
 
+    async function handleRegenerate() {
+        if (!selected) return;
+        setRegeneratingId(selected.id);
+        const res = await regenerateDraft(selected.id, regenerationNote);
+        if (res.error) {
+            alert(res.error);
+        } else {
+            setRegenerationNote('');
+            fetchDrafts();
+        }
+        setRegeneratingId(null);
+    }
+
+    async function handleApproveSchedule(isBulk = false) {
+        const ids = isBulk ? Array.from(checkedIds) : [selected!.id];
+        if (ids.length === 0) return;
+
+        const staggerStr = prompt(`Schedule ${ids.length} email(s) starting now?\nEnter delay between emails in minutes (0 for no delay):`, '0');
+        if (staggerStr === null) return;
+
+        const stagger = parseInt(staggerStr, 10) || 0;
+
+        setBulkLoading(true);
+        const res = await approveAndScheduleDrafts(ids, new Date().toISOString(), stagger);
+        setBulkLoading(false);
+
+        if (res.error) {
+            alert(res.error);
+        } else {
+            if (isBulk) setCheckedIds(new Set());
+            if (!isBulk && selected) {
+                const updated = { ...selected, status: 'scheduled', scheduled_at: new Date().toISOString() };
+                setSelected(updated);
+            }
+            fetchDrafts();
+        }
+    }
+
     const totalPages = Math.ceil(total / 25);
 
     return (
@@ -135,8 +181,8 @@ export default function DraftsPage() {
                             setIsSelecting(!isSelecting);
                         }}
                         className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm ${isSelecting
-                                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                            ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                             }`}
                     >
                         {isSelecting ? 'Cancel' : 'Select'}
@@ -152,21 +198,28 @@ export default function DraftsPage() {
 
             {/* Search */}
             <div className="relative mb-5">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                     type="text"
                     placeholder="Search drafts by subject..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-colors shadow-sm"
                 />
             </div>
 
             {/* Bulk Action Bar */}
             {checkedIds.size > 0 && (
-                <div className="flex items-center gap-3 mb-4 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="flex items-center gap-3 mb-4 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl shadow-sm">
                     <span className="text-sm font-bold text-slate-700">{checkedIds.size} selected</span>
                     <div className="flex items-center gap-2 ml-auto">
+                        <button
+                            onClick={() => handleApproveSchedule(true)}
+                            disabled={bulkLoading}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                        >
+                            <Send className="w-3.5 h-3.5" /> Approve & Schedule
+                        </button>
                         <button
                             onClick={() => handleBulkAction('delete')}
                             disabled={bulkLoading}
@@ -224,14 +277,23 @@ export default function DraftsPage() {
                                             onClick={() => handleSelect(draft)}
                                             className="flex-1 text-left min-w-0"
                                         >
-                                            <p className="text-sm font-semibold text-slate-700 truncate">
+                                            <p className="text-sm font-semibold text-slate-700 truncate flex items-center gap-2">
                                                 {draft.subject || '(no subject)'}
+                                                {draft.status === 'scheduled' && (
+                                                    <span className="shrink-0 bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[10px] font-bold">SCHED</span>
+                                                )}
+                                                {draft.ai_generated_from_template_id && (
+                                                    <span className="shrink-0 bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded text-[10px] font-bold">AI</span>
+                                                )}
                                             </p>
                                             <p className="text-xs text-slate-400 mt-0.5 truncate">
                                                 To: {draft.to_emails?.join(', ') || '(no recipient)'}
                                             </p>
                                             <p className="text-xs text-slate-400 mt-0.5">
-                                                Last edited: {new Date(draft.created_at).toLocaleString()}
+                                                {draft.status === 'scheduled' && draft.scheduled_at
+                                                    ? `Scheduled: ${new Date(draft.scheduled_at).toLocaleString()}`
+                                                    : `Last edited: ${new Date(draft.created_at).toLocaleString()}`
+                                                }
                                             </p>
                                         </button>
                                         <button
@@ -283,13 +345,26 @@ export default function DraftsPage() {
                             </button>
 
                             <div className="mb-6">
-                                <h2 className="text-xl font-bold text-slate-900 mb-2">{selected.subject || '(no subject)'}</h2>
+                                <h2 className="text-xl font-bold text-slate-900 mb-2 flex flex-wrap items-center gap-2">
+                                    {selected.subject || '(no subject)'}
+                                    {selected.status === 'scheduled' && (
+                                        <span className="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs font-bold tracking-wide uppercase">Scheduled</span>
+                                    )}
+                                    {selected.ai_generated_from_template_id && (
+                                        <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-bold tracking-wide uppercase flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span> AI Generated
+                                        </span>
+                                    )}
+                                </h2>
                                 <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
                                     <span className="font-semibold text-slate-700">To:</span>
                                     {selected.to_emails?.join(', ') || '(no recipient)'}
                                 </div>
                                 <p className="text-xs text-slate-400 mt-2">
-                                    Last edited: {new Date(selected.created_at).toLocaleString()}
+                                    {selected.status === 'scheduled' && selected.scheduled_at
+                                        ? `Scheduled to send on: ${new Date(selected.scheduled_at).toLocaleString()}`
+                                        : `Last edited: ${new Date(selected.created_at).toLocaleString()}`
+                                    }
                                 </p>
                             </div>
 
@@ -307,7 +382,30 @@ export default function DraftsPage() {
                                 )}
                             </div>
 
-                            <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3">
+                            {/* AI Regeneration Panel */}
+                            {selected.ai_generated_from_template_id && selected.status === 'draft' && (
+                                <div className="mt-6 p-4 border border-amber-200 bg-amber-50/50 rounded-xl">
+                                    <h4 className="text-sm font-bold text-amber-800 flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4" /> AI Regeneration</h4>
+                                    <p className="text-xs text-amber-700 mb-3">Provide feedback to tweak this draft.</p>
+                                    <textarea
+                                        value={regenerationNote}
+                                        onChange={e => setRegenerationNote(e.target.value)}
+                                        placeholder="e.g. Make it shorter, focus more on ROI..."
+                                        className="w-full p-2.5 text-sm rounded-lg border border-amber-200 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 mb-3"
+                                        rows={2}
+                                    />
+                                    <button
+                                        onClick={handleRegenerate}
+                                        disabled={regeneratingId === selected.id}
+                                        className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50"
+                                    >
+                                        <RefreshCw className={`w-4 h-4 ${regeneratingId === selected.id ? 'animate-spin' : ''}`} />
+                                        {regeneratingId === selected.id ? 'Regenerating...' : 'Regenerate Draft'}
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
                                 <button
                                     onClick={() => setEditing(selected)}
                                     className="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors"
@@ -320,6 +418,15 @@ export default function DraftsPage() {
                                 >
                                     Delete
                                 </button>
+                                {selected.status === 'draft' && (
+                                    <button
+                                        onClick={() => handleApproveSchedule(false)}
+                                        className="ml-auto flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-colors"
+                                    >
+                                        <Send className="w-4 h-4" />
+                                        Approve & Schedule
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ) : (

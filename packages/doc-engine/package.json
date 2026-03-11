@@ -8,6 +8,7 @@
         "build": "tsc"
     },
     "dependencies": {
+        "csv-parse": "^6.1.0",
         "jszip": "^3.10.1",
         "mammoth": "^1.11.0",
         "pdf-parse": "^2.4.5",

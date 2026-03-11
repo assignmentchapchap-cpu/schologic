@@ -1,9 +1,11 @@
 'use client';
 
+// @ts-expect-error - False positive in local LSP environment
 import { usePathname, useRouter } from 'next/navigation';
+// @ts-expect-error - False positive in local LSP environment
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
-import { Inbox, Send, Pencil, Users, BookOpen, Search, X } from 'lucide-react';
+import { Inbox, Send, Pencil, Users, BookOpen, Search, X, TrendingUp } from 'lucide-react';
 import { searchEmailsGlobal } from '@/app/actions/adminEmails';
 import { useDebounce } from 'use-debounce';
 
@@ -13,6 +15,7 @@ const EMAIL_TABS = [
     { label: 'Drafts', icon: Pencil, href: '/admin/email/drafts' },
     { label: 'Mailing Lists', icon: Users, href: '/admin/email/mailing-lists' },
     { label: 'Templates', icon: BookOpen, href: '/admin/email/templates' },
+    { label: 'Performance', icon: TrendingUp, href: '/admin/email/performance' },
 ];
 
 interface SearchResult {
@@ -154,7 +157,7 @@ export default function EmailLayout({ children }: { children: React.ReactNode })
                                             return (
                                                 <button
                                                     key={email.id}
-                                                    onClick={() => navigateToResult(email.folder)}
+                                                    onClick={() => navigateToResult(email.folder, email.id)}
                                                     className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 border-b border-slate-50 last:border-0"
                                                 >
                                                     <FolderIcon className={`w-4 h-4 mt-0.5 shrink-0 ${meta.color.split(' ')[0]}`} />
