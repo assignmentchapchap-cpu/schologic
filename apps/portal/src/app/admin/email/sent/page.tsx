@@ -1,15 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Send, RefreshCw, CheckCircle, XCircle, AlertTriangle, Clock, Eye } from 'lucide-react';
-import { getEmails } from '@/app/actions/adminEmails';
+import { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Send, RefreshCw, CheckCircle, XCircle, AlertTriangle, Clock, Eye, Search, Filter, Mail, ArrowLeft, CheckSquare, Trash2 } from 'lucide-react';
+import { searchEmails, bulkEmailAction } from '@/app/actions/adminEmails';
+import { useDebounce } from 'use-debounce';
+import { useEmailRealtime } from '../hooks/useEmailRealtime';
 
 interface EmailRow {
     id: string;
     from_email: string;
     to_emails: string[];
     subject: string;
+    body_html: string | null;
+    body_text: string | null;
     status: string;
+    is_read: boolean;
     metadata_jsonb: Record<string, any> | null;
     created_at: string;
 }
@@ -25,19 +31,100 @@ const STATUS_CONFIG: Record<string, { icon: any; color: string; label: string }>
     scheduled: { icon: Clock, color: 'text-cyan-500 bg-cyan-50', label: 'Scheduled' },
 };
 
+const STATUS_FILTERS = [
+    { value: '', label: 'All Statuses' },
+    { value: 'delivered', label: 'Delivered' },
+    { value: 'bounced', label: 'Bounced' },
+    { value: 'failed', label: 'Failed' },
+    { value: 'sent', label: 'Sent' },
+];
+
 export default function SentPage() {
     const [emails, setEmails] = useState<EmailRow[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [selected, setSelected] = useState<EmailRow | null>(null);
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+    const [page, setPage] = useState(1);
+    const [debouncedSearch] = useDebounce(search, 400);
+    // Mobile detail view
+    const [showMobileDetail, setShowMobileDetail] = useState(false);
+    const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+    const [bulkLoading, setBulkLoading] = useState(false);
+    const [isSelecting, setIsSelecting] = useState(false);
 
-    useEffect(() => { fetchEmails(); }, []);
-
-    async function fetchEmails() {
+    const fetchEmails = useCallback(async () => {
         setLoading(true);
-        const result = await getEmails('sent');
+        const result = await searchEmails(debouncedSearch, 'sent', statusFilter, page);
         setEmails(result.data as EmailRow[]);
         setTotal(result.total);
         setLoading(false);
+    }, [debouncedSearch, statusFilter, page]);
+
+    useEffect(() => { fetchEmails(); }, [fetchEmails]);
+
+    // Reset page when search/filter changes
+    useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter]);
+
+    // Supabase Realtime
+    const handleRealtimeInsert = useCallback((newEmail: any) => {
+        if (newEmail.status === 'draft') return;
+        setEmails(prev => [newEmail, ...prev]);
+        setTotal(t => t + 1);
+    }, []);
+    const handleRealtimeUpdate = useCallback((updated: any) => {
+        setEmails(prev => prev.map(e => e.id === updated.id ? { ...e, ...updated } : e));
+        if (selected?.id === updated.id) setSelected(prev => prev ? { ...prev, ...updated } : null);
+    }, [selected?.id]);
+    const handleRealtimeDelete = useCallback((id: string) => {
+        setEmails(prev => prev.filter(e => e.id !== id));
+        setTotal(t => Math.max(0, t - 1));
+        if (selected?.id === id) { setSelected(null); setShowMobileDetail(false); }
+    }, [selected?.id]);
+    useEmailRealtime('sent', handleRealtimeInsert, handleRealtimeUpdate, handleRealtimeDelete);
+
+    // Auto-select email from universal search
+    const searchParams = useSearchParams();
+    useEffect(() => {
+        const selectId = searchParams.get('select');
+        if (selectId && emails.length > 0 && !selected) {
+            const match = emails.find(e => e.id === selectId);
+            if (match) handleSelect(match);
+        }
+    }, [emails, searchParams]);
+
+    function handleSelect(email: EmailRow) {
+        setSelected(email);
+        setShowMobileDetail(true);
+    }
+
+    const totalPages = Math.ceil(total / 25);
+
+    function toggleCheck(id: string, e: React.MouseEvent) {
+        e.stopPropagation();
+        setCheckedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    }
+
+    function toggleCheckAll() {
+        if (checkedIds.size === emails.length) {
+            setCheckedIds(new Set());
+        } else {
+            setCheckedIds(new Set(emails.map(e => e.id)));
+        }
+    }
+
+    async function handleBulkAction(action: 'markRead' | 'markUnread' | 'delete') {
+        if (checkedIds.size === 0) return;
+        setBulkLoading(true);
+        await bulkEmailAction(Array.from(checkedIds), action);
+        setCheckedIds(new Set());
+        setBulkLoading(false);
+        fetchEmails();
     }
 
     return (
@@ -50,84 +137,249 @@ export default function SentPage() {
                     </h1>
                     <p className="text-slate-500 mt-1">{total} emails sent</p>
                 </div>
-                <button
-                    onClick={fetchEmails}
-                    className="mt-3 md:mt-0 flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
-                >
-                    <RefreshCw className="w-4 h-4" /> Refresh
-                </button>
+                <div className="flex items-center gap-3 mt-3 md:mt-0">
+                    <button
+                        onClick={() => {
+                            if (isSelecting) {
+                                setCheckedIds(new Set());
+                            }
+                            setIsSelecting(!isSelecting);
+                        }}
+                        className={`px-4 py-2.5 text-sm font-bold rounded-xl transition-all shadow-sm ${isSelecting
+                                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                    >
+                        {isSelecting ? 'Cancel' : 'Select'}
+                    </button>
+                    <button
+                        onClick={fetchEmails}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+                    >
+                        <RefreshCw className="w-4 h-4" /> Refresh
+                    </button>
+                </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                {loading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <RefreshCw className="w-5 h-5 text-slate-400 animate-spin" />
-                    </div>
-                ) : emails.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                        <Send className="w-10 h-10 mb-3" />
-                        <p className="font-semibold">No sent emails</p>
-                    </div>
-                ) : (
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/50">
-                                <th className="text-left px-4 py-3 font-semibold text-slate-500">To</th>
-                                <th className="text-left px-4 py-3 font-semibold text-slate-500">Subject</th>
-                                <th className="text-left px-4 py-3 font-semibold text-slate-500">Status</th>
-                                <th className="text-left px-4 py-3 font-semibold text-slate-500">Tracking</th>
-                                <th className="text-left px-4 py-3 font-semibold text-slate-500">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {emails.map(email => {
-                                // Fallback to 'sent' if status is unknown, but format the label correctly
-                                const statusInfo = STATUS_CONFIG[email.status] || {
-                                    icon: Clock,
-                                    color: 'text-slate-500 bg-slate-50',
-                                    label: email.status.charAt(0).toUpperCase() + email.status.slice(1).replace('_', ' ')
-                                };
-                                const StatusIcon = statusInfo.icon;
-                                const meta = email.metadata_jsonb || {};
+            {/* Search & Filters */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-5">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search sent emails..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300"
+                    />
+                </div>
+                <div className="relative w-full sm:w-48">
+                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <select
+                        value={statusFilter}
+                        onChange={e => setStatusFilter(e.target.value)}
+                        className="w-full pl-10 pr-8 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none bg-white"
+                    >
+                        {STATUS_FILTERS.map(f => (
+                            <option key={f.value} value={f.value}>{f.label}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
 
-                                return (
-                                    <tr key={email.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-4 py-3 font-medium text-slate-700 max-w-[200px] truncate">
-                                            {email.to_emails?.join(', ')}
-                                        </td>
-                                        <td className="px-4 py-3 text-slate-600 max-w-[300px] truncate">
-                                            {email.subject || '(no subject)'}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${statusInfo.color}`}>
-                                                <StatusIcon className="w-3.5 h-3.5" />
-                                                {statusInfo.label}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-3 text-xs text-slate-400">
-                                                {meta.open_count > 0 && (
-                                                    <span className="flex items-center gap-1 text-indigo-500 font-semibold">
-                                                        <Eye className="w-3.5 h-3.5" /> {meta.open_count}
-                                                    </span>
+            {/* Bulk Action Bar */}
+            {checkedIds.size > 0 && (
+                <div className="flex items-center gap-3 mb-4 px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <span className="text-sm font-bold text-emerald-700">{checkedIds.size} selected</span>
+                    <div className="flex items-center gap-2 ml-auto">
+                        <button
+                            onClick={() => handleBulkAction('delete')}
+                            disabled={bulkLoading}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Two-pane layout */}
+            <div className="flex gap-4 min-h-[600px]">
+                {/* Email List */}
+                <div className={`w-full md:w-2/5 bg-white rounded-2xl border border-slate-200 overflow-hidden ${showMobileDetail ? 'hidden md:block' : ''}`}>
+                    {loading ? (
+                        <div className="flex items-center justify-center py-20">
+                            <RefreshCw className="w-5 h-5 text-slate-400 animate-spin" />
+                        </div>
+                    ) : emails.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                            <Send className="w-10 h-10 mb-3" />
+                            <p className="font-semibold">No sent emails</p>
+                            <p className="text-xs mt-1">Emails you send will appear here</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto">
+                                {/* Select All header */}
+                                {isSelecting && (
+                                    <div className="flex items-center gap-3 px-4 py-2 bg-slate-50/50 border-b border-slate-100">
+                                        <button onClick={toggleCheckAll} className="text-slate-400 hover:text-emerald-500 transition-colors">
+                                            {checkedIds.size === emails.length && emails.length > 0
+                                                ? <CheckSquare className="w-4 h-4 text-emerald-500" />
+                                                : <span className="w-4 h-4 border-2 border-slate-300 rounded inline-block" />
+                                            }
+                                        </button>
+                                        <span className="text-xs text-slate-400 font-medium">Select all</span>
+                                    </div>
+                                )}
+                                {emails.map(email => {
+                                    const statusInfo = STATUS_CONFIG[email.status] || {
+                                        icon: Clock,
+                                        color: 'text-slate-500 bg-slate-50',
+                                        label: email.status?.charAt(0).toUpperCase() + email.status?.slice(1)
+                                    };
+                                    const StatusIcon = statusInfo.icon;
+
+                                    return (
+                                        <button
+                                            key={email.id}
+                                            onClick={() => handleSelect(email)}
+                                            className={`w-full text-left px-4 py-3.5 hover:bg-slate-50 transition-colors ${selected?.id === email.id ? 'bg-indigo-50/50 border-l-2 border-indigo-500' : ''}`}
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                {isSelecting && (
+                                                    <div role="checkbox" aria-checked={checkedIds.has(email.id)} onClick={(e) => toggleCheck(email.id, e)} className="mt-0.5 text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer">
+                                                        {checkedIds.has(email.id)
+                                                            ? <CheckSquare className="w-4 h-4 text-emerald-500" />
+                                                            : <span className="w-4 h-4 border-2 border-slate-300 rounded inline-block" />
+                                                        }
+                                                    </div>
                                                 )}
-                                                {meta.click_count > 0 && (
-                                                    <span className="flex items-center gap-1 text-violet-500 font-semibold">
-                                                        <span className="w-3.5 h-3.5 inline-flex items-center justify-center font-bold">C</span> {meta.click_count}
-                                                    </span>
-                                                )}
-                                                {!meta.open_count && !meta.click_count && '—'}
+                                                <div className="mt-0.5">
+                                                    <StatusIcon className={`w-4 h-4 ${statusInfo.color.split(' ')[0]}`} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-slate-700 truncate">
+                                                        To: {email.to_emails?.join(', ')}
+                                                    </p>
+                                                    <p className="text-sm text-slate-600 truncate mt-0.5">
+                                                        {email.subject || '(no subject)'}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${statusInfo.color}`}>
+                                                            {statusInfo.label}
+                                                        </span>
+                                                        <span className="text-xs text-slate-400">
+                                                            {new Date(email.created_at).toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">
-                                            {new Date(email.created_at).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+                                    <button
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        className="text-xs font-semibold text-slate-500 hover:text-slate-700 disabled:opacity-30"
+                                    >
+                                        ← Previous
+                                    </button>
+                                    <span className="text-xs text-slate-400">
+                                        Page {page} of {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={page === totalPages}
+                                        className="text-xs font-semibold text-slate-500 hover:text-slate-700 disabled:opacity-30"
+                                    >
+                                        Next →
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+
+                {/* Email Detail */}
+                <div className={`flex-1 bg-white rounded-2xl border border-slate-200 overflow-hidden ${showMobileDetail ? 'block' : 'hidden md:block'}`}>
+                    {selected ? (
+                        <div className="p-6 overflow-y-auto max-h-[600px]">
+                            {/* Mobile back button */}
+                            <button
+                                onClick={() => { setShowMobileDetail(false); setSelected(null); }}
+                                className="md:hidden flex items-center gap-1 text-sm font-semibold text-indigo-600 mb-4"
+                            >
+                                <ArrowLeft className="w-4 h-4" /> Back to list
+                            </button>
+
+                            <div className="mb-6">
+                                <h2 className="text-xl font-bold text-slate-900 mb-2">{selected.subject || '(no subject)'}</h2>
+                                <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
+                                    <span className="font-semibold text-slate-700">From:</span>
+                                    {selected.from_email}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
+                                    <span className="font-semibold text-slate-700">To:</span>
+                                    {selected.to_emails?.join(', ')}
+                                </div>
+                                <p className="text-xs text-slate-400 mt-2">
+                                    {new Date(selected.created_at).toLocaleString()}
+                                </p>
+
+                                {/* Tracking metrics */}
+                                {selected.metadata_jsonb && (
+                                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100">
+                                        {(() => {
+                                            const statusInfo = STATUS_CONFIG[selected.status] || { icon: Clock, color: 'text-slate-500 bg-slate-50', label: selected.status };
+                                            const StatusIcon = statusInfo.icon;
+                                            return (
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${statusInfo.color}`}>
+                                                    <StatusIcon className="w-3.5 h-3.5" />
+                                                    {statusInfo.label}
+                                                </span>
+                                            );
+                                        })()}
+                                        {selected.metadata_jsonb.open_count > 0 && (
+                                            <span className="flex items-center gap-1 text-sm text-indigo-600 font-semibold">
+                                                <Eye className="w-4 h-4" /> {selected.metadata_jsonb.open_count} opens
+                                            </span>
+                                        )}
+                                        {selected.metadata_jsonb.click_count > 0 && (
+                                            <span className="flex items-center gap-1 text-sm text-violet-600 font-semibold">
+                                                🔗 {selected.metadata_jsonb.click_count} clicks
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="border-t border-slate-100 pt-4">
+                                {selected.body_html ? (
+                                    <div
+                                        className="prose prose-sm max-w-none"
+                                        dangerouslySetInnerHTML={{ __html: selected.body_html }}
+                                    />
+                                ) : (
+                                    <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans">
+                                        {selected.body_text || '(empty)'}
+                                    </pre>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-slate-400 py-20">
+                            <Mail className="w-12 h-12 mb-3" />
+                            <p className="font-semibold">Select a sent email</p>
+                            <p className="text-xs mt-1">Click on an email to see its details and tracking</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </>
     );

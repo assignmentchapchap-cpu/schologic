@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createSessionClient } from '@schologic/database';
+import { redis } from '@/lib/redis';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -83,6 +84,8 @@ export async function sendEmail(data: SendEmailData) {
             // Don't throw — email was already sent
         }
 
+        await invalidateEmailCache('sent');
+        await invalidateEmailCache('inbox');
         return { success: true, id: resendData?.id };
     } catch (error: any) {
         console.error('[sendEmail] Error:', error);
@@ -129,6 +132,7 @@ export async function saveDraft(data: DraftData) {
                 .eq('status', 'draft'); // safety: only update drafts
 
             if (error) throw error;
+            await invalidateEmailCache('drafts');
             return { success: true, id: data.id };
         } else {
             // Create new draft
@@ -139,6 +143,7 @@ export async function saveDraft(data: DraftData) {
                 .single();
 
             if (error) throw error;
+            await invalidateEmailCache('drafts');
             return { success: true, id: inserted?.id };
         }
     } catch (error: any) {
@@ -160,6 +165,7 @@ export async function deleteDraft(draftId: string) {
             .eq('status', 'draft');
 
         if (error) throw error;
+        await invalidateEmailCache('drafts');
         return { success: true };
     } catch (error: any) {
         console.error('[deleteDraft] Error:', error);
@@ -204,6 +210,181 @@ export async function getEmails(folder: EmailFolder, page = 1, pageSize = 25) {
     } catch (error: any) {
         console.error('[getEmails] Error:', error);
         return { data: [], total: 0, error: error.message };
+    }
+}
+
+// ─── Search Emails (Server-Side, Redis-Cached) ─────────────────────
+
+export async function searchEmails(
+    query: string,
+    folder: EmailFolder,
+    filterStatus = '',
+    page = 1,
+    pageSize = 25
+) {
+    try {
+        await ensureSuperadmin();
+
+        // Build cache key
+        const cacheKey = `emails:${folder}:${filterStatus}:${query.toLowerCase().trim()}:p${page}`;
+
+        // Check Redis cache
+        try {
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                return typeof cached === 'string' ? JSON.parse(cached) : cached;
+            }
+        } catch (cacheErr) {
+            console.warn('[searchEmails] Redis read failed, falling through to DB:', cacheErr);
+        }
+
+        // Build Supabase query
+        let dbQuery = supabaseAdmin
+            .from('platform_emails')
+            .select('*', { count: 'exact' });
+
+        // Folder filter
+        switch (folder) {
+            case 'inbox':
+                dbQuery = dbQuery.eq('direction', 'inbound');
+                break;
+            case 'sent':
+                dbQuery = dbQuery.eq('direction', 'outbound').neq('status', 'draft');
+                break;
+            case 'drafts':
+                dbQuery = dbQuery.eq('status', 'draft');
+                break;
+        }
+
+        // Status filter
+        if (filterStatus) {
+            if (filterStatus === 'unread') {
+                dbQuery = dbQuery.eq('is_read', false);
+            } else if (filterStatus === 'read') {
+                dbQuery = dbQuery.eq('is_read', true);
+            } else {
+                dbQuery = dbQuery.eq('status', filterStatus);
+            }
+        }
+
+        // Text search
+        if (query.trim()) {
+            const q = `%${query.trim()}%`;
+            dbQuery = dbQuery.or(`subject.ilike.${q},from_email.ilike.${q},body_text.ilike.${q}`);
+        }
+
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+
+        const { data, error, count } = await dbQuery
+            .order('created_at', { ascending: false })
+            .range(from, to);
+
+        if (error) throw error;
+
+        const result = { data: data || [], total: count || 0 };
+
+        // Cache the result for 60s
+        try {
+            await redis.setex(cacheKey, 60, JSON.stringify(result));
+        } catch (cacheErr) {
+            console.warn('[searchEmails] Redis write failed:', cacheErr);
+        }
+
+        return result;
+    } catch (error: any) {
+        console.error('[searchEmails] Error:', error);
+        return { data: [], total: 0, error: error.message };
+    }
+}
+
+// ─── Global Search (All Folders) ────────────────────────────────────
+
+export async function searchEmailsGlobal(query: string) {
+    try {
+        await ensureSuperadmin();
+        if (!query.trim()) return { inbox: [], sent: [], drafts: [] };
+
+        const cacheKey = `emails:global:${query.toLowerCase().trim()}`;
+
+        // Check Redis cache
+        try {
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                return typeof cached === 'string' ? JSON.parse(cached) : cached;
+            }
+        } catch (cacheErr) {
+            console.warn('[searchEmailsGlobal] Redis read failed:', cacheErr);
+        }
+
+        const q = `%${query.trim()}%`;
+        const searchFilter = `subject.ilike.${q},from_email.ilike.${q},body_text.ilike.${q}`;
+
+        // Search all three folders in parallel
+        const [inboxRes, sentRes, draftsRes] = await Promise.all([
+            supabaseAdmin
+                .from('platform_emails')
+                .select('id, from_email, to_emails, subject, status, is_read, created_at')
+                .eq('direction', 'inbound')
+                .or(searchFilter)
+                .order('created_at', { ascending: false })
+                .limit(10),
+            supabaseAdmin
+                .from('platform_emails')
+                .select('id, from_email, to_emails, subject, status, is_read, created_at')
+                .eq('direction', 'outbound')
+                .neq('status', 'draft')
+                .or(searchFilter)
+                .order('created_at', { ascending: false })
+                .limit(10),
+            supabaseAdmin
+                .from('platform_emails')
+                .select('id, from_email, to_emails, subject, created_at')
+                .eq('status', 'draft')
+                .or(searchFilter)
+                .order('created_at', { ascending: false })
+                .limit(10),
+        ]);
+
+        const result = {
+            inbox: inboxRes.data || [],
+            sent: sentRes.data || [],
+            drafts: draftsRes.data || [],
+        };
+
+        // Cache for 60s
+        try {
+            await redis.setex(cacheKey, 60, JSON.stringify(result));
+        } catch (cacheErr) {
+            console.warn('[searchEmailsGlobal] Redis write failed:', cacheErr);
+        }
+
+        return result;
+    } catch (error: any) {
+        console.error('[searchEmailsGlobal] Error:', error);
+        return { inbox: [], sent: [], drafts: [], error: error.message };
+    }
+}
+
+// ─── Cache Invalidation Helper ─────────────────────────────────────
+
+async function invalidateEmailCache(folder?: string) {
+    try {
+        // Simple approach: delete known cache patterns
+        // In production you might use redis.keys() + pipeline, but
+        // for a small admin panel, selective invalidation is fine.
+        const patterns = folder
+            ? [`emails:${folder}:*`, 'emails:global:*']
+            : ['emails:inbox:*', 'emails:sent:*', 'emails:drafts:*', 'emails:global:*'];
+
+        for (const pattern of patterns) {
+            const keys = await redis.keys(pattern);
+            if (keys.length > 0) {
+                await redis.del(...keys);
+            }
+        }
+    } catch (err) {
+        console.warn('[invalidateEmailCache] Redis error (non-blocking):', err);
     }
 }
 
@@ -260,10 +441,49 @@ export async function markEmailAsRead(emailId: string) {
             .eq('id', emailId);
 
         if (error) throw error;
+        await invalidateEmailCache('inbox');
         return { success: true };
     } catch (error: any) {
         console.error('[markEmailAsRead] Error:', error);
         return { error: error.message };
+    }
+}
+
+// ─── Bulk Email Action ─────────────────────────────────────────────
+
+export async function bulkEmailAction(
+    emailIds: string[],
+    action: 'markRead' | 'markUnread' | 'delete'
+) {
+    try {
+        await ensureSuperadmin();
+        if (!emailIds.length) return { success: true };
+
+        if (action === 'markRead') {
+            const { error } = await supabaseAdmin
+                .from('platform_emails')
+                .update({ is_read: true })
+                .in('id', emailIds);
+            if (error) throw error;
+        } else if (action === 'markUnread') {
+            const { error } = await supabaseAdmin
+                .from('platform_emails')
+                .update({ is_read: false })
+                .in('id', emailIds);
+            if (error) throw error;
+        } else if (action === 'delete') {
+            const { error } = await supabaseAdmin
+                .from('platform_emails')
+                .delete()
+                .in('id', emailIds);
+            if (error) throw error;
+        }
+
+        await invalidateEmailCache();
+        return { success: true };
+    } catch (error: any) {
+        console.error('[bulkEmailAction] Error:', error);
+        return { error: error.message || 'Bulk action failed' };
     }
 }
 
