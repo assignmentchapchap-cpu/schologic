@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Send, RefreshCw, CheckCircle, XCircle, AlertTriangle, Clock, Eye, Search, Filter, Mail, ArrowLeft, CheckSquare, Trash2 } from 'lucide-react';
 import { searchEmails, bulkEmailAction } from '@/app/actions/adminEmails';
@@ -39,7 +39,7 @@ const STATUS_FILTERS = [
     { value: 'sent', label: 'Sent' },
 ];
 
-export default function SentPage() {
+function SentPageContent() {
     const [emails, setEmails] = useState<EmailRow[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -382,5 +382,17 @@ export default function SentPage() {
                 </div>
             </div>
         </>
+    );
+}
+
+export default function SentPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin" />
+            </div>
+        }>
+            <SentPageContent />
+        </Suspense>
     );
 }

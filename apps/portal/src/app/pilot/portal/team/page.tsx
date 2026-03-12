@@ -1,4 +1,6 @@
 import { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 import { getCurrentPilotRequest } from '@/app/actions/pilotPortal';
 import { getTeamMembers } from '@/app/actions/pilotTeam';
 import { TeamTasksClient } from './TeamTasksClient';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Inbox as InboxIcon, RefreshCw, Search, Mail, Filter, ArrowLeft, CheckSquare, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { searchEmails, markEmailAsRead, bulkEmailAction } from '@/app/actions/adminEmails';
@@ -28,7 +28,7 @@ const READ_FILTERS = [
     { value: 'read', label: 'Read' },
 ];
 
-export default function InboxPage() {
+function InboxPageContent() {
     const [emails, setEmails] = useState<EmailRow[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -399,5 +399,17 @@ export default function InboxPage() {
                 />
             )}
         </>
+    );
+}
+
+export default function InboxPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin" />
+            </div>
+        }>
+            <InboxPageContent />
+        </Suspense>
     );
 }

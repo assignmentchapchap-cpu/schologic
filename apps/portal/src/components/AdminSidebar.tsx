@@ -24,7 +24,6 @@ interface AdminSidebarProps {
 }
 
 const NAV_LINKS = [
-    { label: 'Dashboard', icon: Home, href: '/admin/dashboard', color: 'text-indigo-400' },
     { label: 'Leads Hub', icon: Users, href: '/admin/leads', color: 'text-orange-400' },
     { label: 'Users', icon: Users, href: '/admin/users', color: 'text-amber-400' },
     { label: 'AI Usage', icon: Zap, href: '/admin/ai-usage', color: 'text-violet-400' },
